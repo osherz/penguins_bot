@@ -7,8 +7,6 @@ import math
 # from typing import List
 
 MIN_SCORE_FOR_SENDING = 20
-UPDATE = 'update'
-OCCUPY = 'occupy'
 TURNS_TO_CHECK = 15
 
 
@@ -40,12 +38,15 @@ def occupy_close_icebergs(scores, game):
     :type game: Game
     """
     for my_iceberg in game.get_my_icebergs():  # type: Iceberg
-        icebergs = score_icebergs(scores, my_iceberg, game.get_all_icebergs())
-        for iceberg in icebergs:
-            # type: (Iceberg, int)
-            dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
-            print dest_iceberg, min_price
-            if not my_iceberg.equals(dest_iceberg) and not whether_to_upgrade(my_iceberg, dest_iceberg, min_price, TURNS_TO_CHECK):
+        all_icebergs = game.get_all_icebergs()
+        all_icebergs.remove(my_iceberg)
+        icebergs = score_icebergs(scores, my_iceberg, all_icebergs)
+        upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
+        if upgrade_score_for_my_iceberg < icebergs[0]['score']:
+            for iceberg in icebergs:
+                # type: (Iceberg, int)
+                dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
+                print dest_iceberg, min_price
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
 
@@ -77,15 +78,6 @@ def score_icebergs(scores, source_iceberg, icebergs):
 
     print '******** scored icebergs *********'
     print '\n'.join(map(str, scores_icebergs))
-
-    scores_icebergs = map(
-        lambda iceberg: {
-            'iceberg': iceberg['iceberg'],
-            'min_price': iceberg['min_price']
-        },
-        scores_icebergs
-    )
-
     return scores_icebergs
 
 
@@ -182,41 +174,6 @@ def can_be_upgrade(iceberg):
         iceberg.upgrade_level_limit > iceberg.level and \
         not iceberg.already_acted and \
         iceberg.penguin_amount > iceberg.upgrade_cost
-
-
-def whether_to_upgrade(source_iceberg, destination_iceberg, occupy_min_price, turns_to_check):
-    """ Decide whether to occupy destination or upgrade source.
-
-    :param occupy_min_price: We considering it as a minimum amount.
-
-    :type source_iceberg: Iceberg
-    :type destination_iceberg: Iceberg
-    :type occupy_min_price: int
-    :type turns_to_check: int
-    :rtype: bool
-    :return: Whether to upgrade
-    """
-    if source_iceberg.level == source_iceberg.upgrade_level_limit:
-        return False
-
-    distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
-    # Turns to check
-    turns_left = turns_to_check - distance
-    if turns_left < 0:
-        turns_to_check = distance + 1
-        turns_left = 1
-
-    # For occupy
-    new_penguins_occupy = -occupy_min_price + 1  # +1 because we sent 1 additional
-    new_penguins_occupy += distance*source_iceberg.level
-    new_penguins_occupy += turns_left*destination_iceberg.level
-
-    # For upgarda
-    new_penguins_upgrade = -source_iceberg.upgrade_cost
-    new_penguins_upgrade += (distance + turns_to_check) * \
-        (source_iceberg.level+1)
-
-    return new_penguins_upgrade > new_penguins_occupy
 
 
 def rescu_icebers_in_risk(game, my_player):
