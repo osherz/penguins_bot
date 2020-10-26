@@ -72,7 +72,6 @@ class Scores:
         :rtype: (int, int)
         :return: (score, min_penguins_for_occupy)
         """
-
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
             self.__game, source_iceberg, destination_iceberg_to_score)
 
@@ -85,6 +84,18 @@ class Scores:
         score = self.__max_price - min_penguins_for_occupy
         return score, min_penguins_for_occupy
 
+    def score_upgrade(self, iceberg_to_score):
+        """
+        Score the upgrade action of iceberg_to_score.
+
+        :param iceberg_to_score: Iceberg to score the upgrade action.
+        :type iceberg_to_score: Iceberg
+        :return: Score
+        :rtype: float
+        """
+        upgrade_cost = iceberg_to_score.upgrade_cost
+        next_level = iceberg_to_score.next_level
+        return self.__max_price - upgrade_cost + next_level
     def __find_max_distance(self):
         """
         Find the max distance between icebergs.
