@@ -154,3 +154,14 @@ def are_all_has_enough_penguins(icebergs, penguins):
         if iceberg.penguin_amount <= penguins:
             return False
     return True
+
+
+def is_empty(ls):
+    """
+    Check is the given list is empty
+    :param ls: List to checl
+    :type ls: list
+    :return: Is empty
+    :rtype: bool
+    """
+    return len(ls) == 0
