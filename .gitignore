@@ -4,4 +4,5 @@
 # python
 env/
 SkillzAutocomplete/
+*.zip
 penguin_game.py
