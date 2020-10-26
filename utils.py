@@ -37,7 +37,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     """
     distance, min_turns = destination_iceberg.get_turns_till_arrival(
         source_iceberg)
-    return get_penguins_in_x_turns(game, destination, distance)
+    return get_penguins_in_x_turns(game, destination, distance) + 1
 
 
 def get_penguins_in_x_turns(game, iceberg, turns=0):
@@ -45,6 +45,7 @@ def get_penguins_in_x_turns(game, iceberg, turns=0):
     Return how much penguins will be in the given iceberg after x turns, and in howmuch turns.
     Negative = enemy/neutral penguins,
     Positive = my player penguins
+
     :type game: Game
     :type iceberg: Iceberg
     :type turns: int
