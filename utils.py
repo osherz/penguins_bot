@@ -65,10 +65,9 @@ def get_penguins_in_x_turns(game, iceberg, turns=0):
 
     group_to_this_iceberg = [
         group for group in game.get_all_penguin_groups()
-        if group.destination.equals(iceberg)
-        and (turns <= 0 or group.‎turns_till_arrival <= turns)
+        if group.destination.equals(iceberg) and (turns <= 0 or group.turns_till_arrival <= turns)
     ]
-    group_to_this_iceberg = sorted(group_to_this_iceberg, key=lambda group: group.‎turns_till_arrival)
+    group_to_this_iceberg = sorted(group_to_this_iceberg, key=lambda group: group.turns_till_arrival)
 
     penguins = iceberg.penguin_amount
     owner = iceberg.owner
@@ -136,8 +135,7 @@ def get_icebergs_in_risk(game, my_player):
     :type myPlayer: Player
     :rtype: List[Iceberg]
     """
-    icbergs_in_risk = IcebergsInRisk()
-    enemy_groups = game.get_enemy_penguin_groups()  # List[Iceberg]
+    icbergs_in_risk = []
     for my_iceberg in game.get_my_icebergs():
         penguins, turns = get_penguins_in_x_turns(game, my_iceberg)
         if penguins <= 0:
