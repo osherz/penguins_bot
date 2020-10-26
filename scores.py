@@ -1,5 +1,5 @@
 from penguin_game import *
-from utils import * as utils
+import utils
 
 ENEMY_BELONGS_SCORE = 2
 NEUTRAL_BELONGS_SCORE = 1
@@ -74,13 +74,10 @@ class Scores:
         """
 
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
-            self.__game, source_iceberg, destination_iceberg)
+            self.__game, source_iceberg, destination_iceberg_to_score)
 
-        if min_penguins_for_occupy > 0:
+        if min_penguins_for_occupy == 0:
             return MY_BELONGS_SCORE, 0
-        else:
-            # Its will not belong to us, so make it positive
-            min_penguins_for_occupy = abs(min_penguins_for_occupy)
 
         if min_penguins_for_occupy >= source_iceberg.penguin_amount:
             return CANT_BE_OCCUPIED_SCORE, -1
@@ -122,4 +119,4 @@ class Scores:
         :type iceberg: Iceberg
         :rtype: bool
         """
-        return iceberg.owner.equals(game.get_myself())
+        return iceberg.owner.equals(self.__game.get_myself())

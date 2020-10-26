@@ -1,10 +1,12 @@
 from penguin_game import Player, PenguinGroup, Iceberg
 from IcebergsInRisk import *
-from utils import * as utils
+import utils
 from scores import Scores
 import math
 # import typing
 # from typing import List
+
+MIN_SCORE_FOR_SENDING = 20
 
 
 def do_turn(game):
@@ -25,7 +27,7 @@ def do_turn(game):
     my_player = game.get_myself()  # type: Player
     # rescu_icebers_in_risk(game, my_player)
 
-    occupy_close_icebergs(scores)
+    occupy_close_icebergs(scores, game)
     upgrade_icebergs(game)
 
 
@@ -36,8 +38,10 @@ def occupy_close_icebergs(scores, game):
     """
     for my_iceberg in game.get_my_icebergs():  # type: Iceberg
         icebergs = score_icebergs(scores, my_iceberg, game.get_all_icebergs())
-        for dest_iceberg, min_price in icebergs:  # type: (Iceberg, int)
-            send_penguins(my_iceberg, penguins_to_send, dest_iceberg)
+        for iceberg in icebergs:  # type: (Iceberg, int)
+            dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
+            print dest_iceberg, min_price
+            send_penguins(my_iceberg, min_price, dest_iceberg)
 
 
 def score_icebergs(scores, source_iceberg, icebergs):
@@ -51,20 +55,23 @@ def score_icebergs(scores, source_iceberg, icebergs):
     """
     def get_iceberg_data(iceberg):
         score, min_price = score_iceberg(
-            scores, source_iceberg, destination_iceberg)
+            scores, source_iceberg, iceberg)
         return {
             "iceberg": iceberg,
-            "score": score
+            "score": score,
             "min_price": min_price
         }
 
     scores_icebergs = map(
-        lambda iceberg: get_iceberg_data,
+        lambda iceberg: get_iceberg_data(iceberg),
         icebergs
     )
 
-    scores_icebergs = remove_negative_score_iceberg(scores_icebergs)
+    scores_icebergs = remove_smalls_score_icebergs(scores_icebergs)
     sort_icebergs_by_score(scores_icebergs)
+
+    print '******** scored icebergs *********'
+    print '\n'.join(map(str, scores_icebergs))
 
     scores_icebergs = map(
         lambda iceberg: {
@@ -73,7 +80,7 @@ def score_icebergs(scores, source_iceberg, icebergs):
         },
         scores_icebergs
     )
-    print scores_icebergs
+
     return scores_icebergs
 
 
@@ -83,22 +90,27 @@ def sort_icebergs_by_score(scores_icebergs):
     :type scores_icebergs: list[{Iceberg, int}]
     :rtype: None
     """
-    sorted_icebergs.sort(
-        def key(iceberg): return iceberg['score'],
+    scores_icebergs.sort(
+        key=lambda iceberg: iceberg['score'],
         reverse=True
     )
 
 
-def remove_negative_score_iceberg(scores_icebergs):
-    """ Remove all negative icebergs with negative scores.
+def remove_smalls_score_icebergs(scores_icebergs):
+    """ Remove all icebergs with smalls scors.
     Not changing inplace.
 
     :type scores_icebergs: List[{Iceberg, int}]
     :rtype: List[{Iceberg, int}]
+    :return: List[{Iceberg, score}]
     """
-    return reduce(
-        lambda ls, iceberg: ls + [iceberg] if iceberg['score'] > 0 else ls
-    )
+    print scores_icebergs
+    ls = []
+    for iceberg in scores_icebergs:
+        if iceberg['score'] >= MIN_SCORE_FOR_SENDING:
+            ls.append(iceberg)
+
+    return ls
 
 
 def score_iceberg(scores, source_iceberg, destination_iceberg):
@@ -113,12 +125,12 @@ def score_iceberg(scores, source_iceberg, destination_iceberg):
     min_penguins_for_occupy_score, min_penguins_for_occupy = scores.score_by_iceberg_price(
         source_iceberg, destination_iceberg)
 
-    score = scores.score_by_iceberg_belogns(icdestination_icebergeberg) +
-    scores.score_by_iceberg_distance(source_iceberg, destination_iceberg) +
-    scores.score_by_iceberg_level(destination_iceberg) +
-    min_penguins_for_occupy_score
+    score = scores.score_by_iceberg_belogns(destination_iceberg) + \
+        scores.score_by_iceberg_distance(source_iceberg, destination_iceberg) + \
+        scores.score_by_iceberg_level(destination_iceberg) + \
+        min_penguins_for_occupy_score
 
-    print f'source {source_iceberg}, destination {destination_iceberg}, score {score}, min_penguins_for_occupy {min_penguins_for_occupy}'
+    print 'source', source_iceberg, 'destination', destination_iceberg, 'score', score, 'min_penguins_for_occupy', min_penguins_for_occupy
     return score, min_penguins_for_occupy
 
 

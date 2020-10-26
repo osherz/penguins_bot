@@ -35,9 +35,17 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     :type destination_iceberg: Iceberg
     :rtype: int
     """
-    distance, min_turns = destination_iceberg.get_turns_till_arrival(
-        source_iceberg)
-    return get_penguins_in_x_turns(game, destination, distance) + 1
+    distance = destination_iceberg.get_turns_till_arrival(source_iceberg)
+    penguins, min_turns = get_penguins_in_x_turns(
+        game, destination_iceberg, distance)
+
+    if penguins == 0:
+        return 1
+
+    if penguins > 0:
+        return 0
+
+    return abs(penguins) + 1
 
 
 def get_penguins_in_x_turns(game, iceberg, turns=0):
