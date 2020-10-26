@@ -4,6 +4,7 @@ from utils import * as utils
 ENEMY_BELONGS_SCORE = 2
 NEUTRAL_BELONGS_SCORE = 1
 MY_BELONGS_SCORE = 0
+CANT_BE_OCCUPIED_SCORE = -9999
 
 
 class Scores:
@@ -36,11 +37,10 @@ class Scores:
         if iceberg_owner.equals(game.get_enemy()):
             return ENEMY_BELONGS_SCORE
 
-        if iceberg_owner.equals(game.get_neutral()):
-            return NEUTRAL_BELONGS_SCORE
-
-        if iceberg_owner.equals(game.get_myself()):
+        if self.__is_belong_to_me(iceberg_to_score):
             return MY_BELONGS_SCORE
+
+        return NEUTRAL_BELONGS_SCORE
 
     def score_by_iceberg_level(self, iceberg_to_score):
         """
@@ -65,14 +65,28 @@ class Scores:
         """
         Scoring by the price of the destination iceberg.
         Taking in account the number of the penguins when the penguins-group from the source iceberg will arrive.
-        If there is not enoght penguins in the source iceberg, the score is negative.
+        If there is not enoght penguins in the source iceberg return (-999, -1).
+        If the iceberg belong or will belong to us, return (0,0).
         :type source_iceberg: Iceberg
         :type destination_iceberg_to_score: Iceberg
-        :rtype: float
+        :rtype: (int, int)
+        :return: (score, min_penguins_for_occupy)
         """
+
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
             self.__game, source_iceberg, destination_iceberg)
-        return self.__max_price - min_penguins_for_occupy
+
+        if min_penguins_for_occupy > 0:
+            return MY_BELONGS_SCORE, 0
+        else:
+            # Its will not belong to us, so make it positive
+            min_penguins_for_occupy = abs(min_penguins_for_occupy)
+
+        if min_penguins_for_occupy >= source_iceberg.penguin_amount:
+            return CANT_BE_OCCUPIED_SCORE, -1
+
+        score = self.__max_price - min_penguins_for_occupy
+        return score, min_penguins_for_occupy
 
     def __find_max_distance(self):
         """
@@ -101,3 +115,11 @@ class Scores:
             self.__game.get_all_icebergs()
         )
         return max(prices_map)
+
+    def __is_belong_to_me(self, iceberg):
+        """Check whether the given iceberg belongs to me.
+
+        :type iceberg: Iceberg
+        :rtype: bool
+        """
+        return iceberg.owner.equals(game.get_myself())
