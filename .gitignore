@@ -1,5 +1,7 @@
 # vscode
 .vscode/
 
-# code
+# python
+env/
 SkillzAutocomplete/
+penguin_game.py
