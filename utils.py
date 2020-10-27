@@ -121,6 +121,21 @@ def get_penguins_in_x_turns(game, iceberg, turns=0):
 
     return penguins, sum_of_turns
 
+def get_groups_way_to_iceberg(game, iceberg):
+    """
+    Get all the penguins group in their way to the given iceberg.
+
+    :param game: Game status
+    :type game: Game
+    :param iceberg: Destination iceberg
+    :type iceberg: iceberg
+    :return: Penguins group in their way to the iceberg.
+    :rtype: List[PenguinGroup]
+    """
+    return [
+        group for group in game.get_all_penguin_groups()
+        if group.destination.equals(iceberg)
+    ]
 
 def get_additional_pengions_in_x_turns(iceberg, owner, turns, my_player, enemy):
     """
