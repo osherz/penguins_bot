@@ -1,10 +1,12 @@
 from penguin_game import *
 import utils
 
-ENEMY_BELONGS_SCORE = 2
-NEUTRAL_BELONGS_SCORE = 1
+ENEMY_BELONGS_SCORE = 4
+NEUTRAL_BELONGS_SCORE = 2
 MY_BELONGS_SCORE = 0
-CANT_BE_OCCUPIED_SCORE = -9999
+NEED_PROTECTED = 10
+CANT_DO_ACTION_SCORE = -9999
+UPGRADE_TURNS_TO_CHECK = 20
 
 
 class Scores:
@@ -12,8 +14,10 @@ class Scores:
         """
         :type game: Game
         """
+
         self.update_game(game)
         self.__max_distance = self.__find_max_distance()
+        self.__average_distance = self.__calculate_average_distance()
 
     def update_game(self, game):
         """
@@ -25,10 +29,11 @@ class Scores:
         self.__game = game
         self.__max_price = self.__find_max_price()
 
-    def score_by_iceberg_belogns(self, iceberg_to_score):
+    def score_by_iceberg_belogns(self, source_iceberg, iceberg_to_score):
         """
         Scoring by the belongs of the iceberg (my, enemy, neutrial)
 
+        :type source_iceberg: Iceberg
         :type iceberg_to_score: Iceberg
         :rtype: float
         """
@@ -38,7 +43,11 @@ class Scores:
             return ENEMY_BELONGS_SCORE
 
         if self.__is_belong_to_me(iceberg_to_score):
-            return MY_BELONGS_SCORE
+
+            if self.__is_destination_closest_to_enemy(source_iceberg, iceberg_to_score):
+                return self.__max_distance - source_iceberg.get_turns_till_arrival(iceberg_to_score)
+            else:
+                return MY_BELONGS_SCORE
 
         return NEUTRAL_BELONGS_SCORE
 
@@ -75,11 +84,13 @@ class Scores:
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
             self.__game, source_iceberg, destination_iceberg_to_score)
 
+        print
+        source_iceberg, destination_iceberg_to_score, min_penguins_for_occupy
         if min_penguins_for_occupy == 0:
             return MY_BELONGS_SCORE, 0
 
         if min_penguins_for_occupy >= source_iceberg.penguin_amount:
-            return CANT_BE_OCCUPIED_SCORE, -1
+            return CANT_DO_ACTION_SCORE, -1
 
         score = self.__max_price - min_penguins_for_occupy
         return score, min_penguins_for_occupy
@@ -93,9 +104,14 @@ class Scores:
         :return: Score
         :rtype: float
         """
+
+        if not utils.can_be_upgrade(iceberg_to_score):
+            return CANT_DO_ACTION_SCORE
+
         upgrade_cost = iceberg_to_score.upgrade_cost
-        next_level = iceberg_to_score.next_level
-        return self.__max_price - upgrade_cost + next_level
+        next_level = iceberg_to_score.level + 1
+        return self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
+
     def __find_max_distance(self):
         """
         Find the max distance between icebergs.
@@ -131,3 +147,47 @@ class Scores:
         :rtype: bool
         """
         return iceberg.owner.equals(self.__game.get_myself())
+
+    def __calculate_average_distance(self):
+        """
+        Calculate the average distance between all icebergs.
+        :return: The average distance.
+        :rtype: float
+        """
+        game = self.__game  # type: Game
+        all_icebergs = game.get_all_icebergs()
+        all_icebergs_pairs = zip(all_icebergs, all_icebergs)
+        distances = map(
+            lambda (iceberg1, iceberg2): iceberg1.get_turns_till_arrival(iceberg2),
+            all_icebergs_pairs
+        )
+        sum_of_icebergs = len(all_icebergs)
+        sum_distances = sum(distances)
+        return sum_distances / (sum_of_icebergs * (sum_of_icebergs - 1) / 2)
+
+    def __calculate_average_distance_from_enemy(self, iceberg):
+        """
+        Calculate the distance average between the given iceberg and the enemy icebergs.
+
+        :param iceberg: Iceberg to calculate the distance from him.
+        :type iceberg: Iceberg
+        :return: distance average
+        :rtype: float
+        """
+        enemy_icebergs = self.__game.get_enemy_icebergs()
+        enemy_distance = map(
+            lambda enemy_iceberg: enemy_iceberg.get_turns_till_arrival(iceberg),
+            enemy_icebergs
+        )
+        return sum(enemy_distance) / len(enemy_distance)
+
+    def __is_destination_closest_to_enemy(self, source_iceberg, destination_iceberg):
+        """
+        Check is the source closest to the enemy than the destination.
+        :param source_iceberg:
+        :param destination_iceberg:
+        :return: Whether source closest
+        """
+        source_avg_distance = self.__calculate_average_distance_from_enemy(source_iceberg)
+        destination_avg_distance = self.__calculate_average_distance_from_enemy(destination_iceberg)
+        return destination_avg_distance < self.__average_distance < source_avg_distance

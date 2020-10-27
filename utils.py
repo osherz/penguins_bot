@@ -39,6 +39,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     penguins, min_turns = get_penguins_in_x_turns(
         game, destination_iceberg, distance)
 
+    print 'min penguins:', penguins
     if penguins == 0:
         return 1
 
@@ -63,45 +64,62 @@ def get_penguins_in_x_turns(game, iceberg, turns=0):
     my_player = game.get_myself()  # type: Player
     enemy = game.get_enemy()  # type: Player
 
+    def to_group_data(group):
+        """
+        :type group: PenguinGroup
+        """
+        return {
+            'is_enemy': group.owner.equals(enemy),
+            'turns_till_arrival': group.turns_till_arrival,
+            'penguin_amount': group.penguin_amount
+        }
+
     group_to_this_iceberg = [
-        group for group in game.get_all_penguin_groups()
+        to_group_data(group) for group in game.get_all_penguin_groups()
         if group.destination.equals(iceberg) and (turns <= 0 or group.turns_till_arrival <= turns)
     ]
-    group_to_this_iceberg = sorted(group_to_this_iceberg, key=lambda group: group.turns_till_arrival)
+    group_to_this_iceberg = sorted(group_to_this_iceberg, key=lambda group: group['turns_till_arrival'])
 
     penguins = iceberg.penguin_amount
     owner = iceberg.owner
     if not owner.equals(my_player):
         penguins *= -1
 
-    turns_since_start = 0
-    for group in group_to_this_iceberg:  # type: PenguinGroup
-        # Add penguins that the iceberg invreasing
+    sum_of_turns = 0
+    is_not_finished = True
+    while is_not_finished:
+        is_not_finished = False
+        for group in group_to_this_iceberg:
+            if group['turns_till_arrival'] > 0:
+                is_not_finished = True
+                group['turns_till_arrival'] -= 1
+                turns_till_arrival = group['turns_till_arrival']
+                if turns_till_arrival == 0:
+                    # Add penguins that arrival from outside
+                    if group['is_enemy']:
+                        penguins -= group['penguin_amount']
+                    else:
+                        penguins += group['penguin_amount']
+
+                    # update owner
+                    if penguins > 0:
+                        owner = my_player
+                    elif penguins < 0:
+                        owner = enemy
+                    else:
+                        owner = game.get_neutral()
+
         penguins += get_additional_pengions_in_x_turns(
-            iceberg, owner, group.turns_till_arrival - turns_since_start, my_player, enemy)
-        turns_since_start += group.turns_till_arrival
+            iceberg, owner, 1, my_player, enemy)
 
-        # Add penguins that arrival from outside
-        if group.equals(enemy):
-            penguins -= group.penguin_amount
-        elif group.equals(my_player):
-            penguins += group.penguin_amount
+        sum_of_turns += 1
 
-        # update owner
-        if penguins > 0:
-            owner = my_player
-        elif penguins < 0:
-            owner = enemy
-        else:
-            owner = game.get_neutral()
-
-    if turns > turns_since_start:
+    if turns > sum_of_turns:
         penguins += get_additional_pengions_in_x_turns(
-            iceberg, owner, turns - turns_since_start, my_player, enemy)
-        turns_since_start = turns
+            iceberg, owner, turns - sum_of_turns, my_player, enemy)
+        sum_of_turns = turns
 
-    print 'In ', iceberg, ' in ', turns_since_start, ' turns will be ', penguins, ' penguins.'
-    return penguins, turns_since_start
+    return penguins, sum_of_turns
 
 
 def get_additional_pengions_in_x_turns(iceberg, owner, turns, my_player, enemy):
@@ -165,3 +183,14 @@ def is_empty(ls):
     :rtype: bool
     """
     return len(ls) == 0
+
+
+def can_be_upgrade(iceberg):
+    """
+    Return whether given iceberg can be upgrade.
+    :type iceberg: Iceberg
+    """
+    return iceberg.can_upgrade and \
+           iceberg.upgrade_level_limit > iceberg.level and \
+           not iceberg.already_acted and \
+           iceberg.penguin_amount > iceberg.upgrade_cost
