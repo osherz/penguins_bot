@@ -1,6 +1,10 @@
 # vscode
 .vscode/
 
+# PyCharm
+.idea/
+
+
 # python
 env/
 SkillzAutocomplete/
