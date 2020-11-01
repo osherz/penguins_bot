@@ -45,7 +45,7 @@ class Simulation:
         Get penguin amount.
         If positive: The iceberg belong to us.
         If negative: The iceberg belong to enemy.
-        If is neutral return 0 in any case so tou need to go to get_cost_if_neutral() to know the amount.
+        If is neutral return 0 in any case so you need to go to get_cost_if_neutral() to know the amount.
         :return: Penguin amount.
         :rtype: int
         """
@@ -53,6 +53,18 @@ class Simulation:
             return 0
         else:
             return self.__penguin_amount
+
+    def get_cost_if_neutral(self):
+        """
+        Get cost of iceberg if neutral.
+        If is not neutral return 0 in any case so you need to go to get_penguin_amount() to know the amount.
+        :return: Penguin amount.
+        :rtype: int
+        """
+        if self.is_belong_to_neutral():
+            return self.__cost_if_neutral
+        else:
+            return 0
 
     def simulate(self, turns_to_simulate):
         """
