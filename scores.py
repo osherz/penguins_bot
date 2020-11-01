@@ -84,14 +84,14 @@ class Scores:
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
             self.__game, source_iceberg, destination_iceberg_to_score)
 
-        print
-        source_iceberg, destination_iceberg_to_score, min_penguins_for_occupy
+        print source_iceberg, destination_iceberg_to_score, min_penguins_for_occupy
         if min_penguins_for_occupy == 0:
             return MY_BELONGS_SCORE, 0
 
         if min_penguins_for_occupy >= source_iceberg.penguin_amount:
             return CANT_DO_ACTION_SCORE, -1
 
+        # TODO: Take in account that if enemy going to occupy the iceberg, the penguin_amount reduce
         score = self.__max_price - min_penguins_for_occupy
         return score, min_penguins_for_occupy
 
