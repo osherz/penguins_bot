@@ -68,7 +68,7 @@ def get_penguins_in_x_turns(game, iceberg):
     penguin_amount = simulation.get_penguin_amount()
     if simulation.is_belong_to_neutral():
         penguin_amount = simulation.get_cost_if_neutral()
-    return simulation.get_penguin_amount(), penguin_amount
+    return penguin_amount, simulation.get_turns_simulated()
 
 
 def get_groups_way_to_iceberg(game, iceberg):

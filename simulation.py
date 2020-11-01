@@ -135,6 +135,14 @@ class Simulation:
         valid_instance_of_penguin_group_simulate(penguin_group_simulate)
         self.__groups_to_iceberg.remove(penguin_group_simulate)
 
+    def get_turns_simulated(self):
+        """
+
+        :return: Houw much turns already simulated.
+        :rtype: int
+        """
+        return self.__current_turn
+
     def is_belong_to_me(self):
         return self.__iceberg_owner.equals(self.__game.get_myself())
 
