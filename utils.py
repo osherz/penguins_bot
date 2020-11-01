@@ -1,5 +1,5 @@
 from penguin_game import *
-
+from simulation import Simulation
 
 def min_penguins_for_occupy(game, iceberg):
     """ 
@@ -49,7 +49,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     return abs(penguins) + 1
 
 
-def get_penguins_in_x_turns(game, iceberg, turns=0):
+def get_penguins_in_x_turns(game, iceberg):
     """
     Return how much penguins will be in the given iceberg after x turns, and in howmuch turns.
     Negative = enemy/neutral penguins,
@@ -61,65 +61,15 @@ def get_penguins_in_x_turns(game, iceberg, turns=0):
     :rtype: (int, int)
     :return: (penguins, turns)
     """
-    my_player = game.get_myself()  # type: Player
-    enemy = game.get_enemy()  # type: Player
+    simulation = Simulation(game, iceberg)
+    simulation.simulate_until_last_group_arrived()
 
-    def to_group_data(group):
-        """
-        :type group: PenguinGroup
-        """
-        return {
-            'is_enemy': group.owner.equals(enemy),
-            'turns_till_arrival': group.turns_till_arrival,
-            'penguin_amount': group.penguin_amount
-        }
+    # TODO: Indices that the iceberg neutral
+    penguin_amount = simulation.get_penguin_amount()
+    if simulation.is_belong_to_neutral():
+        penguin_amount = simulation.get_cost_if_neutral()
+    return simulation.get_penguin_amount(), penguin_amount
 
-    group_to_this_iceberg = [
-        to_group_data(group) for group in game.get_all_penguin_groups()
-        if group.destination.equals(iceberg) and (turns <= 0 or group.turns_till_arrival <= turns)
-    ]
-    group_to_this_iceberg = sorted(group_to_this_iceberg, key=lambda group: group['turns_till_arrival'])
-
-    penguins = iceberg.penguin_amount
-    owner = iceberg.owner
-    if not owner.equals(my_player):
-        penguins *= -1
-
-    sum_of_turns = 0
-    is_not_finished = True
-    while is_not_finished:
-        is_not_finished = False
-        for group in group_to_this_iceberg:
-            if group['turns_till_arrival'] > 0:
-                is_not_finished = True
-                group['turns_till_arrival'] -= 1
-                turns_till_arrival = group['turns_till_arrival']
-                if turns_till_arrival == 0:
-                    # Add penguins that arrival from outside
-                    if group['is_enemy']:
-                        penguins -= group['penguin_amount']
-                    else:
-                        penguins += group['penguin_amount']
-
-                    # update owner
-                    if penguins > 0:
-                        owner = my_player
-                    elif penguins < 0:
-                        owner = enemy
-                    else:
-                        owner = game.get_neutral()
-
-        penguins += get_additional_pengions_in_x_turns(
-            iceberg, owner, 1, my_player, enemy)
-
-        sum_of_turns += 1
-
-    if turns > sum_of_turns:
-        penguins += get_additional_pengions_in_x_turns(
-            iceberg, owner, turns - sum_of_turns, my_player, enemy)
-        sum_of_turns = turns
-
-    return penguins, sum_of_turns
 
 def get_groups_way_to_iceberg(game, iceberg):
     """
@@ -136,6 +86,7 @@ def get_groups_way_to_iceberg(game, iceberg):
         group for group in game.get_all_penguin_groups()
         if group.destination.equals(iceberg)
     ]
+
 
 def get_additional_pengions_in_x_turns(iceberg, owner, turns, my_player, enemy):
     """
