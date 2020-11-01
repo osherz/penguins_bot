@@ -31,7 +31,7 @@ class Scores:
 
     def score_by_iceberg_belogns(self, source_iceberg, iceberg_to_score):
         """
-        Scoring by the belongs of the iceberg (my, enemy, neutrial)
+        Scoring by the belongs of the iceberg (my, enemy, neutral)
 
         :type source_iceberg: Iceberg
         :type iceberg_to_score: Iceberg
@@ -74,7 +74,7 @@ class Scores:
         """
         Scoring by the price of the destination iceberg.
         Taking in account the number of the penguins when the penguins-group from the source iceberg will arrive.
-        If there is not enoght penguins in the source iceberg return (-999, -1).
+        If there is not enough penguins in the source iceberg return (-999, -1).
         If the iceberg belong or will belong to us, return (0,0).
         :type source_iceberg: Iceberg
         :type destination_iceberg_to_score: Iceberg
