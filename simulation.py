@@ -86,7 +86,7 @@ class Simulation:
         """
         sorted_groups_by_turns = sorted(
             self.__groups_to_iceberg,
-            lambda  group: group.get_turns_till_arrival()
+            key=lambda group: group.get_turns_till_arrival()
         )
         last_group = sorted_groups_by_turns[-1]
         turns = last_group.get_turns_till_arrival()
