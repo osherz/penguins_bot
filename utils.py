@@ -8,7 +8,6 @@ def min_penguins_for_occupy(game, iceberg):
 
     :type game: Game
     :type iceberg: Iceberg
-    :type my_player: Player
     """
     min_penguins = iceberg.penguin_amount
 
@@ -37,7 +36,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     """
     distance = destination_iceberg.get_turns_till_arrival(source_iceberg)
     penguins, min_turns = get_penguins_in_x_turns(
-        game, destination_iceberg, distance)
+        game, destination_iceberg)
 
     print 'min penguins:', penguins
     if penguins == 0:

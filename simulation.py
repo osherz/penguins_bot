@@ -87,13 +87,14 @@ class Simulation:
 
         :return:
         """
-        sorted_groups_by_turns = sorted(
-            self.__groups_to_iceberg,
-            key=lambda group: group.get_turns_till_arrival()
-        )
-        last_group = sorted_groups_by_turns[-1]
-        turns = last_group.get_turns_till_arrival()
-        self.simulate(turns)
+        if len(self.__groups_to_iceberg) > 0:
+            sorted_groups_by_turns = sorted(
+                self.__groups_to_iceberg,
+                key=lambda group: group.get_turns_till_arrival()
+            )
+            last_group = sorted_groups_by_turns[-1]
+            turns = last_group.get_turns_till_arrival()
+            self.simulate(turns)
 
     def are_group_remains(self):
         """
@@ -126,7 +127,10 @@ class Simulation:
         :return: The custom PenguinGroupSimulate that created and added to the groups.
         :rtype: PenguinGroupSimulate
         """
-        penguin_group_simulate = PenguinGroupSimulate(source_iceberg, destination_iceberg, penguin_amount, self.__game)
+        penguin_group_simulate = PenguinGroupSimulate(self.__game,
+                                                      source_iceberg=source_iceberg,
+                                                      destination_iceberg=destination_iceberg,
+                                                      penguin_amount=penguin_amount)
         self.add_penguin_group(penguin_group_simulate)
         return penguin_group_simulate
 
@@ -186,7 +190,10 @@ class Simulation:
         If our, append the number of penguins.
         """
 
-        groups_arrived = map(lambda penguin_group: penguin_group.is_arrived(), self.__groups_to_iceberg)
+        groups_arrived = [
+            penguin_group for penguin_group in self.__groups_to_iceberg
+            if penguin_group.is_arrived()
+        ]
         for group in groups_arrived:  # type: PenguinGroupSimulate
             if self.is_belong_to_neutral():
                 self.__treat_group_arrived_iceberg_neutral(group)
