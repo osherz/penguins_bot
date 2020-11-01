@@ -6,37 +6,34 @@ class PenguinGroupSimulate:
     Penguin group data staructure for simulation.
     """
 
-    def __init__(self, penguin_group, game):
+    def __init__(self, game, penguin_group = None, source_iceberg = None, destination_iceberg=None, penguin_amount=None, ):
         """
         Initialize data by penguin_group
-        :param penguin_group: Penguin group to attach to.
-        :type penguin_group: PenguinGroup
+        If penguin_group not assigned then create custom group from the other params.
+        penguin_group or all others must be assigned.
+
         :param game: Game status.
         :type game: Game
-        """
-        self.__is_custom = False
-        self.__penguin_group = penguin_group
-        self.__is_enemy = penguin_group.owner.equals(game.get_enemy())
-        self.reset_to_origin()
-
-    def __init__(self, source_iceberg, destination_iceberg, penguin_amount, game):
-        """
-        Initialize data by penguin_group
-
+        :param penguin_group: Penguin group to attach to.
+        :type penguin_group: PenguinGroup
         :param source_iceberg: Iceberg to send penguin from it
         :type source_iceberg: Iceberg
         :param destination_iceberg: Iceberg to send penguin to it
         :type destination_iceberg: Iceberg
         :param penguin_amount: How much penguin to send.
         :type penguin_amount: iny
-        :param game: Game status.
-        :type game: Game
         """
-        self.__is_custom = True
-        self.__source_iceberg = source_iceberg
-        self.__destination_iceberg = destination_iceberg
-        self.__origin_penguin_amount = penguin_amount
-        self.__is_enemy = source_iceberg.owner.equals(game.get_enemy())
+        if penguin_group is None:
+            self.__is_custom = True
+            self.__source_iceberg = source_iceberg
+            self.__destination_iceberg = destination_iceberg
+            self.__origin_penguin_amount = penguin_amount
+            self.__is_enemy = source_iceberg.owner.equals(game.get_enemy())
+        else:
+            self.__is_custom = False
+            self.__penguin_group = penguin_group
+            self.__is_enemy = penguin_group.owner.equals(game.get_enemy())
+
         self.reset_to_origin()
 
     def reset_to_origin(self):

@@ -32,7 +32,10 @@ class Simulation:
         self.__cost_if_neutral = 0
         self.__penguin_amount = 0
         penguin_groups = utils.get_groups_way_to_iceberg(game, iceberg_to_simulate)
-        self.__groups_to_iceberg = map(PenguinGroupSimulate, penguin_groups)
+        self.__groups_to_iceberg = map(
+            lambda group: PenguinGroupSimulate(game, penguin_group=group),
+            penguin_groups
+        )
         if self.is_belong_to_neutral():
             self.__cost_if_neutral = iceberg_to_simulate.penguin_amount
         else:
