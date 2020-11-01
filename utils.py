@@ -1,6 +1,7 @@
 from penguin_game import *
 from simulation import Simulation
 
+
 def min_penguins_for_occupy(game, iceberg):
     """ 
     Return the minimum of penguins require to occupy iceberg
@@ -109,22 +110,6 @@ def get_icebergs_not_in(all_icebergs, icebergs):
     icebergs_to_return = [
         iceberg for iceberg in all_icebergs if iceberg not in icebergs]
     return icebergs_to_return
-
-
-def get_icebergs_in_risk(game, my_player):
-    """
-    Check which enemy groups put my icebergs in danger.
-    :type game: Game
-    :type myPlayer: Player
-    :rtype: List[Iceberg]
-    """
-    icbergs_in_risk = []
-    for my_iceberg in game.get_my_icebergs():
-        penguins, turns = get_penguins_in_x_turns(game, my_iceberg)
-        if penguins <= 0:
-            icbergs_in_risk.append(my_iceberg, abs(penguins), turns)
-
-    return icbergs_in_risk
 
 
 def are_all_has_enough_penguins(icebergs, penguins):
