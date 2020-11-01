@@ -35,9 +35,9 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     :type destination_iceberg: Iceberg
     :rtype: int
     """
-    distance = destination_iceberg.get_turns_till_arrival(source_iceberg)
+    distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
     penguins, min_turns = get_penguins_in_x_turns(
-        game, destination_iceberg)
+        game, destination_iceberg, distance)
 
     print 'min penguins:', penguins
     if penguins == 0:
@@ -49,7 +49,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     return abs(penguins) + 1
 
 
-def get_penguins_in_x_turns(game, iceberg):
+def get_penguins_in_x_turns(game, iceberg, min_turns):
     """
     Return how much penguins will be in the given iceberg after x turns, and in howmuch turns.
     Negative = enemy/neutral penguins,
@@ -57,17 +57,26 @@ def get_penguins_in_x_turns(game, iceberg):
 
     :type game: Game
     :type iceberg: Iceberg
-    :type turns: int
+    :type min_turns: int
     :rtype: (int, int)
     :return: (penguins, turns)
     """
     simulation = Simulation(game, iceberg)
-    simulation.simulate_until_last_group_arrived()
+    simulation.simulate(min_turns)
+    cost = 0
+    if not simulation.is_belong_to_me():
+        cost = simulation.get_cost()
+        # Check what happen if we sent enough penguins to occupy.
+        simulation.add_penguin_amount(False, cost + 1)
 
-    # TODO: Indices that the iceberg neutral
+    # Continue simulate
+    if simulation.are_group_remains():
+        simulation.simulate_until_last_group_arrived()
+
     penguin_amount = simulation.get_penguin_amount()
     if simulation.is_belong_to_neutral():
-        penguin_amount = simulation.get_cost_if_neutral()
+        penguin_amount = -1 * simulation.get_cost_if_neutral()
+    penguin_amount += cost
     return penguin_amount, simulation.get_turns_simulated()
 
 
@@ -82,10 +91,14 @@ def get_groups_way_to_iceberg(game, iceberg):
     :return: Penguins group in their way to the iceberg.
     :rtype: List[PenguinGroup]
     """
-    return [
+    groups = [
         group for group in game.get_all_penguin_groups()
         if group.destination.equals(iceberg)
     ]
+    if len(groups) > 0:
+        print 'groups to iceberg', iceberg, ':', groups
+        print game.get_all_penguin_groups()
+    return groups
 
 
 def get_additional_pengions_in_x_turns(iceberg, owner, turns, my_player, enemy):
