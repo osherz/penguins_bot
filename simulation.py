@@ -66,6 +66,20 @@ class Simulation:
             self.__treat_iceberg_by_turns(1)
             self.__treat_groups_arrived_destination()
 
+    def simulate_until_last_group_arrived(self):
+        """
+        Start/continue to simulate until the last group arrival to destination.
+
+        :return:
+        """
+        sorted_groups_by_turns = sorted(
+            self.__groups_to_iceberg,
+            lambda  group: group.get_turns_till_arrival()
+        )
+        last_group = sorted_groups_by_turns[-1]
+        turns = last_group.get_turns_till_arrival()
+        self.simulate(turns)
+
     def are_group_remains(self):
         """
         Return whether there are any groups to the destination remains.
