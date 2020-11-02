@@ -4,9 +4,11 @@ import utils
 ENEMY_BELONGS_SCORE = 50
 NEUTRAL_BELONGS_SCORE = 2
 MY_BELONGS_SCORE = 0
-NEED_PROTECTED = 10
+NEED_PROTECTED_SCORE = 10
 CANT_DO_ACTION_SCORE = -9999
 UPGRADE_TURNS_TO_CHECK = 20
+OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -20
+OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -50
 
 
 class Scores:
@@ -91,8 +93,12 @@ class Scores:
         if min_penguins_for_occupy >= source_iceberg.penguin_amount:
             return CANT_DO_ACTION_SCORE, -1
 
-        # TODO: Take in account that if enemy going to occupy the iceberg, the penguin_amount reduce
         score = self.__max_price - min_penguins_for_occupy
+        penguin_amount_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(self.__game,
+                                                                                                source_iceberg,
+                                                                                                min_penguins_for_occupy)
+        if penguin_amount_after_all_groups_arrived <= 0:
+            score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE
         return score, min_penguins_for_occupy
 
     def score_upgrade(self, iceberg_to_score):
@@ -110,7 +116,13 @@ class Scores:
 
         upgrade_cost = iceberg_to_score.upgrade_cost
         next_level = iceberg_to_score.level + 1
-        return self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
+        score = self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
+
+        penguins_amount = utils.penguin_amount_after_all_groups_arrived(self.__game, iceberg_to_score,
+                                                                        upgrade_cost=upgrade_cost)
+        if penguins_amount <= 0:
+            score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
+        return score
 
     def __find_max_distance(self):
         """
