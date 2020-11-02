@@ -31,7 +31,6 @@ def do_turn(game):
     # rescu_icebers_in_risk(game, my_player)
 
     occupy_close_icebergs(scores, game)
-    upgrade_icebergs(game)
 
 
 def occupy_close_icebergs(scores, game):
@@ -40,16 +39,20 @@ def occupy_close_icebergs(scores, game):
     :type game: Game
     """
     for my_iceberg in game.get_my_icebergs():  # type: Iceberg
+        print '***icebrg source', my_iceberg
         all_icebergs = game.get_all_icebergs()
         all_icebergs.remove(my_iceberg)
         icebergs = score_icebergs(game, scores, my_iceberg, all_icebergs)
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
+        print 'upgrade score', upgrade_score_for_my_iceberg
         if not utils.is_empty(icebergs) and upgrade_score_for_my_iceberg < icebergs[0]['score']:
             for iceberg in icebergs:
                 # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
                 if min_price > 0:
                     send_penguins(my_iceberg, min_price, dest_iceberg)
+        elif upgrade_score_for_my_iceberg > 0:
+            my_iceberg.upgrade()
 
 
 def score_icebergs(game, scores, source_iceberg, icebergs):
@@ -78,12 +81,9 @@ def score_icebergs(game, scores, source_iceberg, icebergs):
     )
 
     sort_icebergs_by_score(scores_icebergs)
-    print
-    '******** scored icebergs *********'
-    print
-    'source iceberg:', source_iceberg
-    print
-    '\n'.join(map(str, scores_icebergs))
+    print '******** scored icebergs *********'
+    print 'source iceberg:', source_iceberg
+    print '\n'.join(map(str, scores_icebergs))
     scores_icebergs = remove_smalls_score_icebergs(scores_icebergs)
 
     return scores_icebergs
@@ -131,15 +131,11 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg):
     min_penguins_for_occupy_score, min_penguins_for_occupy = scores.score_by_iceberg_price(
         source_iceberg, destination_iceberg)
 
-    if destination_iceberg.owner.equals(game.get_myself()):
-        min_penguins_for_occupy = source_iceberg.penguin_amount / 2
-
-    print
-    's:', source_iceberg, 'd:', destination_iceberg, scores.score_by_iceberg_belogns(source_iceberg,
-                                                                                     destination_iceberg), \
-    scores.score_by_iceberg_distance(source_iceberg, destination_iceberg), \
-    scores.score_by_iceberg_level(destination_iceberg), \
-    min_penguins_for_occupy_score
+    print 's:', source_iceberg, 'd:', destination_iceberg, scores.score_by_iceberg_belogns(source_iceberg,
+                                                                                           destination_iceberg), \
+        scores.score_by_iceberg_distance(source_iceberg, destination_iceberg), \
+        scores.score_by_iceberg_level(destination_iceberg), \
+        min_penguins_for_occupy_score
     score = scores.score_by_iceberg_belogns(source_iceberg, destination_iceberg) + \
             scores.score_by_iceberg_distance(source_iceberg, destination_iceberg) + \
             scores.score_by_iceberg_level(destination_iceberg) + \
