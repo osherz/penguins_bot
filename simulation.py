@@ -29,6 +29,7 @@ class Simulation:
         self.__current_turn = 0
 
         iceberg_to_simulate = self.__iceberg_to_simulate
+        self.__iceberg_level = iceberg_to_simulate.level
         self.__cost_if_neutral = 0
         self.__penguin_amount = 0
         penguin_groups = utils.get_groups_way_to_iceberg(game, iceberg_to_simulate)
@@ -160,6 +161,16 @@ class Simulation:
         """
         self.__treat_group_arrived_destination(is_enemy, penguin_amount)
 
+    def upgrade_iceberg(self, cost):
+        """
+        Upgrade the iceberg.
+        Assume that the iceberg can be upgrade.
+        Check only are there enough penguins.
+        """
+        if cost < self.get_penguin_amount():
+            self.__penguin_amount -= cost
+            self.__iceberg_level += 1
+
     def remove_penguin_group(self, penguin_group_simulate):
         """
         Remove custom group.
@@ -202,7 +213,7 @@ class Simulation:
         :param turns: How much turns to simulate on the iceberg.
         :type turns: int
         """
-        iceberg_level = self.__iceberg_to_simulate.level
+        iceberg_level = self.__iceberg_level
         penguins_to_add = turns * iceberg_level
         if self.is_belong_to_enemy():
             self.__penguin_amount -= penguins_to_add
@@ -279,7 +290,7 @@ class Simulation:
 
     def __str__(self):
         return 'Simulation: penguin amount ' + str(self.get_penguin_amount()) + ', owner ' + str(
-            self.__iceberg_owner) + ', level ' + str(self.__iceberg_to_simulate.level) + ', cost ' + str(self.get_cost_if_neutral())
+            self.__iceberg_owner) + ', level ' + str(self.__iceberg_level) + ', cost ' + str(self.get_cost_if_neutral())
 
 
 def valid_instance_of_penguin_group_simulate(self, penguin_group_simulate):
