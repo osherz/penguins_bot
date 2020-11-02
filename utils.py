@@ -84,6 +84,30 @@ def get_penguins_in_x_turns(game, iceberg, min_turns):
         penguin_amount -= cost
     return penguin_amount, simulation.get_turns_simulated()
 
+def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_reduce=0, upgrade_cost=None):
+    """
+    Calculate how much penguins will be after all groups arrived to this iceberg.
+
+    :type game: Game
+    :param iceberg: Iceberg to calculate penguins amount for.
+    :type iceberg: iceberg
+    :param penguins_amount_to_reduce: How much penguins to reduce befure simulation.
+    :type penguins_amount_to_reduce: int
+    :param upgrade_cost: If assigned, upgrade iceberg first.
+    :type upgrade_cost: int
+    :return: Penguins amount. If negative belong to enemy, if positive belong to me else neutral.
+    :rtype: int
+    """
+    simulation = Simulation(game, iceberg)
+    simulation.add_penguin_amount(True, penguins_amount_to_reduce) # Treat as enemy so the penguins will reduce from the amount.
+    if upgrade_cost is not None:
+        simulation.upgrade_iceberg(upgrade_cost)
+        print simulation
+    simulation.simulate_until_last_group_arrived()
+    if simulation.is_belong_to_neutral():
+        return simulation.get_cost()
+    else:
+        return simulation.get_penguin_amount()
 
 def get_groups_way_to_iceberg(game, iceberg):
     """
@@ -130,7 +154,7 @@ def get_icebergs_not_in(all_icebergs, icebergs):
 def are_all_has_enough_penguins(icebergs, penguins):
     """
     Are all icebergs has more penguined that the given
-    :type icebergs: Iceberg
+    :type icebergs: List[Iceberg]
     :type penguins: int
     """
     for iceberg in icebergs:  # type: Iceberg
