@@ -63,6 +63,7 @@ def get_penguins_in_x_turns(game, iceberg, min_turns):
     """
     simulation = Simulation(game, iceberg)
     simulation.simulate(min_turns)
+    print simulation
     cost = 0
     if not simulation.is_belong_to_me():
         cost = simulation.get_cost()
@@ -76,7 +77,11 @@ def get_penguins_in_x_turns(game, iceberg, min_turns):
     penguin_amount = simulation.get_penguin_amount()
     if simulation.is_belong_to_neutral():
         penguin_amount = -1 * simulation.get_cost_if_neutral()
-    penguin_amount += cost
+        penguin_amount += -cost
+    elif simulation.is_belong_to_me() and cost > 0:
+        penguin_amount = -cost
+    else:
+        penguin_amount -= cost
     return penguin_amount, simulation.get_turns_simulated()
 
 
@@ -95,9 +100,6 @@ def get_groups_way_to_iceberg(game, iceberg):
         group for group in game.get_all_penguin_groups()
         if group.destination.equals(iceberg)
     ]
-    if len(groups) > 0:
-        print 'groups to iceberg', iceberg, ':', groups
-        print game.get_all_penguin_groups()
     return groups
 
 
