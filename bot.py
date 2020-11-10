@@ -1,5 +1,4 @@
 from penguin_game import Player, PenguinGroup, Iceberg
-from IcebergsInRisk import *
 import utils
 from scores import Scores
 import math
