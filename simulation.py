@@ -43,6 +43,7 @@ class Simulation:
             self.__penguin_amount = iceberg_to_simulate.penguin_amount
         if self.is_belong_to_enemy():
             self.__penguin_amount *= -1
+        # TODO: change the function so the __penguin_amount will be possitive and we will chane the owner.
 
     def get_penguin_amount(self):
         """
