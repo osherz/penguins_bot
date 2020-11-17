@@ -6,7 +6,7 @@ class PenguinGroupSimulate:
     Penguin group data staructure for simulation.
     """
 
-    def __init__(self, game, penguin_group = None, source_iceberg = None, destination_iceberg=None, penguin_amount=None, ):
+    def __init__(self, game, penguin_group = None, source_iceberg = None, destination_iceberg=None, penguin_amount=None):
         """
         Initialize data by penguin_group
         If penguin_group not assigned then create custom group from the other params.
@@ -24,16 +24,19 @@ class PenguinGroupSimulate:
         :type penguin_amount: iny
         """
         if penguin_group is None:
-            self.__is_custom = True
             self.__source_iceberg = source_iceberg
             self.__destination_iceberg = destination_iceberg
             self.__origin_penguin_amount = penguin_amount
+            self.__origin_turns_till_arrival = self.__source_iceberg.get_turns_till_arrival(self.__destination_iceberg)
             self.__is_enemy = source_iceberg.owner.equals(game.get_enemy())
         else:
-            self.__is_custom = False
-            self.__penguin_group = penguin_group
-            self.__is_enemy = penguin_group.owner.equals(game.get_enemy())
+            self.__source_iceberg = penguin_group.source
+            self.__destination_iceberg = penguin_group.destination
+            self.__origin_penguin_amount = penguin_group.penguin_amount
+            self.__origin_turns_till_arrival = penguin_group.turns_till_arrival
+            self.__is_enemy = penguin_group.source.owner.equals(game.get_enemy())
 
+        self.__owner = self.__source_iceberg.owner
         self.reset_to_origin()
 
     def reset_to_origin(self):
@@ -41,13 +44,14 @@ class PenguinGroupSimulate:
         Reset the data to the penguin_group origin data.
         :return:
         """
-        if self.__is_custom:
-            self.__penguin_amount = self.__origin_penguin_amount
-            self.__turns_till_arrival = self.__source_iceberg.get_turns_till_arrival(self.__destination_iceberg)
-        else:
-            penguin_group = self.__penguin_group
-            self.__penguin_amount = penguin_group.penguin_amount
-            self.__turns_till_arrival = penguin_group.turns_till_arrival
+        self.__penguin_amount = self.__origin_penguin_amount
+        self.__turns_till_arrival = self.__origin_turns_till_arrival
+
+    def get_owner(self):
+        """
+        :rtype: Player
+        """
+        return self.__owner
 
     def is_enemy(self):
         """
@@ -113,12 +117,10 @@ class PenguinGroupSimulate:
         if not isinstance(other, PenguinGroupSimulate):
             return False
 
-        if other.__is_custom:
-            return other.__source_iceberg.equals(self.__source_iceberg) and \
-                   other.__destination_iceberg.equals(self.__destination_iceberg) and \
-                   other.__penguin_amount == self.__penguin_amount
-        else:
-            return other.__penguin_group.equals(self.__penguin_group)
+        return other.__source_iceberg.equals(self.__source_iceberg) and \
+               other.__destination_iceberg.equals(self.__destination_iceberg) and \
+               other.__penguin_amount == self.__penguin_amount
+
 
     def __ne__(self, other):
         return not self.__eq__(other)

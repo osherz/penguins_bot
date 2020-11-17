@@ -9,7 +9,7 @@ CANT_DO_ACTION_SCORE = -9999
 UPGRADE_TURNS_TO_CHECK = 20
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
-
+LOST_DESTINATION_ICEBERG_SCORE = 70
 
 class Scores:
     def __init__(self, game):
@@ -93,7 +93,12 @@ class Scores:
         if min_penguins_for_occupy >= source_iceberg.penguin_amount:
             return CANT_DO_ACTION_SCORE, -1
 
+        # If we got here, so we can and need to occupy the destination.
         score = self.__max_price - min_penguins_for_occupy
+        if destination_iceberg_to_score.owner.equals(self.__game.get_myself()):
+            score += LOST_DESTINATION_ICEBERG_SCORE
+
+        # Check whether source will be in danger if send the penguins.
         penguin_amount_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(self.__game,
                                                                                                 source_iceberg,
                                                                                                 min_penguins_for_occupy)
