@@ -184,3 +184,14 @@ def can_be_upgrade(iceberg):
            iceberg.upgrade_level_limit > iceberg.level and \
            not iceberg.already_acted and \
            iceberg.penguin_amount > iceberg.upgrade_cost
+
+def get_actual_penguin_amount(game, iceberg):
+    """
+    Calculate the actual penguin amount including the additional penguin amount getting in this turn.
+
+    :type game: Game
+    :type iceberg: Iceberg
+    """
+    if iceberg.owner.equals(game.get_neutral()):
+        return iceberg.penguin_amount
+    return iceberg.penguin_amount + iceberg.penguins_per_turn

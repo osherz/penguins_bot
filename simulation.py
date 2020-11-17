@@ -40,7 +40,7 @@ class Simulation:
         if self.is_belong_to_neutral():
             self.__cost_if_neutral = iceberg_to_simulate.penguin_amount
         else:
-            self.__penguin_amount = iceberg_to_simulate.penguin_amount
+            self.__penguin_amount = utils.get_actual_penguin_amount(game, iceberg_to_simulate)
         if self.is_belong_to_enemy():
             self.__penguin_amount *= -1
 

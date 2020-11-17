@@ -90,11 +90,11 @@ class Scores:
         if min_penguins_for_occupy == 0:
             return MY_BELONGS_SCORE, 0
 
-        if min_penguins_for_occupy >= source_iceberg.penguin_amount:
+        if min_penguins_for_occupy >= utils.get_actual_penguin_amount(self.__game, source_iceberg):
             return CANT_DO_ACTION_SCORE, -1
 
         # If we got here, so we can and need to occupy the destination.
-        score = self.__max_price - min_penguins_for_occupy
+        score = -1* min_penguins_for_occupy
         if destination_iceberg_to_score.owner.equals(self.__game.get_myself()):
             score += LOST_DESTINATION_ICEBERG_SCORE
 
@@ -152,7 +152,7 @@ class Scores:
         :rtype: int
         """
         prices_map = map(
-            lambda iceberg: iceberg.penguin_amount,
+            lambda iceberg: utils.get_actual_penguin_amount(self.__game, iceberg),
             self.__game.get_all_icebergs()
         )
         return max(prices_map)
