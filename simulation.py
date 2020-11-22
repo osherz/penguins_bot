@@ -30,59 +30,22 @@ class Simulation:
         iceberg_to_simulate = self.__iceberg_to_simulate
         self.__iceberg_owner = iceberg_to_simulate.owner
         self.__iceberg_level = iceberg_to_simulate.level
-        self.__cost_if_neutral = 0
-        self.__penguin_amount = 0
+        self.__penguin_amount = iceberg_to_simulate.penguin_amount
+        # TODO: use penguins_per_turn instead of level
         penguin_groups = utils.get_groups_way_to_iceberg(game, iceberg_to_simulate)
         self.__groups_to_iceberg = map(
             lambda group: PenguinGroupSimulate(game, penguin_group=group),
             penguin_groups
         )
-        if self.is_belong_to_neutral():
-            self.__cost_if_neutral = iceberg_to_simulate.penguin_amount
-        else:
-            self.__penguin_amount = utils.get_actual_penguin_amount(game, iceberg_to_simulate)
-        if self.is_belong_to_enemy():
-            self.__penguin_amount *= -1
 
     def get_penguin_amount(self):
         """
         Get penguin amount.
-        If positive: The iceberg belong to us.
-        If negative: The iceberg belong to enemy.
-        If is neutral return 0 in any case so you need to go to get_cost_if_neutral() to know the amount.
+
         :return: Penguin amount.
         :rtype: int
         """
-        if self.is_belong_to_neutral():
-            return 0
-        else:
-            return self.__penguin_amount
-
-    def get_cost_if_neutral(self):
-        """
-        Get cost of iceberg if neutral.
-        If is not neutral return 0 in any case so you need to go to get_penguin_amount() to know the amount.
-        :return: Penguin amount.
-        :rtype: int
-        """
-        if self.is_belong_to_neutral():
-            return self.__cost_if_neutral
-        else:
-            return 0
-
-    def get_cost(self):
-        """
-        Return the cost of the iceberg, no matter if it belong to enemy or neutral.
-        If belong to us return 0.
-
-        :return: The cost. If belong to us, return 0.
-        """
-        if self.is_belong_to_neutral():
-            return abs(self.get_cost_if_neutral())
-        elif self.is_belong_to_enemy():
-            return abs(self.get_penguin_amount())
-        else:
-            return 0
+        return self.__penguin_amount
 
     def simulate(self, turns_to_simulate):
         """
@@ -150,16 +113,16 @@ class Simulation:
         self.add_penguin_group_simulate(penguin_group_simulate)
         return penguin_group_simulate
 
-    def add_penguin_amount(self, is_enemy, penguin_amount):
+    def add_penguin_amount(self, owner, penguin_amount):
         """
         Add penguin amount to the iceberg, appropriate the owner of the penguins.
         Changed the owner if needed.
 
-        :type is_enemy: bool
+        :type owner: Player
         :param penguin_amount: Penguins to add.
         :type penguin_amount: int
         """
-        self.__treat_group_arrived_destination(is_enemy, penguin_amount)
+        self.__treat_group_arrived_destination(owner, penguin_amount)
 
     def upgrade_iceberg(self, cost):
         """
@@ -181,11 +144,18 @@ class Simulation:
 
     def get_turns_simulated(self):
         """
-
         :return: How much turns already simulated.
         :rtype: int
         """
         return self.__current_turn
+
+    def get_owner(self):
+        """
+        Get the current owner of the iceberg.
+
+        :rtype: Player
+        """
+        return self.__iceberg_owner
 
     def is_belong_to_me(self):
         return self.__iceberg_owner.equals(self.__game.get_myself())
@@ -215,9 +185,7 @@ class Simulation:
         """
         iceberg_level = self.__iceberg_level
         penguins_to_add = turns * iceberg_level
-        if self.is_belong_to_enemy():
-            self.__penguin_amount -= penguins_to_add
-        elif self.is_belong_to_me():
+        if not self.is_belong_to_neutral():
             self.__penguin_amount += penguins_to_add
 
     def __treat_groups_arrived_destination(self):
@@ -235,63 +203,58 @@ class Simulation:
         groups_arrived.sort(key=lambda group: group.get_owner().id) # If number of groups arrived, treat ours as arrived first
 
         for group in groups_arrived:  # type: PenguinGroupSimulate
-            self.__treat_group_arrived_destination(group.is_enemy(), group.get_penguin_amount())
+            self.__treat_group_arrived_destination(group.get_owner(), group.get_penguin_amount())
             self.__groups_to_iceberg.remove(group)
 
-    def __treat_group_arrived_destination(self, is_enemy, penguin_amount):
+    def __treat_group_arrived_destination(self, owner, penguin_amount):
         """
         Treat group as arrived destination.
         If enemy, reduce number of penguins.
         If our, append the number of penguins.
-        :type is_enemy: bool
+        :type owner: Player
         :type penguin_amount: int
         :return:
         """
         if self.is_belong_to_neutral():
-            self.__treat_group_arrived_iceberg_neutral(is_enemy, penguin_amount)
+            self.__treat_group_arrived_iceberg_neutral(owner, penguin_amount)
         else:
-            self.__treat_group_arrived_iceberg_not_neutral(is_enemy, penguin_amount)
+            self.__treat_group_arrived_iceberg_not_neutral(owner, penguin_amount)
 
-    def __treat_group_arrived_iceberg_neutral(self, is_enemy, penguin_amount):
+    def __treat_group_arrived_iceberg_neutral(self, owner, penguin_amount):
         """
         Treat group as iceberg belong to enemy or to us.
 
-        :type is_enemy: bool
+        :type owner: Player
         :type penguin_amount: int
         """
-        if self.__cost_if_neutral > penguin_amount:
-            self.__cost_if_neutral -= penguin_amount
-            print 'big'
+        if self.__penguin_amount > penguin_amount:
+            self.__penguin_amount -= penguin_amount
         else:
-            penguin_amount -= self.__cost_if_neutral
-            print 'small', penguin_amount, self.__cost_if_neutral
-            self.__cost_if_neutral = 0
-            self.__treat_group_arrived_iceberg_not_neutral(is_enemy, penguin_amount)
+            penguin_amount -= self.__penguin_amount
+            self.__iceberg_owner = owner
+            self.__treat_group_arrived_iceberg_not_neutral(owner, penguin_amount)
 
-    def __treat_group_arrived_iceberg_not_neutral(self, is_enemy_group, penguin_amount):
+    def __treat_group_arrived_iceberg_not_neutral(self, owner, penguin_amount):
         """
         Treat group as iceberg belong to enemy or to us.
 
-        :param is_enemy_group: is group belong to enemy.
-        :type is_enemy_group: bool
+        :type owner: Player
         :param penguin_amount: Amount of penguins in group.
         :type penguin_amount: int
         """
-        if is_enemy_group:
-            self.__penguin_amount -= penguin_amount
-        else:
+        if self.__iceberg_owner.equals(owner):
             self.__penguin_amount += penguin_amount
-
-        if self.__penguin_amount > 0:
-            self.__iceberg_owner = self.__game.get_myself()
-        elif self.__penguin_amount < 0:
-            self.__iceberg_owner = self.__game.get_enemy()
         else:
-            self.__iceberg_owner = self.__game.get_neutral()
+            self.__penguin_amount -= penguin_amount
+            if self.__penguin_amount < 0:
+                self.__iceberg_owner = owner
+                self.__penguin_amount = abs(self.__penguin_amount)
+            elif self.__penguin_amount == 0:
+                self.__iceberg_owner = self.__game.get_neutral()
 
     def __str__(self):
         return 'Simulation: penguin amount ' + str(self.get_penguin_amount()) + ', owner ' + str(
-            self.__iceberg_owner) + ', level ' + str(self.__iceberg_level) + ', cost ' + str(self.get_cost_if_neutral())
+            self.__iceberg_owner) + ', level ' + str(self.__iceberg_level)
 
 
 def valid_instance_of_penguin_group_simulate(penguin_group_simulate):
