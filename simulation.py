@@ -17,7 +17,6 @@ class Simulation:
         """
         self.__game = game
         self.__iceberg_to_simulate = iceberg_to_simulate
-        self.__iceberg_owner = iceberg_to_simulate.owner
         self.reset_to_origin()
 
     def reset_to_origin(self):
@@ -29,6 +28,7 @@ class Simulation:
         self.__current_turn = 0
 
         iceberg_to_simulate = self.__iceberg_to_simulate
+        self.__iceberg_owner = iceberg_to_simulate.owner
         self.__iceberg_level = iceberg_to_simulate.level
         self.__cost_if_neutral = 0
         self.__penguin_amount = 0
@@ -40,7 +40,7 @@ class Simulation:
         if self.is_belong_to_neutral():
             self.__cost_if_neutral = iceberg_to_simulate.penguin_amount
         else:
-            self.__penguin_amount = iceberg_to_simulate.penguin_amount
+            self.__penguin_amount = utils.get_actual_penguin_amount(game, iceberg_to_simulate)
         if self.is_belong_to_enemy():
             self.__penguin_amount *= -1
         # TODO: change the function so the __penguin_amount will be possitive and we will chane the owner.
@@ -91,7 +91,7 @@ class Simulation:
         :param turns_to_simulate: How much turns to simulate.
         :type turns_to_simulate: int
         """
-
+        print "turns: ", turns_to_simulate
         for turn in range(turns_to_simulate):
             self.__current_turn += 1
             self.__move_groups_to_destination()
@@ -121,7 +121,7 @@ class Simulation:
         """
         return len(self.__groups_to_iceberg) > 0
 
-    def add_penguin_group(self, penguin_group_simulate):
+    def add_penguin_group_simulate(self, penguin_group_simulate):
         """
         Add custom penguin group.
 
@@ -148,7 +148,7 @@ class Simulation:
                                                       source_iceberg=source_iceberg,
                                                       destination_iceberg=destination_iceberg,
                                                       penguin_amount=penguin_amount)
-        self.add_penguin_group(penguin_group_simulate)
+        self.add_penguin_group_simulate(penguin_group_simulate)
         return penguin_group_simulate
 
     def add_penguin_amount(self, is_enemy, penguin_amount):
@@ -232,7 +232,8 @@ class Simulation:
             penguin_group for penguin_group in self.__groups_to_iceberg
             if penguin_group.is_arrived()
         ]
-        # groups_arrived.sort(key=lambda group: 0 if group.is_enemy() else 1) # If number of groups arrived, treat ours as arrived first
+
+        groups_arrived.sort(key=lambda group: group.get_owner().id) # If number of groups arrived, treat ours as arrived first
 
         for group in groups_arrived:  # type: PenguinGroupSimulate
             self.__treat_group_arrived_destination(group.is_enemy(), group.get_penguin_amount())
@@ -294,7 +295,7 @@ class Simulation:
             self.__iceberg_owner) + ', level ' + str(self.__iceberg_level) + ', cost ' + str(self.get_cost_if_neutral())
 
 
-def valid_instance_of_penguin_group_simulate(self, penguin_group_simulate):
+def valid_instance_of_penguin_group_simulate(penguin_group_simulate):
     """
     Check whether the given penguin_group is isinstance of PenguinGroupSimulate.
     If not, raise ValueError.
