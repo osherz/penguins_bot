@@ -25,18 +25,19 @@ class PenguinGroupSimulate:
         """
         if penguin_group is None:
             self.__source_iceberg = source_iceberg
+            self.__owner = source_iceberg.owner
             self.destination = destination_iceberg
             self.__origin_penguin_amount = penguin_amount
             self.__origin_turns_till_arrival = self.__source_iceberg.get_turns_till_arrival(self.destination)
             self.__is_enemy = source_iceberg.owner.equals(game.get_enemy())
         else:
             self.__source_iceberg = penguin_group.source
+            self.__owner = penguin_group.owner
             self.destination = penguin_group.destination
             self.__origin_penguin_amount = penguin_group.penguin_amount
             self.__origin_turns_till_arrival = penguin_group.turns_till_arrival
             self.__is_enemy = penguin_group.source.owner.equals(game.get_enemy())
 
-        self.__owner = self.__source_iceberg.owner
         self.reset_to_origin()
 
     def reset_to_origin(self):
