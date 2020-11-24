@@ -182,7 +182,7 @@ class Simulation:
                 self.__iceberg_to_simulate,
                 groups_to_check=self.__all_groups
             )
-            #self.__treat_groups_coming_each_other()
+            self.__treat_groups_coming_each_other()
 
     def __move_groups_to_destination(self, turns_to_move=1):
         """
