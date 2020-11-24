@@ -2,7 +2,6 @@ from penguin_game import Player, PenguinGroup, Iceberg
 import utils
 from scores import Scores
 import math
-
 # import typing
 # from typing import List
 
@@ -18,10 +17,6 @@ def do_turn(game):
     :type game: Game
     """
 
-    # TODO: Check which icebergs are in real danger.
-    # TODO: Occupy close icbergs & check whether the enemy want to occupt them too.
-    # TODO: Upgrades.
-
     # Go over all of my icebergs.
     print
     game.turn, "/", game.get_max_turn_time()
@@ -35,6 +30,8 @@ def do_turn(game):
 def occupy_close_icebergs(scores, game):
     """
     Occupy close icebergs (neutral and enemy's)
+    :param scores:
+    :type scores:
     :type game: Game
     """
     for my_iceberg in game.get_my_icebergs():  # type: Iceberg
@@ -45,11 +42,15 @@ def occupy_close_icebergs(scores, game):
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
         print 'upgrade score', upgrade_score_for_my_iceberg
         if not utils.is_empty(icebergs) and upgrade_score_for_my_iceberg < icebergs[0]['score']:
+            # TODO: take in account if my iceberg will be in danger after send penguins group.
             for iceberg in icebergs:
                 # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
                 if min_price > 0:
                     send_penguins(my_iceberg, min_price, dest_iceberg)
+                else:
+                    pass
+                    #TODO: to decide waht to do with our iceberg that needs penguins from some reason
         elif upgrade_score_for_my_iceberg > 0:
             my_iceberg.upgrade()
 
@@ -66,18 +67,14 @@ def score_icebergs(game, scores, source_iceberg, icebergs):
     """
 
     def get_iceberg_data(iceberg):
-        score, min_price = score_iceberg(
-            game, scores, source_iceberg, iceberg)
+        score, min_price = score_iceberg(game, scores, source_iceberg, iceberg)
         return {
             "iceberg": iceberg,
             "score": score,
             "min_price": min_price
         }
 
-    scores_icebergs = map(
-        lambda iceberg: get_iceberg_data(iceberg),
-        icebergs
-    )
+    scores_icebergs = map(lambda iceberg: get_iceberg_data(iceberg), icebergs)
 
     sort_icebergs_by_score(scores_icebergs)
     print '******** scored icebergs *********'
