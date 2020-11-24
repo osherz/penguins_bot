@@ -30,6 +30,8 @@ def do_turn(game):
 def occupy_close_icebergs(scores, game):
     """
     Occupy close icebergs (neutral and enemy's)
+    :param scores:
+    :type scores:
     :type game: Game
     """
     for my_iceberg in game.get_my_icebergs():  # type: Iceberg
@@ -46,6 +48,9 @@ def occupy_close_icebergs(scores, game):
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
                 if min_price > 0:
                     send_penguins(my_iceberg, min_price, dest_iceberg)
+                else:
+                    pass
+                    #TODO: to decide waht to do with our iceberg that needs penguins from some reason
         elif upgrade_score_for_my_iceberg > 0:
             my_iceberg.upgrade()
 
