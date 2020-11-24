@@ -107,7 +107,7 @@ def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_re
 
     return simulation.get_penguin_amount(), simulation.get_owner()
 
-def get_groups_way_to_iceberg(game, iceberg):
+def get_groups_way_to_iceberg(game, iceberg, groups_to_check = None):
     """
     Get all the penguins group in their way to the given iceberg.
 
@@ -115,11 +115,16 @@ def get_groups_way_to_iceberg(game, iceberg):
     :type game: Game
     :param iceberg: Destination iceberg
     :type iceberg: iceberg
-    :return: Penguins group in their way to the iceberg.
+    :param groups_to_check: optional. You can decide which groups to check or leave it None to check all groups.
+    :type groups_to_check: List[PenguinGroup]
+    :return: Penguins group in their way to the iceberg. If groups_to_check is list of PenguinGroupSimulate,
+             so the return will be list of PenguinGroupSimulate.
     :rtype: List[PenguinGroup]
     """
+    if groups_to_check in None:
+        groups_to_check = game.get_all_penguin_groups()
     groups = [
-        group for group in game.get_all_penguin_groups()
+        group for group in groups_to_check
         if group.destination.equals(iceberg)
     ]
     return groups

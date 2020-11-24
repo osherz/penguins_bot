@@ -1,6 +1,7 @@
 from penguin_game import Game, Iceberg
 from penguingroupsimulate import PenguinGroupSimulate
 import utils
+import itertools
 
 
 class Simulation:
@@ -25,6 +26,7 @@ class Simulation:
         :return:
         """
         game = self.__game
+        self.__is_simulate_started = False
         self.__current_turn = 0
 
         iceberg_to_simulate = self.__iceberg_to_simulate
@@ -32,10 +34,9 @@ class Simulation:
         self.__iceberg_level = iceberg_to_simulate.level
         self.__penguin_amount = iceberg_to_simulate.penguin_amount
         # TODO: use penguins_per_turn instead of level
-        penguin_groups = utils.get_groups_way_to_iceberg(game, iceberg_to_simulate)
-        self.__groups_to_iceberg = map(
+        self.__all_groups = map(
             lambda group: PenguinGroupSimulate(game, penguin_group=group),
-            penguin_groups
+            game.get_all_penguin_groups()
         )
 
     def get_penguin_amount(self):
@@ -53,6 +54,13 @@ class Simulation:
         :param turns_to_simulate: How much turns to simulate.
         :type turns_to_simulate: int
         """
+        self.__is_simulate_started = True
+        self.__groups_to_iceberg = utils.get_groups_way_to_iceberg(
+            self.__game,
+            self.__iceberg_to_simulate,
+            groups_to_check=self.__all_groups
+        )
+
         print "turns: ", turns_to_simulate
         for turn in range(turns_to_simulate):
             self.__current_turn += 1
@@ -91,7 +99,10 @@ class Simulation:
         :type penguin_group_simulate: PenguinGroupSimulate.
         """
         valid_instance_of_penguin_group_simulate(penguin_group_simulate)
-        self.__groups_to_iceberg.append(penguin_group_simulate)
+        if self.__is_simulate_started:
+            raise NotImplementedError("You can't add groups after simulate started. Please reset and try again")
+        else:
+            self.__all_groups.append(penguin_group_simulate)
 
     def add_penguin_group(self, source_iceberg, destination_iceberg, penguin_amount):
         """
@@ -200,7 +211,8 @@ class Simulation:
             if penguin_group.is_arrived()
         ]
 
-        groups_arrived.sort(key=lambda group: group.get_owner().id) # If number of groups arrived, treat ours as arrived first
+        groups_arrived.sort(
+            key=lambda group: group.get_owner().id)  # If number of groups arrived, treat ours as arrived first
 
         for group in groups_arrived:  # type: PenguinGroupSimulate
             self.__treat_group_arrived_destination(group.get_owner(), group.get_penguin_amount())
