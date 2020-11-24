@@ -39,19 +39,38 @@ def occupy_close_icebergs(scores, game):
     """
     for my_iceberg in game.get_my_icebergs():  # type: Iceberg
         print '***icebrg source', my_iceberg
-        all_icebergs = game.get_all_icebergs()
-        all_icebergs.remove(my_iceberg)
-        icebergs = score_icebergs(game, scores, my_iceberg, all_icebergs)
+
+        destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg) #type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
+
         print 'upgrade score', upgrade_score_for_my_iceberg
-        if not utils.is_empty(icebergs) and upgrade_score_for_my_iceberg < icebergs[0]['score']:
-            for iceberg in icebergs:
+
+        if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < destination_scored_icebergs[0]['score']:
+            while not utils.is_empty(destination_scored_icebergs):
+
+                iceberg = destination_scored_icebergs[0]
                 # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
-                if min_price > 0:
-                    send_penguins(my_iceberg, min_price, dest_iceberg)
-        elif upgrade_score_for_my_iceberg > 0:
+                send_penguins(my_iceberg, min_price, dest_iceberg)
+
+                destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg)
+
+                if iceberg in destination_scored_icebergs:
+                    destination_scored_icebergs.remove(iceberg)
+
+        elif upgrade_score_for_my_iceberg> 0:
             my_iceberg.upgrade()
+
+
+def get_scored_icebergs(scores, game, my_iceberg):
+    all_icebergs = game.get_all_icebergs()
+    all_icebergs.remove(my_iceberg)
+    scored_icebergs =  score_icebergs(game, scores, my_iceberg, all_icebergs)
+    ret = []
+    for iceberg in scored_icebergs:
+        if iceberg['min_price'] > 0:
+            ret.append(iceberg)
+    return ret
 
 
 def score_icebergs(game, scores, source_iceberg, icebergs):
