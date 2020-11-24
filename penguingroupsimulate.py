@@ -6,7 +6,7 @@ class PenguinGroupSimulate:
     Penguin group data staructure for simulation.
     """
 
-    def __init__(self, game, penguin_group = None, source_iceberg = None, destination_iceberg=None, penguin_amount=None):
+    def __init__(self, game, penguin_group=None, source_iceberg=None, destination_iceberg=None, penguin_amount=None):
         """
         Initialize data by penguin_group
         If penguin_group not assigned then create custom group from the other params.
@@ -25,13 +25,13 @@ class PenguinGroupSimulate:
         """
         if penguin_group is None:
             self.__source_iceberg = source_iceberg
-            self.__destination_iceberg = destination_iceberg
+            self.destination = destination_iceberg
             self.__origin_penguin_amount = penguin_amount
-            self.__origin_turns_till_arrival = self.__source_iceberg.get_turns_till_arrival(self.__destination_iceberg)
+            self.__origin_turns_till_arrival = self.__source_iceberg.get_turns_till_arrival(self.destination)
             self.__is_enemy = source_iceberg.owner.equals(game.get_enemy())
         else:
             self.__source_iceberg = penguin_group.source
-            self.__destination_iceberg = penguin_group.destination
+            self.destination = penguin_group.destination
             self.__origin_penguin_amount = penguin_group.penguin_amount
             self.__origin_turns_till_arrival = penguin_group.turns_till_arrival
             self.__is_enemy = penguin_group.source.owner.equals(game.get_enemy())
@@ -53,7 +53,7 @@ class PenguinGroupSimulate:
 
         :rtype: Iceberg
         """
-        return self.__destination_iceberg
+        return self.destination
 
     def get_source(self):
         """
@@ -97,7 +97,7 @@ class PenguinGroupSimulate:
         """
         return self.__turns_till_arrival
 
-    def move_toward_destination(self, turns = 1):
+    def move_toward_destination(self, turns=1):
         """
         Move on to destination by number of turns.
         If turns is too much raise exception.
@@ -109,7 +109,7 @@ class PenguinGroupSimulate:
         :rtype: bool
         """
         if self.__turns_till_arrival - turns >= 0:
-            self.__turns_till_arrival-=turns
+            self.__turns_till_arrival -= turns
             return self.is_arrived()
         else:
             raise ValueError("Turns bigger than turns-till-arrival")
@@ -128,9 +128,12 @@ class PenguinGroupSimulate:
         Make a collision with other penguin group.
         Check which of the groups win the collision and how much penguins left to him.
         Update the penguins remains in each of the group.
+        Doing nothing if the group from the same owner.
 
         :type other_penguin_group: PenguinGroupSimulate
         """
+        if self.__owner.equals(other_penguin_group.get_owner()):
+            return
         if other_penguin_group.get_penguin_amount() > self.get_penguin_amount():
             other_penguin_group.__penguin_amount -= self.get_penguin_amount()
             self.__penguin_amount = 0
@@ -149,9 +152,8 @@ class PenguinGroupSimulate:
             return False
 
         return other.__source_iceberg.equals(self.__source_iceberg) and \
-               other.__destination_iceberg.equals(self.__destination_iceberg) and \
+               other.destination.equals(self.destination) and \
                other.__penguin_amount == self.__penguin_amount
-
 
     def __ne__(self, other):
         return not self.__eq__(other)
