@@ -209,14 +209,3 @@ class Scores:
         destination_avg_distance = self.__calculate_average_distance_from_enemy(destination_iceberg)
         #TODO: maybe to return int value for more acurate score for distance from enemy.
         return destination_avg_distance < self.__average_distance < source_avg_distance
-
-"""
-A function that returns the amount of penguins moving from the source iceberg to the target iceberg
-
-def get_number_penguins_on_route(game, player, source, destination):
-    sum = 0
-    for group in game.get_all_penguin_groups():
-        if group.destination.equals(destination) and group.source.equals(source) and group.owner.equals(player):
-            sum += group.penguin_amount
-    return sum
-"""
