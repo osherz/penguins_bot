@@ -99,10 +99,10 @@ class Scores:
             score += LOST_DESTINATION_ICEBERG_SCORE
 
         # Check whether source will be in danger if send the penguins.
-        penguin_amount_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(self.__game,
+        penguin_amount_after_all_groups_arrived, owner = utils.penguin_amount_after_all_groups_arrived(self.__game,
                                                                                                 source_iceberg,
                                                                                                 min_penguins_for_occupy)
-        if penguin_amount_after_all_groups_arrived <= 0:
+        if not self.__game.get_myself().equals(owner):
             score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE
         return score, min_penguins_for_occupy
 
@@ -123,9 +123,9 @@ class Scores:
         next_level = iceberg_to_score.level + 1
         score = self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
 
-        penguins_amount = utils.penguin_amount_after_all_groups_arrived(self.__game, iceberg_to_score,
+        penguins_amount, owner = utils.penguin_amount_after_all_groups_arrived(self.__game, iceberg_to_score,
                                                                         upgrade_cost=upgrade_cost)
-        if penguins_amount <= 0:
+        if not self.__game.get_myself().equals(owner):
             score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
         return score
 

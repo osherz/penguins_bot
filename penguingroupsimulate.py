@@ -47,6 +47,22 @@ class PenguinGroupSimulate:
         self.__penguin_amount = self.__origin_penguin_amount
         self.__turns_till_arrival = self.__origin_turns_till_arrival
 
+    def get_destination(self):
+        """
+        Get the destination iceberg.
+
+        :rtype: Iceberg
+        """
+        return self.__destination_iceberg
+
+    def get_source(self):
+        """
+        Get the source iceberg.
+
+        :rtype: Iceberg
+        """
+        return self.__source_iceberg
+
     def get_owner(self):
         """
         :rtype: Player
@@ -106,6 +122,21 @@ class PenguinGroupSimulate:
         :rtype: bool
         """
         return self.__turns_till_arrival == 0
+
+    def collision_with(self, other_penguin_group):
+        """
+        Make a collision with other penguin group.
+        Check which of the groups win the collision and how much penguins left to him.
+        Update the penguins remains in each of the group.
+
+        :type other_penguin_group: PenguinGroupSimulate
+        """
+        if other_penguin_group.get_penguin_amount() > self.get_penguin_amount():
+            other_penguin_group.__penguin_amount -= self.get_penguin_amount()
+            self.__penguin_amount = 0
+        else:
+            self.__penguin_amount -= other_penguin_group.get_penguin_amount()
+            other_penguin_group.__penguin_amount = 0
 
     def __eq__(self, other):
         """
