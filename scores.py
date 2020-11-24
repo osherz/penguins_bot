@@ -1,17 +1,20 @@
 from penguin_game import *
 import utils
 
-ENEMY_BELONGS_SCORE = 50
+ENEMY_BELONGS_SCORE = 20
 NEUTRAL_BELONGS_SCORE = 2
 MY_BELONGS_SCORE = 0
 CANT_DO_ACTION_SCORE = -9999
 UPGRADE_TURNS_TO_CHECK = 20
+SUPPORT_SCORE = 10
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
-NEED_PROTECTED_SCORE = 70
+NEED_PROTECTED_SCORE = 40
 DISTANCE_FACTOR_SCORE = 1
 PRICE_FACTOR_SCORE = 1
-LEVEL_FACTOR_SCORE = 1
+LEVEL_FACTOR_SCORE = 3
+UPDATE_FACTOR_SCORE = 0.5
+MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0.3
 
 
 class Scores:
@@ -23,6 +26,8 @@ class Scores:
         self.update_game(game)
         self.__max_distance = self.__find_max_distance()
         self.__average_distance = self.__calculate_average_distance()
+        self.__average_penguins_in_our_icebergs = self.__calculate_average_penguins_in_our_icebergs()
+        self.__min_penguins_amount = int(MIN_PENGUINS_AMOUNT_AVG_PERCENT * self.__average_penguins_in_our_icebergs)
 
     def update_game(self, game):
         """
@@ -63,7 +68,7 @@ class Scores:
         :type iceberg_to_score: Iceberg
         :rtype: float
         """
-        return iceberg_to_score.level * LEVEL_FACTOR_SCORE
+        return iceberg_to_score.level ** LEVEL_FACTOR_SCORE
 
     def score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):
         """
@@ -73,7 +78,8 @@ class Scores:
         :type destination_iceberg_to_score: Iceberg
         :rtype: float:
         """
-        return DISTANCE_FACTOR_SCORE * (self.__max_distance - destination_iceberg_to_score.get_turns_till_arrival(source_iceberg))
+        return DISTANCE_FACTOR_SCORE * (
+                    self.__max_distance - destination_iceberg_to_score.get_turns_till_arrival(source_iceberg))
 
     def score_by_iceberg_price(self, source_iceberg, destination_iceberg_to_score):
         """
@@ -86,18 +92,20 @@ class Scores:
         :rtype: (int, int)
         :return: (score, min_penguins_for_occupy)
         """
+        score = 0
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
             self.__game, source_iceberg, destination_iceberg_to_score)
 
         print source_iceberg, destination_iceberg_to_score, min_penguins_for_occupy
         if min_penguins_for_occupy == 0:
-            return MY_BELONGS_SCORE, 0
+            min_penguins_for_occupy = self.__calculate_min_penguins_for_support(destination_iceberg_to_score)
+            score += SUPPORT_SCORE
 
-        if min_penguins_for_occupy >= utils.get_actual_penguin_amount(self.__game, source_iceberg):
+        if utils.get_actual_penguin_amount(self.__game, source_iceberg) - min_penguins_for_occupy <= self.__min_penguins_amount:
             return CANT_DO_ACTION_SCORE, -1
 
         # If we got here, so we can and need to occupy the destination.
-        score = -PRICE_FACTOR_SCORE * min_penguins_for_occupy
+        score += -PRICE_FACTOR_SCORE * min_penguins_for_occupy
         if destination_iceberg_to_score.owner.equals(self.__game.get_myself()):
             score += NEED_PROTECTED_SCORE
 
@@ -130,7 +138,7 @@ class Scores:
                                                                                upgrade_cost=upgrade_cost)
         if not self.__game.get_myself().equals(owner):
             score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
-        return score
+        return score * UPDATE_FACTOR_SCORE
 
     def __find_max_distance(self):
         """
@@ -168,6 +176,16 @@ class Scores:
         """
         return iceberg.owner.equals(self.__game.get_myself())
 
+    def __calculate_average_penguins_in_our_icebergs(self):
+        """
+        :return: The average penguins in my icebergs.
+        :rtype: int
+        """
+        sum_penguins = 0
+        all_my_icebergs = self.__game.get_my_icebergs()
+        for iceberg in all_my_icebergs:  # type: PenguinGroup
+            sum_penguins += iceberg.penguin_amount
+        return sum_penguins / len(all_my_icebergs)
 
     def __calculate_average_distance(self):
         """
@@ -213,3 +231,17 @@ class Scores:
         destination_avg_distance = self.__calculate_average_distance_from_enemy(destination_iceberg)
         # TODO: maybe to return int value for more acurate score for distance from enemy.
         return destination_avg_distance < self.__average_distance < source_avg_distance
+
+    def __calculate_min_penguins_for_support(self, destination_iceberg_to_score):
+        """
+        calculate the penguins amount to support the destination,
+        taking in account the average penguins amount.
+
+        :param destination_iceberg_to_score: Iceberg to support.
+        :type destination_iceberg_to_score: Iceberg.
+        """
+        min_penguins_amount = self.__min_penguins_amount
+        if destination_iceberg_to_score.penguin_amount < min_penguins_amount:
+            penguins_to_send = min_penguins_amount - destination_iceberg_to_score.penguin_amount
+            return penguins_to_send
+        return 0

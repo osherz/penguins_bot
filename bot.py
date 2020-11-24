@@ -8,7 +8,7 @@ import math
 
 MIN_SCORE_FOR_SENDING = 0
 TURNS_TO_CHECK = 15
-
+PENGUINS_FOR_HELP = 0
 
 def do_turn(game):
     """
@@ -66,7 +66,7 @@ def get_scored_icebergs(scores, game, my_iceberg, icebergs):
     for iceberg in scored_icebergs:
         if iceberg['min_price'] > 0:
             ret.append(iceberg)
-        else:
+        elif iceberg['min_price'] == 0:
             pass
             # TODO: to decide waht to do with our iceberg that needs penguins from some reason
     return ret
@@ -85,6 +85,8 @@ def score_icebergs(game, scores, source_iceberg, icebergs):
 
     def get_iceberg_data(iceberg):
         score, min_price = score_iceberg(game, scores, source_iceberg, iceberg)
+        if min_price == 0:
+            min_price = PENGUINS_FOR_HELP
         return {
             "iceberg": iceberg,
             "score": score,
