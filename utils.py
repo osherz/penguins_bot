@@ -2,27 +2,6 @@ from penguin_game import *
 from simulation import Simulation
 
 
-def min_penguins_for_occupy(game, iceberg):
-    """ 
-    Return the minimum of penguins require to occupy iceberg
-    taking in account penguins groups
-
-    :type game: Game
-    :type iceberg: Iceberg
-    """
-    min_penguins = iceberg.penguin_amount
-
-    for enemy_group in game.get_enemy_penguin_groups():  # type: PenguinGroup
-        if enemy_group.destination.equal(iceberg):
-            min_penguins += enemy_group.penguin_amount
-
-    for my_group in game.get_my_penguin_groups():  # type: PenguinGroup
-        if my_group.destination.equal(iceberg):
-            min_penguins -= my_group.penguin_amount
-
-    return min_penguins
-
-
 def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     """
     Calculate how much penguins need to be send 
