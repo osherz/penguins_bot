@@ -54,12 +54,7 @@ class Simulation:
         :param turns_to_simulate: How much turns to simulate.
         :type turns_to_simulate: int
         """
-        self.__is_simulate_started = True
-        self.__groups_to_iceberg = utils.get_groups_way_to_iceberg(
-            self.__game,
-            self.__iceberg_to_simulate,
-            groups_to_check=self.__all_groups
-        )
+        self.__init_groups_to_iceberg()
 
         print "turns: ", turns_to_simulate
         for turn in range(turns_to_simulate):
@@ -74,6 +69,7 @@ class Simulation:
 
         :return:
         """
+        self.__init_groups_to_iceberg()
         if len(self.__groups_to_iceberg) > 0:
             sorted_groups_by_turns = sorted(
                 self.__groups_to_iceberg,
@@ -177,6 +173,16 @@ class Simulation:
     def is_belong_to_neutral(self):
         return self.__iceberg_owner.equals(self.__game.get_neutral())
 
+    def __init_groups_to_iceberg(self):
+        if not self.__is_simulate_started:
+            self.__is_simulate_started = True
+            self.__groups_to_iceberg = utils.get_groups_way_to_iceberg(
+                self.__game,
+                self.__iceberg_to_simulate,
+                groups_to_check=self.__all_groups
+            )
+            self.__treat_groups_coming_each_other()
+
     def __move_groups_to_destination(self, turns_to_move=1):
         """
         Move all penguins groups toward destination.
@@ -263,6 +269,38 @@ class Simulation:
                 self.__penguin_amount = abs(self.__penguin_amount)
             elif self.__penguin_amount == 0:
                 self.__iceberg_owner = self.__game.get_neutral()
+
+    def __treat_groups_coming_each_other(self):
+        """
+        Check if there is ant group that sent from destination to any source of any penguin-groups.
+        If there are, reduce the small from the big.
+        """
+        groups_from_destination = [
+            penguin_group
+            for penguin_group in self.__all_groups
+            if penguin_group.get_source().equals(self.__iceberg_to_simulate)
+        ]
+        groups_from_destination.sort(key=lambda group: group.get_turns_till_arrival())
+
+        # Check for collision for each group send from destination.
+        for source, groups_from_iceberg in itertools.groupby(groups_from_destination,
+                                                             lambda x: x.get_destination()):
+            groups_from_iceberg = list(groups_from_iceberg)
+            groups_from_iceberg.sort(key=lambda group: group.get_turns_till_arrival())
+
+            groups_from_source = [group for group in self.__groups_to_iceberg if group.get_source().equals(source)]
+            groups_from_source.sort(key=lambda group: group.get_turns_till_arrival)
+
+            for group_from_iceberg in groups_from_iceberg:  # type: PenguinGroupSimulate
+                if group_from_iceberg.get_penguin_amount() > 0:
+                    for group_from_source in groups_from_source:  # type: PenguinGroupSimulate
+                        if group_from_iceberg.get_penguin_amount() <= 0:
+                            break
+                        if group_from_source.get_penguin_amount() > 0:
+                            group_from_iceberg.collision_with(group_from_source)
+
+        # Remove groups that not has penguins
+        self.__groups_to_iceberg = [group for group in self.__groups_to_iceberg if group.get_penguin_amount() > 0]
 
     def __str__(self):
         return 'Simulation: penguin amount ' + str(self.get_penguin_amount()) + ', owner ' + str(

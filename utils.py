@@ -37,7 +37,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     """
     distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
     penguins, owner, min_turns = get_penguins_in_x_turns(
-        game,source_iceberg, destination_iceberg, distance)
+        game, source_iceberg, destination_iceberg, distance)
 
     print 'min penguins:', penguins, "owner:", owner
     if not owner.equals(game.get_myself()):
@@ -66,21 +66,22 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
         owner = simulation.get_owner()
         # Check what happen if we sent enough penguins to occupy.
         simulation.reset_to_origin()
-        simulation.add_penguin_group(source_iceberg,destination_iceberg, penguin_amount+1)
+        simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
     simulation.simulate_until_last_group_arrived()
     print simulation
 
     new_penguin_amount = simulation.get_penguin_amount()
     if simulation.is_belong_to_neutral():
         new_penguin_amount += penguin_amount
-        owner = game.get_enemy() # In case we won't send penguins, the iceberg will belong to enemy.
+        owner = game.get_enemy()  # In case we won't send penguins, the iceberg will belong to enemy.
     elif simulation.is_belong_to_me():
         new_penguin_amount = penguin_amount
     else:
         new_penguin_amount += penguin_amount
-        owner = game.get_enemy() # In case we won't send penguins, the iceberg will belong to enemy.
+        owner = game.get_enemy()  # In case we won't send penguins, the iceberg will belong to enemy.
 
-    return new_penguin_amount,owner, simulation.get_turns_simulated()
+    return new_penguin_amount, owner, simulation.get_turns_simulated()
+
 
 def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_reduce=0, upgrade_cost=None):
     """
@@ -98,7 +99,8 @@ def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_re
     """
     simulation = Simulation(game, iceberg)
     print '1. Simulate source:', simulation
-    simulation.add_penguin_amount(game.get_enemy(), penguins_amount_to_reduce) # Treat as enemy so the penguins will reduce from the amount.
+    simulation.add_penguin_amount(game.get_enemy(),
+                                  penguins_amount_to_reduce)  # Treat as enemy so the penguins will reduce from the amount.
     if upgrade_cost is not None:
         simulation.upgrade_iceberg(upgrade_cost)
     print '2. Simulate source:', simulation
@@ -107,7 +109,8 @@ def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_re
 
     return simulation.get_penguin_amount(), simulation.get_owner()
 
-def get_groups_way_to_iceberg(game, iceberg, groups_to_check = None):
+
+def get_groups_way_to_iceberg(game, iceberg, groups_to_check=None):
     """
     Get all the penguins group in their way to the given iceberg.
 
@@ -121,7 +124,7 @@ def get_groups_way_to_iceberg(game, iceberg, groups_to_check = None):
              so the return will be list of PenguinGroupSimulate.
     :rtype: List[PenguinGroup]
     """
-    if groups_to_check in None:
+    if groups_to_check is None:
         groups_to_check = game.get_all_penguin_groups()
     groups = [
         group for group in groups_to_check
@@ -186,6 +189,7 @@ def can_be_upgrade(iceberg):
            iceberg.upgrade_level_limit > iceberg.level and \
            not iceberg.already_acted and \
            iceberg.penguin_amount > iceberg.upgrade_cost
+
 
 def get_actual_penguin_amount(game, iceberg):
     """

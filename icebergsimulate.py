@@ -87,7 +87,7 @@ class IcebergSimulate:
             return False
 
         return other.__source_iceberg.equals(self.__source_iceberg) and \
-               other.__destination_iceberg.equals(self.__destination_iceberg) and \
+               other.destination.equals(self.__destination_iceberg) and \
                other.__penguin_amount == self.__penguin_amount
 
 
