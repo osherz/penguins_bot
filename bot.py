@@ -2,10 +2,11 @@ from penguin_game import Player, PenguinGroup, Iceberg
 import utils
 from scores import Scores
 import math
+
 # import typing
 # from typing import List
 
-MIN_SCORE_FOR_SENDING = 30
+MIN_SCORE_FOR_SENDING = 10
 TURNS_TO_CHECK = 15
 
 
@@ -37,29 +38,29 @@ def occupy_close_icebergs(scores, game):
     for my_iceberg in game.get_my_icebergs():  # type: Iceberg
         print '***icebrg source', my_iceberg
 
-        destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, game.get_all_icebergs()) #type: list
+        icebergs_to_score = [iceberg for iceberg in game.get_all_icebergs() if not iceberg.equals(my_iceberg)]
+        destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score)  # type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
 
         print 'upgrade score', upgrade_score_for_my_iceberg
 
-        if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < destination_scored_icebergs[0]['score']:
+        if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
+                destination_scored_icebergs[0]['score']:
             while not utils.is_empty(destination_scored_icebergs):
-
                 iceberg = destination_scored_icebergs[0]
                 # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
                 icebergs_to_score = map(lambda iceberg: iceberg['iceberg'], destination_scored_icebergs[1:])
-                destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,icebergs_to_score)
+                destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score)
 
-        elif upgrade_score_for_my_iceberg> 0:
+        elif upgrade_score_for_my_iceberg > 0:
             my_iceberg.upgrade()
 
 
 def get_scored_icebergs(scores, game, my_iceberg, icebergs):
     all_icebergs = icebergs
-    all_icebergs.remove(my_iceberg)
     scored_icebergs = score_icebergs(game, scores, my_iceberg, all_icebergs)
     ret = []
     for iceberg in scored_icebergs:
@@ -67,7 +68,7 @@ def get_scored_icebergs(scores, game, my_iceberg, icebergs):
             ret.append(iceberg)
         else:
             pass
-            #TODO: to decide waht to do with our iceberg that needs penguins from some reason
+            # TODO: to decide waht to do with our iceberg that needs penguins from some reason
     return ret
 
 

@@ -182,7 +182,7 @@ class Simulation:
                 self.__iceberg_to_simulate,
                 groups_to_check=self.__all_groups
             )
-            self.__treat_groups_coming_each_other()
+            #self.__treat_groups_coming_each_other()
 
     def __move_groups_to_destination(self, turns_to_move=1):
         """
@@ -304,8 +304,11 @@ class Simulation:
         self.__groups_to_iceberg = [group for group in self.__groups_to_iceberg if group.get_penguin_amount() > 0]
 
     def __str__(self):
-        return 'Simulation: penguin amount ' + str(self.get_penguin_amount()) + ', owner ' + str(
-            self.__iceberg_owner) + ', level ' + str(self.__iceberg_level)
+        num_of_groups_to_iceberg = 0
+        if self.__is_simulate_started:
+            num_of_groups_to_iceberg = len(self.__groups_to_iceberg)
+        return 'Simulation: is started:'+str(self.__is_simulate_started)+', penguin amount ' + str(self.get_penguin_amount()) + ', owner ' + str(
+            self.__iceberg_owner) + ', level ' + str(self.__iceberg_level) + ', groups: '+str(num_of_groups_to_iceberg)
 
 
 def valid_instance_of_penguin_group_simulate(penguin_group_simulate):
