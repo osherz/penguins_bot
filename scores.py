@@ -4,12 +4,15 @@ import utils
 ENEMY_BELONGS_SCORE = 50
 NEUTRAL_BELONGS_SCORE = 2
 MY_BELONGS_SCORE = 0
-NEED_PROTECTED_SCORE = 10
 CANT_DO_ACTION_SCORE = -9999
 UPGRADE_TURNS_TO_CHECK = 20
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
-LOST_DESTINATION_ICEBERG_SCORE = 70
+NEED_PROTECTED_SCORE = 70
+DISTANCE_FACTOR_SCORE = 1
+PRICE_FACTOR_SCORE = 1
+LEVEL_FACTOR_SCORE = 1
+
 
 class Scores:
     def __init__(self, game):
@@ -60,7 +63,7 @@ class Scores:
         :type iceberg_to_score: Iceberg
         :rtype: float
         """
-        return iceberg_to_score.level
+        return iceberg_to_score.level * LEVEL_FACTOR_SCORE
 
     def score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):
         """
@@ -70,7 +73,7 @@ class Scores:
         :type destination_iceberg_to_score: Iceberg
         :rtype: float:
         """
-        return self.__max_distance - destination_iceberg_to_score.get_turns_till_arrival(source_iceberg)
+        return DISTANCE_FACTOR_SCORE * (self.__max_distance - destination_iceberg_to_score.get_turns_till_arrival(source_iceberg))
 
     def score_by_iceberg_price(self, source_iceberg, destination_iceberg_to_score):
         """
@@ -94,14 +97,14 @@ class Scores:
             return CANT_DO_ACTION_SCORE, -1
 
         # If we got here, so we can and need to occupy the destination.
-        score = -1* min_penguins_for_occupy
+        score = -PRICE_FACTOR_SCORE * min_penguins_for_occupy
         if destination_iceberg_to_score.owner.equals(self.__game.get_myself()):
-            score += LOST_DESTINATION_ICEBERG_SCORE
+            score += NEED_PROTECTED_SCORE
 
         # Check whether source will be in danger if send the penguins.
         penguin_amount_after_all_groups_arrived, owner = utils.penguin_amount_after_all_groups_arrived(self.__game,
-                                                                                                source_iceberg,
-                                                                                                min_penguins_for_occupy)
+                                                                                                       source_iceberg,
+                                                                                                       min_penguins_for_occupy)
         if not self.__game.get_myself().equals(owner):
             score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE
         return score, min_penguins_for_occupy
@@ -124,7 +127,7 @@ class Scores:
         score = self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
 
         penguins_amount, owner = utils.penguin_amount_after_all_groups_arrived(self.__game, iceberg_to_score,
-                                                                        upgrade_cost=upgrade_cost)
+                                                                               upgrade_cost=upgrade_cost)
         if not self.__game.get_myself().equals(owner):
             score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
         return score
@@ -164,6 +167,7 @@ class Scores:
         :rtype: bool
         """
         return iceberg.owner.equals(self.__game.get_myself())
+
 
     def __calculate_average_distance(self):
         """
@@ -207,5 +211,5 @@ class Scores:
         """
         source_avg_distance = self.__calculate_average_distance_from_enemy(source_iceberg)
         destination_avg_distance = self.__calculate_average_distance_from_enemy(destination_iceberg)
-        #TODO: maybe to return int value for more acurate score for distance from enemy.
+        # TODO: maybe to return int value for more acurate score for distance from enemy.
         return destination_avg_distance < self.__average_distance < source_avg_distance

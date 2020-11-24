@@ -6,7 +6,7 @@ import math
 # import typing
 # from typing import List
 
-MIN_SCORE_FOR_SENDING = 10
+MIN_SCORE_FOR_SENDING = 0
 TURNS_TO_CHECK = 15
 
 
