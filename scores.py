@@ -207,6 +207,7 @@ class Scores:
         """
         source_avg_distance = self.__calculate_average_distance_from_enemy(source_iceberg)
         destination_avg_distance = self.__calculate_average_distance_from_enemy(destination_iceberg)
+        #TODO: maybe to return int value for more acurate score for distance from enemy.
         return destination_avg_distance < self.__average_distance < source_avg_distance
 
 """
