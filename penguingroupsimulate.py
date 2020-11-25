@@ -1,6 +1,5 @@
 from penguin_game import PenguinGroup, Game, Iceberg
 
-
 class PenguinGroupSimulate:
     """
     Penguin group data staructure for simulation.
