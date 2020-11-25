@@ -36,7 +36,7 @@ def occupy_close_icebergs(scores, game):
     :type game: Game
     """
     for my_iceberg in game.get_my_icebergs():  # type: Iceberg
-        print '***icebrg source', my_iceberg
+        print '*************icebrg source', my_iceberg
 
         icebergs_to_score = [iceberg for iceberg in game.get_all_icebergs() if not iceberg.equals(my_iceberg)]
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score)  # type: list
@@ -84,6 +84,7 @@ def score_icebergs(game, scores, source_iceberg, icebergs):
     """
 
     def get_iceberg_data(iceberg):
+        print '****start score', iceberg
         score, min_price = score_iceberg(game, scores, source_iceberg, iceberg)
         if min_price == 0:
             min_price = PENGUINS_FOR_HELP
@@ -146,7 +147,7 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg):
     min_penguins_for_occupy_score, min_penguins_for_occupy = scores.score_by_iceberg_price(
         source_iceberg, destination_iceberg)
 
-    print 's:', source_iceberg, 'd:', destination_iceberg, scores.score_by_iceberg_belogns(source_iceberg,
+    print 'scores for:', destination_iceberg, scores.score_by_iceberg_belogns(source_iceberg,
                                                                                            destination_iceberg), \
         scores.score_by_iceberg_distance(source_iceberg, destination_iceberg), \
         scores.score_by_iceberg_level(destination_iceberg), \
@@ -156,7 +157,6 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg):
             scores.score_by_iceberg_level(destination_iceberg) + \
             min_penguins_for_occupy_score
 
-    # print 'source', source_iceberg, 'destination', destination_iceberg, 'score', score, 'min_penguins_for_occupy', min_penguins_for_occupy
     return score, min_penguins_for_occupy
 
 
@@ -181,15 +181,3 @@ def send_penguins_groups(my_icebergs, destination_penguin_amount, destination):
     """
     for iceberg in my_icebergs:
         send_penguins(iceberg, destination_penguin_amount, destination)
-
-
-def upgrade_icebergs(game):
-    """
-    Upgrade all icebergs that can be upgraded and didn't do any action.
-    :type game: Game
-    """
-    for iceberg in game.get_my_icebergs():  # type: Iceberg
-        if utils.can_be_upgrade(iceberg):
-            print
-            "upgrade: ", iceberg, "penguins: ", iceberg.penguin_amount, "for update: ", iceberg.upgrade_cost
-            iceberg.upgrade()

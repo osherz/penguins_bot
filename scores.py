@@ -12,9 +12,9 @@ OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 NEED_PROTECTED_SCORE = 40
 DISTANCE_FACTOR_SCORE = 1
 PRICE_FACTOR_SCORE = 1
-LEVEL_FACTOR_SCORE = 3
+LEVEL_FACTOR_SCORE = 1
 UPDATE_FACTOR_SCORE = 0.5
-MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0.3
+MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 
 
 class Scores:
@@ -96,7 +96,7 @@ class Scores:
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
             self.__game, source_iceberg, destination_iceberg_to_score)
 
-        print source_iceberg, destination_iceberg_to_score, min_penguins_for_occupy
+        print 'min penguins for occupy', min_penguins_for_occupy
         if min_penguins_for_occupy == 0:
             min_penguins_for_occupy = self.__calculate_min_penguins_for_support(destination_iceberg_to_score)
             score += SUPPORT_SCORE
