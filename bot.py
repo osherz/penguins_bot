@@ -3,6 +3,7 @@ import utils
 from scores import Scores
 import math
 from utils import print_enabled
+from random import shuffle
 
 # import typing
 # from typing import List
@@ -20,7 +21,7 @@ def do_turn(game):
     """
     utils.active_print()
     # Go over all of my icebergs.
-    print game.turn, "/", game.get_max_turn_time()
+    print game.turn, "/", game.max_turns
     scores = Scores(game)
     my_player = game.get_myself()  # type: Player
     # rescu_icebers_in_risk(game, my_player)
@@ -36,7 +37,9 @@ def occupy_close_icebergs(scores, game):
     :type game: Game
     """
     # scores_for_my_icebergs = get_scored_icebergs_for_all_my_icebergs(scores, game, game.get_my_icebergs())
-    scores_for_my_icebergs = game.get_my_icebergs()
+    scores_for_my_icebergs = game.get_my_icebergs()[:]
+    shuffle(scores_for_my_icebergs)
+    scores_for_my_icebergs = scores_for_my_icebergs[:2]
 
     if print_enabled():
         print '********************************* START ACTIONS **********************************'
