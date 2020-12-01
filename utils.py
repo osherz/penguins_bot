@@ -8,6 +8,7 @@ def active_print():
     """
     Enable prints
     """
+    global __print
     __print = True
 
 
@@ -15,10 +16,12 @@ def disable_print():
     """
     Enable prints
     """
+    global __print
     __print = False
 
 
 def print_enabled():
+    global __print
     return __print
 
 
