@@ -19,7 +19,7 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    utils.active_print()
+    utils.active_print(game)
     # Go over all of my icebergs.
     print game.turn, "/", game.max_turns
     scores = Scores(game)

@@ -46,28 +46,34 @@ class Scores:
         :return: (min_penguins_for_occupy_score, min_penguins_for_occupy)
         :rtype: (float,int)
         """
+        print '__score_by_iceberg_price'
         min_penguins_for_occupy_score, min_penguins_for_occupy = self.__score_by_iceberg_price(
             source_iceberg, destination_iceberg_to_score)
+        print 'penguin_amount_after_all_groups_arrived'
         penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
             self.__game, destination_iceberg_to_score)
         scores = []
         if score_by_iceberg_belogns:
+            print 'score_by_iceberg_belogns'
             scores.append(
                 self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
                                                 iceberg_owner_after_all_groups_arrived)
             )
 
         if score_by_iceberg_distance:
+            print 'score_by_iceberg_distance'
             scores.append(
                 self.__score_by_iceberg_distance(source_iceberg, destination_iceberg_to_score),
             )
 
         if score_by_iceberg_level:
+            print 'score_by_iceberg_level'
             scores.append(
                 self.__score_by_iceberg_level(destination_iceberg_to_score)
             )
 
         if score_by_iceberg_price:
+            print 'score_by_iceberg_price'
             scores.append(min_penguins_for_occupy_score)
 
         if print_enabled():
@@ -186,8 +192,6 @@ class Scores:
 
 
         # Check whether source will be in danger if send the penguins.
-        if print_enabled():
-            print 'Check whether source will be in danger.'
         penguin_amount_after_all_groups_arrived, owner = utils.penguin_amount_after_all_groups_arrived(self.__game,
                                                                                                        source_iceberg,
                                                                                                        min_penguins_for_occupy)

@@ -2,13 +2,15 @@ from penguin_game import *
 from simulation import Simulation
 
 __print = False
+game = ''  # type: Game
+last_time = 0
 
-
-def active_print():
+def active_print(game_):
     """
     Enable prints
     """
-    global __print
+    global __print, game
+    game = game_
     __print = True
 
 
@@ -21,8 +23,11 @@ def disable_print():
 
 
 def print_enabled():
-    global __print
-    return __print
+    global __print, game
+    if game.turn < 40:
+        return False
+    else:
+        return __print
 
 
 def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
@@ -61,8 +66,6 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     """
     simulation = Simulation(game, destination_iceberg)
     simulation.simulate(min_turns)
-    if print_enabled():
-        print simulation
     penguin_amount = 0
     owner = game.get_myself()
     if not simulation.is_belong_to_me():
@@ -72,8 +75,6 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
         simulation.reset_to_origin()
         simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
     simulation.simulate_until_last_group_arrived()
-    if print_enabled():
-        print simulation
 
     new_penguin_amount = simulation.get_penguin_amount()
     if simulation.is_belong_to_neutral():
