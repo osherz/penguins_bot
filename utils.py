@@ -48,7 +48,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
 
 def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns):
     """
-    Return how much penguins will be in the given iceberg after x turns, and in howmuch turns.
+    Return how much penguins will be in the given iceberg after x turns, and in how much turns.
 
     :type game: Game
     :type destination_iceberg: Iceberg
@@ -100,19 +100,13 @@ def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_se
     :rtype: int
     """
     simulation = Simulation(game, iceberg)
-    if print_enabled():
-        print '1. Simulate source:', simulation
     if penguins_amount_to_send > 0:
         simulation.add_penguin_amount(game.get_enemy(),
                                       penguins_amount_to_send,
                                       is_sending=True)  # Treat as enemy so the penguins will reduce from the amount.
     if upgrade_cost is not None and penguins_amount_to_send == 0:
         simulation.upgrade_iceberg(upgrade_cost)
-    if print_enabled():
-        print '2. Simulate source:', simulation
     simulation.simulate_until_last_group_arrived()
-    if print_enabled():
-        print '3. Simulate source:', simulation
 
     return simulation.get_penguin_amount(), simulation.get_owner()
 

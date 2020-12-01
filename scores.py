@@ -71,7 +71,7 @@ class Scores:
             scores.append(min_penguins_for_occupy_score)
 
         if print_enabled():
-            print 'scores for:', destination_iceberg_to_score, scores
+            print 'score:', scores
         return sum(scores), min_penguins_for_occupy
 
     def score_upgrade(self, iceberg_to_score):

@@ -58,9 +58,6 @@ class Simulation:
         """
         self.__init_groups_to_iceberg()
 
-        if utils.print_enabled():
-            print "turns: ", turns_to_simulate
-
         turn = 1
         if self.are_group_remains():
             turn = self.__calculate_how_much_turns_to_continue(turn,turns_to_simulate)

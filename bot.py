@@ -18,10 +18,9 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-
+    utils.active_print()
     # Go over all of my icebergs.
-    print
-    game.turn, "/", game.get_max_turn_time()
+    print game.turn, "/", game.get_max_turn_time()
     scores = Scores(game)
     my_player = game.get_myself()  # type: Player
     # rescu_icebers_in_risk(game, my_player)
@@ -38,11 +37,13 @@ def occupy_close_icebergs(scores, game):
     """
     # scores_for_my_icebergs = get_scored_icebergs_for_all_my_icebergs(scores, game, game.get_my_icebergs())
     scores_for_my_icebergs = game.get_my_icebergs()
+
     if print_enabled():
         print '********************************* START ACTIONS **********************************'
-    for my_iceberg in scores_for_my_icebergs: # type: Iceberg
+    for my_iceberg in scores_for_my_icebergs:  # type: Iceberg
         if print_enabled():
             print '*************icebrg source', my_iceberg
+            print 'Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining()
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
                                                           game.get_all_icebergs())  # type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
@@ -53,7 +54,7 @@ def occupy_close_icebergs(scores, game):
         if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
                 destination_scored_icebergs[0]['score']:
             while not utils.is_empty(destination_scored_icebergs) and my_iceberg.penguin_amount > 0:
-                iceberg = destination_scored_icebergs[0] # type: (Iceberg, int)
+                iceberg = destination_scored_icebergs[0]  # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
@@ -135,7 +136,6 @@ def score_icebergs(game, scores, source_iceberg, icebergs):
     sort_icebergs_by_score(scores_icebergs)
     if print_enabled():
         print '******** scored icebergs *********'
-        print 'source iceberg:', source_iceberg
         print '\n'.join(map(str, scores_icebergs))
     scores_icebergs = remove_smalls_score_icebergs(scores_icebergs)
 
