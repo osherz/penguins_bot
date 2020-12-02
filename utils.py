@@ -1,33 +1,36 @@
 from penguin_game import *
 from simulation import Simulation
 
-__print = False
+TURN_TO_START_PRINT_FROM = 52
+
+__print_enable = False
 game = ''  # type: Game
-last_time = 0
+
 
 def active_print(game_):
     """
     Enable prints
     """
-    global __print, game
+    global __print_enable, game
     game = game_
-    __print = True
+    __print_enable = True
 
 
 def disable_print():
     """
     Enable prints
     """
-    global __print
-    __print = False
+    global __print_enable
+    __print_enable = False
 
 
-def print_enabled():
-    global __print, game
-    if game.turn < 40:
-        return False
-    else:
-        return __print
+def log(*args):
+    """
+    Print to log all params if print enabled.
+    """
+    global __print_enable
+    if __print_enable and game.turn >= TURN_TO_START_PRINT_FROM:
+        print ' '.join([str(x) for x in args])
 
 
 def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
@@ -46,8 +49,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     penguins, owner, min_turns = get_penguins_in_x_turns(
         game, source_iceberg, destination_iceberg, distance)
 
-    if print_enabled():
-        print 'min penguins:', penguins, "owner:", owner
+    log('min penguins:', penguins, "owner:", owner)
     if not owner.equals(game.get_myself()):
         return penguins + 1
     else:
@@ -65,7 +67,9 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     :return: (penguins, owner, turns)
     """
     simulation = Simulation(game, destination_iceberg)
+    log(simulation)
     simulation.simulate(min_turns)
+    log(simulation)
     penguin_amount = 0
     owner = game.get_myself()
     if not simulation.is_belong_to_me():
@@ -74,7 +78,9 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
         # Check what happen if we sent enough penguins to occupy.
         simulation.reset_to_origin()
         simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
+    log(simulation)
     simulation.simulate_until_last_group_arrived()
+    log(simulation)
 
     new_penguin_amount = simulation.get_penguin_amount()
     if simulation.is_belong_to_neutral():

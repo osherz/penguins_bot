@@ -1,6 +1,6 @@
 from penguin_game import *
 import utils
-from utils import print_enabled
+from utils import log
 
 ENEMY_BELONGS_SCORE = 30
 NEUTRAL_BELONGS_SCORE = 20
@@ -28,11 +28,9 @@ class Scores:
         self.__game = game
         self.__max_price = self.__find_max_price()
         self.__max_distance = self.__find_max_distance()
-        if print_enabled():
-            print 'Max distance:', self.__max_distance
+        log('Max distance:', self.__max_distance)
         self.__average_distance = self.__calculate_average_distance()
-        if print_enabled():
-            print 'Average distance:', self.__average_distance
+        log('Average distance:', self.__average_distance)
         self.__average_penguins_in_our_icebergs = self.__calculate_average_penguins_in_our_icebergs()
         self.__min_penguins_amount = int(MIN_PENGUINS_AMOUNT_AVG_PERCENT * self.__average_penguins_in_our_icebergs)
 
@@ -46,38 +44,37 @@ class Scores:
         :return: (min_penguins_for_occupy_score, min_penguins_for_occupy)
         :rtype: (float,int)
         """
-        print '__score_by_iceberg_price'
+        log('__score_by_iceberg_price')
         min_penguins_for_occupy_score, min_penguins_for_occupy = self.__score_by_iceberg_price(
             source_iceberg, destination_iceberg_to_score)
-        print 'penguin_amount_after_all_groups_arrived'
+        log('penguin_amount_after_all_groups_arrived')
         penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
             self.__game, destination_iceberg_to_score)
         scores = []
         if score_by_iceberg_belogns:
-            print 'score_by_iceberg_belogns'
+            log('score_by_iceberg_belogns')
             scores.append(
                 self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
                                                 iceberg_owner_after_all_groups_arrived)
             )
 
         if score_by_iceberg_distance:
-            print 'score_by_iceberg_distance'
+            log('score_by_iceberg_distance')
             scores.append(
                 self.__score_by_iceberg_distance(source_iceberg, destination_iceberg_to_score),
             )
 
         if score_by_iceberg_level:
-            print 'score_by_iceberg_level'
+            log('score_by_iceberg_level')
             scores.append(
                 self.__score_by_iceberg_level(destination_iceberg_to_score)
             )
 
         if score_by_iceberg_price:
-            print 'score_by_iceberg_price'
+            log('score_by_iceberg_price')
             scores.append(min_penguins_for_occupy_score)
 
-        if print_enabled():
-            print 'score:', scores
+        log('score:', scores)
         return sum(scores), min_penguins_for_occupy
 
     def score_upgrade(self, iceberg_to_score):
@@ -175,8 +172,7 @@ class Scores:
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
             self.__game, source_iceberg, destination_iceberg_to_score)
 
-        if print_enabled():
-            'min penguins for occupy', min_penguins_for_occupy
+        log('min penguins for occupy', min_penguins_for_occupy)
         if min_penguins_for_occupy == 0:
             score += self.__score_by_support(source_iceberg, destination_iceberg_to_score, self.__game.get_myself())
             min_penguins_for_occupy = min(source_iceberg.penguin_amount, source_iceberg.penguins_per_turn)
@@ -195,8 +191,7 @@ class Scores:
         penguin_amount_after_all_groups_arrived, owner = utils.penguin_amount_after_all_groups_arrived(self.__game,
                                                                                                        source_iceberg,
                                                                                                        min_penguins_for_occupy)
-        if print_enabled():
-            print '(penguin_amount, owner)', penguin_amount_after_all_groups_arrived, owner
+        log('(penguin_amount, owner)', penguin_amount_after_all_groups_arrived, owner)
         if not self.__game.get_myself().equals(owner):
             score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE
         return score, min_penguins_for_occupy

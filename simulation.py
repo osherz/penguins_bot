@@ -50,19 +50,20 @@ class Simulation:
         """
         return self.__penguin_amount
 
-    def simulate(self, turns_to_simulate):
+    def __simulate(self, turns_to_simulate):
         """
         Start/continue simulation on the iceberg to check how much penguins will be in it in X turns
+        Call after you inits akk groups to iceberg.
         :param turns_to_simulate: How much turns to simulate.
         :type turns_to_simulate: int
         """
-        self.__init_groups_to_iceberg()
-
         turn = 1
         if self.are_group_remains():
-            turn = self.__calculate_how_much_turns_to_continue(turn,turns_to_simulate)
+            turn = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
         turns_to_continue = turn
+        utils.log(turns_to_simulate)
         while turn <= turns_to_simulate:
+            utils.log(turn)
             self.__current_turn += turns_to_continue
             self.__move_groups_to_destination(turns_to_continue)
             self.__treat_iceberg_by_turns(turns_to_continue)
@@ -71,6 +72,15 @@ class Simulation:
             # Calculate how much turns to continue
             turns_to_continue = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
             turn += turns_to_continue
+
+    def simulate(self, turns_to_simulate):
+        """
+        Start/continue simulation on the iceberg to check how much penguins will be in it in X turns
+        :param turns_to_simulate: How much turns to simulate.
+        :type turns_to_simulate: int
+        """
+        self.__init_groups_to_iceberg()
+        self.__simulate(turns_to_simulate)
 
     def simulate_until_last_group_arrived(self):
         """
@@ -82,7 +92,7 @@ class Simulation:
         if len(self.__groups_to_iceberg) > 0:
             last_group = self.__groups_to_iceberg[-1]
             turns = last_group.get_turns_till_arrival()
-            self.simulate(turns)
+            self.__simulate(turns)
 
     def are_group_remains(self):
         """

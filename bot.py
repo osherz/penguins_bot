@@ -2,7 +2,7 @@ from penguin_game import Player, PenguinGroup, Iceberg
 import utils
 from scores import Scores
 import math
-from utils import print_enabled
+from utils import log
 from random import shuffle
 
 # import typing
@@ -21,7 +21,7 @@ def do_turn(game):
     """
     utils.active_print(game)
     # Go over all of my icebergs.
-    print game.turn, "/", game.max_turns
+    log(game.turn, "/", game.max_turns)
     scores = Scores(game)
     my_player = game.get_myself()  # type: Player
     # rescu_icebers_in_risk(game, my_player)
@@ -39,20 +39,16 @@ def occupy_close_icebergs(scores, game):
     # scores_for_my_icebergs = get_scored_icebergs_for_all_my_icebergs(scores, game, game.get_my_icebergs())
     scores_for_my_icebergs = game.get_my_icebergs()[:]
     shuffle(scores_for_my_icebergs)
-    scores_for_my_icebergs = scores_for_my_icebergs[:2]
 
-    if print_enabled():
-        print '********************************* START ACTIONS **********************************'
+    log('********************************* START ACTIONS **********************************')
     for my_iceberg in scores_for_my_icebergs:  # type: Iceberg
-        if print_enabled():
-            print '*************icebrg source', my_iceberg
-            print 'Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining()
+        log('*************icebrg source', my_iceberg)
+        log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
                                                           game.get_all_icebergs())  # type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
 
-        if print_enabled():
-            print 'upgrade score', upgrade_score_for_my_iceberg
+        log('upgrade score', upgrade_score_for_my_iceberg)
 
         if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
                 destination_scored_icebergs[0]['score']:
@@ -66,6 +62,8 @@ def occupy_close_icebergs(scores, game):
 
         elif upgrade_score_for_my_iceberg > 0:
             my_iceberg.upgrade()
+        if game.get_time_remaining() < 0:
+            break
 
 
 def get_scored_icebergs_for_all_my_icebergs(scores, game, source_icebergs=None):
@@ -125,8 +123,7 @@ def score_icebergs(game, scores, source_iceberg, icebergs):
     """
 
     def get_iceberg_data(iceberg):
-        if print_enabled():
-            print '****start score', iceberg
+        log('****start score', iceberg)
         score, min_price = score_iceberg(game, scores, source_iceberg, iceberg)
         return {
             "iceberg": iceberg,
@@ -137,9 +134,8 @@ def score_icebergs(game, scores, source_iceberg, icebergs):
     scores_icebergs = map(lambda iceberg: get_iceberg_data(iceberg), icebergs)
 
     sort_icebergs_by_score(scores_icebergs)
-    if print_enabled():
-        print '******** scored icebergs *********'
-        print '\n'.join(map(str, scores_icebergs))
+    log('******** scored icebergs *********')
+    log('\n'.join(map(str, scores_icebergs)))
     scores_icebergs = remove_smalls_score_icebergs(scores_icebergs)
 
     return scores_icebergs
@@ -201,8 +197,7 @@ def send_penguins(my_iceberg, destination_penguin_amount, destination):
     :type destination_penguin_amount: int
     :type destination: Iceberg
     """
-    print
-    my_iceberg, "sends", destination_penguin_amount, "penguins to", destination
+    log(my_iceberg, "sends", destination_penguin_amount, "penguins to", destination)
     my_iceberg.send_penguins(destination, destination_penguin_amount)
 
 

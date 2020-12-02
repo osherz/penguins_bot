@@ -1,6 +1,6 @@
 from penguin_game import PenguinGroup, Game, Iceberg
 from penguingroupsimulate import PenguinGroupSimulate
-from utils import print_enabled
+from utils import log
 
 
 class IcebergSimulate:
