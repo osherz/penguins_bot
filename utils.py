@@ -1,7 +1,7 @@
 from penguin_game import *
 from simulation import Simulation
 
-TURN_TO_START_PRINT_FROM = 52
+TURN_TO_START_PRINT_FROM = 0
 
 __print_enable = False
 game = ''  # type: Game
