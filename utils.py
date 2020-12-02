@@ -46,6 +46,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     :rtype: int
     """
     distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
+    log('distance',distance)
     penguins, owner, min_turns = get_penguins_in_x_turns(
         game, source_iceberg, destination_iceberg, distance)
 
@@ -67,9 +68,7 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     :return: (penguins, owner, turns)
     """
     simulation = Simulation(game, destination_iceberg)
-    log(simulation)
     simulation.simulate(min_turns)
-    log(simulation)
     penguin_amount = 0
     owner = game.get_myself()
     if not simulation.is_belong_to_me():
@@ -78,9 +77,7 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
         # Check what happen if we sent enough penguins to occupy.
         simulation.reset_to_origin()
         simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
-    log(simulation)
     simulation.simulate_until_last_group_arrived()
-    log(simulation)
 
     new_penguin_amount = simulation.get_penguin_amount()
     if simulation.is_belong_to_neutral():

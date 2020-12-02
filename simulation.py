@@ -61,9 +61,7 @@ class Simulation:
         if self.are_group_remains():
             turn = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
         turns_to_continue = turn
-        utils.log(turns_to_simulate)
         while turn <= turns_to_simulate:
-            utils.log(turn)
             self.__current_turn += turns_to_continue
             self.__move_groups_to_destination(turns_to_continue)
             self.__treat_iceberg_by_turns(turns_to_continue)
@@ -296,6 +294,7 @@ class Simulation:
         else:
             penguin_amount -= self.__penguin_amount
             self.__iceberg_owner = owner
+            self.__penguin_amount = 0
             self.__treat_group_arrived_iceberg_not_neutral(owner, penguin_amount)
 
     def __treat_group_arrived_iceberg_not_neutral(self, owner, penguin_amount):
