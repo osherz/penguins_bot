@@ -12,7 +12,7 @@ OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 NEED_PROTECTED_SCORE = 50
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
-
+IRREVERSIBLE_SCORE = -5000
 # Factprs
 DISTANCE_FACTOR_SCORE = -20
 PRICE_FACTOR_SCORE = -20
@@ -44,13 +44,22 @@ class Scores:
         :return: (min_penguins_for_occupy_score, min_penguins_for_occupy)
         :rtype: (float,int)
         """
+        scores = []
+
         log('__score_by_iceberg_price')
         min_penguins_for_occupy_score, min_penguins_for_occupy = self.__score_by_iceberg_price(
             source_iceberg, destination_iceberg_to_score)
+        if score_by_iceberg_price:
+            log('score_by_iceberg_price')
+            scores.append(min_penguins_for_occupy_score)
+        # if the score will not be positive, return score.
+        if sum(scores) < IRREVERSIBLE_SCORE:
+            return scores, min_penguins_for_occupy
+
         log('penguin_amount_after_all_groups_arrived')
         penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
             self.__game, destination_iceberg_to_score)
-        scores = []
+
         if score_by_iceberg_belogns:
             log('score_by_iceberg_belogns')
             scores.append(
@@ -69,10 +78,6 @@ class Scores:
             scores.append(
                 self.__score_by_iceberg_level(destination_iceberg_to_score)
             )
-
-        if score_by_iceberg_price:
-            log('score_by_iceberg_price')
-            scores.append(min_penguins_for_occupy_score)
 
         log('score:', scores)
         return sum(scores), min_penguins_for_occupy
