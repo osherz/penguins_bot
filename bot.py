@@ -38,12 +38,14 @@ def occupy_close_icebergs(scores, game):
     """
     # scores_for_my_icebergs = get_scored_icebergs_for_all_my_icebergs(scores, game, game.get_my_icebergs())
     scores_for_my_icebergs = game.get_my_icebergs()[:]
+    if game.get_my_bonus_iceberg() is not None:
+        scores_for_my_icebergs.append(game.get_my_bonus_iceberg())
     shuffle(scores_for_my_icebergs)
 
     log('********************************* START ACTIONS **********************************')
-    all_icebergs = game.get_all_icebergs()  # type: list
+    all_icebergs = game.get_all_icebergs()[:]  # type: list
     all_icebergs.append(game.get_bonus_iceberg())
-    log(all_icebergs)
+
     for my_iceberg in scores_for_my_icebergs:  # type: Iceberg
         log('*************icebrg source', my_iceberg)
         log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())

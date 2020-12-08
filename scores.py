@@ -21,7 +21,7 @@ LEVEL_FACTOR_SCORE = 1
 UPDATE_FACTOR_SCORE = 0.5
 OUR_BOMUS_FACTOR_SCORE = 1
 ENEMY_BOMUS_FACTOR_SCORE = 2
-NATURAL_BOMUS_FACTOR_SCORE = 31
+NATURAL_BOMUS_FACTOR_SCORE = 15
 
 
 class Scores:
@@ -204,7 +204,11 @@ class Scores:
         log('min penguins for occupy', min_penguins_for_occupy)
         if min_penguins_for_occupy == 0:
             score += self.__score_by_support(source_iceberg, destination_iceberg_to_score, self.__game.get_myself())
-            min_penguins_for_occupy = min(source_iceberg.penguin_amount, source_iceberg.penguins_per_turn)
+            if type(source_iceberg) == Iceberg:
+                penguins_per_turn = source_iceberg.penguins_per_turn
+            else:
+                penguins_per_turn = 0
+            min_penguins_for_occupy = min(source_iceberg.penguin_amount, penguins_per_turn)
         elif destination_iceberg_to_score.owner.equals(self.__game.get_myself()):
             score += NEED_PROTECTED_SCORE
 
