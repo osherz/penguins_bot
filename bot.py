@@ -23,8 +23,6 @@ def do_turn(game):
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
     scores = Scores(game)
-    my_player = game.get_myself()  # type: Player
-    # rescu_icebers_in_risk(game, my_player)
 
     occupy_close_icebergs(scores, game)
 
