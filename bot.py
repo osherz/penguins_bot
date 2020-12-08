@@ -41,7 +41,6 @@ def occupy_close_icebergs(scores, game):
     if game.get_my_bonus_iceberg() is not None:
         scores_for_my_icebergs.append(game.get_my_bonus_iceberg())
     shuffle(scores_for_my_icebergs)
-
     log('********************************* START ACTIONS **********************************')
     all_icebergs = game.get_all_icebergs()[:]  # type: list
     all_icebergs.append(game.get_bonus_iceberg())
@@ -58,6 +57,10 @@ def occupy_close_icebergs(scores, game):
         if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
                 destination_scored_icebergs[0]['score']:
             while not utils.is_empty(destination_scored_icebergs) and my_iceberg.penguin_amount > 0:
+                if game.get_time_remaining() < 0:
+                    break
+                log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
+
                 iceberg = destination_scored_icebergs[0]  # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
                 send_penguins(my_iceberg, min_price, dest_iceberg)

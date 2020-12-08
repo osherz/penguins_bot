@@ -69,11 +69,12 @@ class Simulation:
             turn = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
         turns_to_continue = turn
         while turn <= turns_to_simulate:
+
             self.__current_turn += turns_to_continue
             self.__move_groups_to_destination(turns_to_continue)
             self.__treat_iceberg_by_turns(turns_to_continue)
             self.__treat_groups_arrived_destination()
-
+            self.__treat_bonus()
             # Calculate how much turns to continue
             turns_to_continue = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
             turn += turns_to_continue
@@ -217,7 +218,13 @@ class Simulation:
             turns_to_continue = self.__groups_to_iceberg[0].get_turns_till_arrival()
             if current_simulate_turn + turns_to_continue > turns_to_simulate:
                 turns_to_continue = turns_to_simulate - current_simulate_turn
-        return turns_to_continue
+
+        bonus_iceberg = self.__game.get_bonus_iceberg() # type:BonusIceberg
+        turns_to_continue_to_bonus = float('inf') # infinity value
+        if bonus_iceberg is not None and not bonus_iceberg.owner.equals(self.__game.get_neutral()):
+            turns_to_continue_to_bonus = bonus_iceberg.turns_left_to_bonus
+
+        return min(turns_to_continue, turns_to_continue_to_bonus)
 
     def __sort_groups_by_distance(self):
         """
@@ -358,6 +365,12 @@ class Simulation:
         # Remove groups that not has penguins
         self.__groups_to_iceberg = [group for group in self.__groups_to_iceberg if group.get_penguin_amount() > 0]
 
+    def __treat_bonus(self):
+        bonus_iceberg = self.__game.get_bonus_iceberg()  # type:BonusIceberg
+        if bonus_iceberg is not None and not bonus_iceberg.owner.equals(self.__iceberg_owner):
+            if bonus_iceberg.turns_left_to_bonus == 0:
+                self.__penguin_amount += bonus_iceberg.penguin_bonus
+
     def __str__(self):
         num_of_groups_to_iceberg = 0
         if self.__is_simulate_started:
@@ -366,7 +379,7 @@ class Simulation:
             self.get_penguin_amount()) + ', owner ' + str(
             self.__iceberg_owner)
 
-        if type(self.__iceberg_to_simulate) ==  Iceberg:
+        if type(self.__iceberg_to_simulate) == Iceberg:
             ret += ', level ' + str(self.__iceberg_level)
 
         ret +=', groups: ' + str(num_of_groups_to_iceberg)
