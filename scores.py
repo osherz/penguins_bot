@@ -2,7 +2,7 @@ from penguin_game import *
 import utils
 from utils import log
 
-ENEMY_BELONGS_SCORE = 20
+ENEMY_BELONGS_SCORE = 24
 NEUTRAL_BELONGS_SCORE = 16
 MY_BELONGS_SCORE = 0
 CANT_DO_ACTION_SCORE = -9999
@@ -15,7 +15,7 @@ MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
 
 # Factprs
-DISTANCE_FACTOR_SCORE = -35
+DISTANCE_FACTOR_SCORE = -30
 PRICE_FACTOR_SCORE = -10
 LEVEL_FACTOR_SCORE = 1
 UPDATE_FACTOR_SCORE = 0.5
@@ -68,7 +68,7 @@ class Scores:
         if score_by_iceberg_belogns:
             log('score_by_iceberg_belogns')
             scores.append(self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
-                                                      iceberg_owner_after_all_groups_arrived))
+                                                          iceberg_owner_after_all_groups_arrived))
 
         if score_by_iceberg_distance:
             log('score_by_iceberg_distance')
@@ -80,13 +80,10 @@ class Scores:
             log('score_by_iceberg_level')
             scores.append(self.__score_by_iceberg_level(destination_iceberg_to_score))
 
-        if score_by_iceberg_price:
-            log('score_by_iceberg_price')
-            scores.append(min_penguins_for_occupy_score)
-
         if score_by_iceberg_bonus:
             log('score_by_iceberg_bonus')
-            bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(destination_iceberg_to_score, min_penguins_for_occupy)
+            bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(destination_iceberg_to_score,
+                                                                                         min_penguins_for_occupy)
             scores.append(bonus_iceberg_score)
 
         log('score:', scores)
@@ -121,10 +118,10 @@ class Scores:
             return 0
 
         penguin_bonus = destination_iceberg_to_score.penguin_bonus
-        bonus_score = (destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
+        bonus_score = (
+                    destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
         # check if the bonus iceberg will be ours.
         if min_penguins_for_occupy <= 0:
-            min_penguins_for_occupy = int(min_penguins_for_occupy * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
             return bonus_score * len(self.__game.get_my_icebergs()) * OUR_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
         # check if the bonus iceberg belongs to the enemy.
         elif bonus_score != 0:
@@ -132,6 +129,7 @@ class Scores:
                 self.__game.get_enemy_icebergs()) * ENEMY_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
         # if the bonus iceberg is netural.
         else:
+            min_penguins_for_occupy = int(min_penguins_for_occupy * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
             return NATURAL_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
 
     def __score_by_iceberg_belogns(self, source_iceberg, iceberg_to_score, iceberg_to_score_owner):
@@ -165,7 +163,7 @@ class Scores:
         score = 0
         is_closest_to_enemy, avr_distance_from_enemy = self.__is_destination_closest_to_enemy(source_iceberg,
                                                                                               iceberg_to_score)
-        if is_belong_to_me and is_closest_to_enemy:
+        if is_belong_to_me and is_closest_to_enemy and not iceberg_to_score is game.get_bonus_iceberg():
             score += self.__max_price - iceberg_to_score.penguin_amount
             score += self.__max_distance - avr_distance_from_enemy
 
@@ -224,13 +222,13 @@ class Scores:
             return CANT_DO_ACTION_SCORE, -1
 
         # If we got here, so we can and need to occupy the destination.
-        score += PRICE_FACTOR_SCORE * (min_penguins_for_occupy / self.__max_price)
+        score += PRICE_FACTOR_SCORE * (float(min_penguins_for_occupy) / self.__max_price)
 
         # Check whether source will be in danger if send the penguins.
         penguin_amount_after_all_groups_arrived, owner = utils.penguin_amount_after_all_groups_arrived(self.__game,
                                                                                                        source_iceberg,
                                                                                                        min_penguins_for_occupy,
-                                                                                                       simulation_data = simulation_data)
+                                                                                                       simulation_data=simulation_data)
         log('(penguin_amount, owner)', penguin_amount_after_all_groups_arrived, owner)
         if not self.__game.get_myself().equals(owner):
             score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE

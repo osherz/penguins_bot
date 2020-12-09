@@ -161,7 +161,7 @@ class PenguinGroupSimulate:
         return not self.__eq__(other)
 
     def __str__(self):
-        return 'From '+str(self.get_source())+\
-               ' to '+str(self.get_destination())+\
-               ' with '+str(self.get_penguin_amount())+\
-               ' penguins, turns: '+str(self.get_turns_till_arrival())
+        return 'From ' + str(self.get_source()) + \
+               ' to ' + str(self.get_destination()) + \
+               ' with ' + str(self.get_penguin_amount()) + \
+               ' penguins, turns: ' + str(self.get_turns_till_arrival())

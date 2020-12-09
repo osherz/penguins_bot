@@ -282,3 +282,28 @@ def turns_until_last_group_arrived(game, destination_iceberg):
     if is_empty(penguin_groups):
         return 0
     return max(penguin_groups, key= lambda group: group.turns_till_arrival).turns_till_arrival
+
+def can_build_bridge(iceberg_source, iceberg_destination):
+    """
+
+    :type game: Game
+    :type iceberg_source: Iceberg
+    :type iceberg_destination: Iceberg
+    """
+    return iceberg_source.can_create_bridge(iceberg_destination) and \
+           iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
+           not iceberg_source.already_acted and \
+           not has_bridge_between(iceberg_source, iceberg_destination)
+
+
+def has_bridge_between(source_iceberg, destination_iceberg):
+    """
+    Check whether this iceberg has a bridge.
+    :type source_iceberg: Iceberg
+    :type destination_iceberg: Iceberg
+    :rtype: bool
+    """
+    for bridge in source_iceberg.bridges:
+        if destination_iceberg in bridge.get_edges():
+            return True
+    return False

@@ -20,7 +20,7 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    # utils.active_print(game)
+    utils.active_print(game)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
 
@@ -65,7 +65,10 @@ def occupy_close_icebergs(game):
                 log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
 
                 iceberg = destination_scored_icebergs[0]  # type: (Iceberg, int)
-                dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
+                dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']  # type: (Iceberg, int)
+                if my_iceberg.get_turns_till_arrival(dest_iceberg) > 15 and utils.can_build_bridge(my_iceberg, dest_iceberg):
+                    my_iceberg.create_bridge(dest_iceberg)
+                    break
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
                 if my_iceberg_cnt < len(game.get_my_icebergs()) or \
@@ -86,7 +89,6 @@ def occupy_close_icebergs(game):
 
             # if game.get_time_remaining() < 0:
             #    break
-
 
 def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, source_icebergs=None):
     """
