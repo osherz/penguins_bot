@@ -3,7 +3,8 @@ from penguin_game import PenguinGroup, Game, Iceberg
 
 class PenguinGroupSimulate:
     """
-    Penguin group data staructure for simulation.
+    Penguin group data staructure f
+    or simulation.
     """
 
     def __init__(self, game, penguin_group=None, source_iceberg=None, destination_iceberg=None, penguin_amount=None):

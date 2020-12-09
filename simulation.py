@@ -96,8 +96,7 @@ class Simulation:
         """
         self.__init_groups_to_iceberg()
         if len(self.__groups_to_iceberg) > 0:
-            last_group = self.__groups_to_iceberg[-1]
-            turns = last_group.get_turns_till_arrival()
+            turns = self.get_last_group_distance()
             self.__simulate(turns)
 
     def are_group_remains(self):
@@ -107,6 +106,7 @@ class Simulation:
         :rtype: bool
         """
         return len(self.__groups_to_iceberg) > 0
+
 
     def add_penguin_group_simulate(self, penguin_group_simulate):
         """
@@ -199,6 +199,12 @@ class Simulation:
         """
         return self.__iceberg_owner
 
+    def get_last_group_distance(self):
+        if self.are_group_remains():
+            return self.__groups_to_iceberg[-1].get_turns_till_arrival()
+        else:
+            return 0
+
     def is_belong_to_me(self):
         return self.__iceberg_owner.equals(self.__game.get_myself())
 
@@ -233,6 +239,12 @@ class Simulation:
         self.__groups_to_iceberg.sort(key=lambda group: group.get_turns_till_arrival())
 
     def __init_groups_to_iceberg(self):
+        """
+        Initialize the groups and their amount that in their way to the iceberg.
+        Taking in account groups that colliding with each other.
+        :return:
+        :rtype:
+        """
         if not self.__is_simulate_started:
             self.__is_simulate_started = True
             self.__groups_to_iceberg = utils.get_groups_way_to_iceberg(

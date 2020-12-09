@@ -1,10 +1,23 @@
 from penguin_game import *
 from simulation import Simulation
+from simulationsdata import SimulationsData,OWNER, ARE_GROUP_REMAIN, PENGUIN_AMOUNT
 
 TURN_TO_START_PRINT_FROM = 0
 
 __print_enable = False
 game = ''  # type: Game
+
+
+def is_belong_to_me(game, owner):
+    return owner.equals(game.get_myself())
+
+
+def is_belong_to_enemy(game, owner):
+    return owner.equals(game.get_enemy())
+
+
+def is_belong_to_neutral(game, owner):
+    return owner.equals(game.get_neutral())
 
 
 def active_print(game_):
@@ -33,7 +46,7 @@ def log(*args):
         print ' '.join([str(x) for x in args])
 
 
-def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
+def min_penguins_for_occupy(game, source_iceberg, destination_iceberg, simulation_data):
     """
     Calculate how much penguins need to be send
     so the source_iceberg will occupy the destination_iceberg.
@@ -48,7 +61,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
     log('distance', distance)
     penguins, owner, min_turns = get_penguins_in_x_turns(
-        game, source_iceberg, destination_iceberg, distance)
+        game, source_iceberg, destination_iceberg, distance, simulation_data)
 
     log('min penguins:', penguins, "owner:", owner)
     if not owner.equals(game.get_myself()):
@@ -57,42 +70,53 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
         return 0
 
 
-def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns):
+def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns, simulation_data):
+
     """
     Return how much penguins will be in the given iceberg after x turns, and in how much turns.
 
     :type game: Game
     :type destination_iceberg: Iceberg
     :type min_turns: int
+    :type simulation_data: SimulationsData
     :rtype: (int, int)
     :return: (penguins, owner, turns)
     """
     simulation = Simulation(game, destination_iceberg)
-    simulation.simulate(min_turns)
+    
     penguin_amount = 0
     owner = game.get_myself()
-    if not simulation.is_belong_to_me():
-        penguin_amount = simulation.get_penguin_amount()
-        owner = simulation.get_owner()
+    iceberg_turns_data = simulation_data.get(destination_iceberg)
+    iceberg_min_turns_data = iceberg_turns_data[min_turns]
+    
+    if not is_belong_to_me(game, iceberg_min_turns_data[OWNER]):
+        penguin_amount = iceberg_min_turns_data[PENGUIN_AMOUNT]
+        owner = iceberg_min_turns_data[OWNER]
         # Check what happen if we sent enough penguins to occupy.
-        simulation.reset_to_origin()
+        
         simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
-    simulation.simulate_until_last_group_arrived()
-
-    new_penguin_amount = simulation.get_penguin_amount()
-    if simulation.is_belong_to_neutral():
+        simulation.simulate_until_last_group_arrived()
+        new_penguin_amount = simulation.get_penguin_amount()
+        new_owner = simulation.get_owner()
+        last_group_turns = simulation.get_turns_simulated()
+    else:
+        last_group_turns = turns_until_last_group_arrived(game, destination_iceberg)
+        new_penguin_amount = iceberg_turns_data[last_group_turns][PENGUIN_AMOUNT]
+        new_owner = iceberg_turns_data[last_group_turns][OWNER]
+    
+    if is_belong_to_neutral(game, new_owner):
         new_penguin_amount += penguin_amount
         owner = game.get_enemy()  # In case we won't send penguins, the iceberg will belong to enemy.
-    elif simulation.is_belong_to_me():
+    elif is_belong_to_me(game, new_owner):
         new_penguin_amount = penguin_amount
     else:
         new_penguin_amount += penguin_amount
         owner = game.get_enemy()  # In case we won't send penguins, the iceberg will belong to enemy.
 
-    return new_penguin_amount, owner, simulation.get_turns_simulated()
+    return new_penguin_amount, owner, last_group_turns
 
 
-def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_send=0, upgrade_cost=None):
+def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_send=0, upgrade_cost=None, simulation_data = None):
     """
     Calculate how much penguins will be after all groups arrived to this iceberg.
 
@@ -103,15 +127,22 @@ def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_se
     :type penguins_amount_to_reduce: int
     :param upgrade_cost: If assigned, upgrade iceberg first.
     :type upgrade_cost: int
+    :type simulation_data: SimulationsData
     :return: Penguins amount and owner.
     :rtype: int
     """
+    if upgrade_cost is None and penguins_amount_to_send == 0:
+        iceberg_turn_data = simulation_data.get(iceberg)[turns_until_last_group_arrived(game, iceberg)]
+        penguins_amount = iceberg_turn_data[PENGUIN_AMOUNT]
+        owner = iceberg_turn_data[OWNER]
+        return penguins_amount, owner
+
     simulation = Simulation(game, iceberg)
     if penguins_amount_to_send > 0:
         simulation.add_penguin_amount(game.get_enemy(),
                                       penguins_amount_to_send,
                                       is_sending=True)  # Treat as enemy so the penguins will reduce from the amount.
-    if upgrade_cost is not None and penguins_amount_to_send == 0:
+    elif upgrade_cost is not None and penguins_amount_to_send == 0:
         simulation.upgrade_iceberg(upgrade_cost)
     simulation.simulate_until_last_group_arrived()
 
@@ -212,3 +243,42 @@ def get_actual_penguin_amount(game, iceberg):
     if iceberg.owner.equals(game.get_neutral()):
         return iceberg.penguin_amount
     return iceberg.penguin_amount
+
+
+__max_distance = -1
+
+
+def find_max_distance(game):
+    """
+    Find the max distance between icebergs.
+    :param game: Game status
+    :type game: Game
+    :return: max distance between two farthest icebergs.
+    :rtype: int
+    """
+    global __max_distance
+    if __max_distance < 0:
+        max_distance = 0
+        for iceberg1 in game.get_all_icebergs():  # type: Iceberg
+            for iceberg2 in game.get_all_icebergs():  # type: Iceberg
+                if not iceberg1.equals(iceberg2):
+                    distance = iceberg1.get_turns_till_arrival(iceberg2)
+                    if distance > max_distance:
+                        max_distance = distance
+        __max_distance = max_distance
+    return __max_distance
+
+def turns_until_last_group_arrived(game, destination_iceberg):
+    """
+    return the turns that the last group remain until arrive to destination iceberg.
+    :param game: game status
+    :type game: Game
+    :param destination_iceberg: 
+    :type destination_iceberg: Iceberg
+    :return: 
+    :rtype: int
+    """
+    penguin_groups = get_groups_way_to_iceberg(game, destination_iceberg)  #type: List[PenguinGroup]
+    if is_empty(penguin_groups):
+        return 0
+    return max(penguin_groups, key= lambda group: group.turns_till_arrival).turns_till_arrival
