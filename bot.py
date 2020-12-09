@@ -36,14 +36,19 @@ def occupy_close_icebergs(scores, game):
     """
     # scores_for_my_icebergs = get_scored_icebergs_for_all_my_icebergs(scores, game, game.get_my_icebergs())
     scores_for_my_icebergs = game.get_my_icebergs()[:]
-    #shuffle(scores_for_my_icebergs)
-
+    if game.get_my_bonus_iceberg() is not None:
+        scores_for_my_icebergs.append(game.get_my_bonus_iceberg())
+    shuffle(scores_for_my_icebergs)
     log('********************************* START ACTIONS **********************************')
+    all_icebergs = game.get_all_icebergs()[:]  # type: list
+    if game.get_bonus_iceberg() is not None:
+        all_icebergs.append(game.get_bonus_iceberg())
+
     for my_iceberg in scores_for_my_icebergs:  # type: Iceberg
         log('*************icebrg source', my_iceberg)
         log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
-                                                          game.get_all_icebergs())  # type: list
+                                                          all_icebergs)  # type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
 
         log('upgrade score', upgrade_score_for_my_iceberg)
@@ -51,6 +56,10 @@ def occupy_close_icebergs(scores, game):
         if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
                 destination_scored_icebergs[0]['score']:
             while not utils.is_empty(destination_scored_icebergs) and my_iceberg.penguin_amount > 0:
+                if game.get_time_remaining() < 0:
+                    break
+                log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
+
                 iceberg = destination_scored_icebergs[0]  # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
                 send_penguins(my_iceberg, min_price, dest_iceberg)
@@ -60,8 +69,9 @@ def occupy_close_icebergs(scores, game):
 
         elif upgrade_score_for_my_iceberg > 0:
             my_iceberg.upgrade()
-        #if game.get_time_remaining() < 0:
-        #    break
+        
+        if game.get_time_remaining() < 0:
+            break
 
 
 def get_scored_icebergs_for_all_my_icebergs(scores, game, source_icebergs=None):
@@ -95,6 +105,9 @@ def get_scored_icebergs_for_all_my_icebergs(scores, game, source_icebergs=None):
 
 
 def get_scored_icebergs(scores, game, my_iceberg, icebergs):
+    """
+    :type icebergs : List[IceBuilding]
+    """
     all_icebergs = icebergs[:]
     if my_iceberg in all_icebergs:
         all_icebergs.remove(my_iceberg)
@@ -178,14 +191,27 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg):
     :rtype: (int, int)
     :return: score, min_penguins_for_occupy)
     """
-    return scores.score(
-        source_iceberg,
-        destination_iceberg,
-        score_by_iceberg_belogns=True,
-        score_by_iceberg_level=True,
-        score_by_iceberg_distance=True,
-        score_by_iceberg_price=True
-    )
+    if type(destination_iceberg) is Iceberg:
+        return scores.score(
+            source_iceberg,
+            destination_iceberg,
+            score_by_iceberg_belogns=True,
+            score_by_iceberg_level=True,
+            score_by_iceberg_distance=True,
+            score_by_iceberg_price=True,
+            score_by_iceberg_bonus=False
+        )
+    else:
+        return scores.score(
+            source_iceberg,
+            destination_iceberg,
+            score_by_iceberg_belogns=True,
+            score_by_iceberg_level=False,
+            score_by_iceberg_distance=True,
+            score_by_iceberg_price=True,
+            score_by_iceberg_bonus=True
+        )
+
 
 
 def send_penguins(my_iceberg, destination_penguin_amount, destination):

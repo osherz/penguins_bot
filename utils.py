@@ -35,9 +35,9 @@ def log(*args):
 
 def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     """
-    Calculate how much penguins need to be send 
+    Calculate how much penguins need to be send
     so the source_iceberg will occupy the destination_iceberg.
-    Taking in account the level of the destination iceberg, the distance 
+    Taking in account the level of the destination iceberg, the distance
     and the groups that in their way to the destination iceberg.
 
     :type game: Game
@@ -46,7 +46,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg):
     :rtype: int
     """
     distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
-    log('distance',distance)
+    log('distance', distance)
     penguins, owner, min_turns = get_penguins_in_x_turns(
         game, source_iceberg, destination_iceberg, distance)
 
@@ -145,6 +145,8 @@ def get_additional_pengions_in_x_turns(iceberg, owner, turns, my_player, enemy):
     """
     Return how much penguins will added in x turns, taking in account only this owner
     """
+    if type(iceberg) == BonusIceberg:
+        return 0
     additional_penguins = iceberg.penguins_per_turn * turns
     if owner.equals(my_player):
         return additional_penguins
@@ -193,7 +195,8 @@ def can_be_upgrade(iceberg):
     Return whether given iceberg can be upgrade.
     :type iceberg: Iceberg
     """
-    return iceberg.can_upgrade and \
+    return type(iceberg) == Iceberg and \
+           iceberg.can_upgrade and \
            iceberg.upgrade_level_limit > iceberg.level and \
            not iceberg.already_acted and \
            iceberg.penguin_amount >= iceberg.upgrade_cost
