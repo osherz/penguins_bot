@@ -35,7 +35,7 @@ class Scores:
         self.__average_penguins_in_our_icebergs = self.__calculate_average_penguins_in_our_icebergs()
         self.__min_penguins_amount = int(MIN_PENGUINS_AMOUNT_AVG_PERCENT * self.__average_penguins_in_our_icebergs)
 
-    def score(self, source_iceberg, destination_iceberg_to_score,
+    def score(self, source_iceberg, destination_iceberg_to_score, simulation_data,
               score_by_iceberg_belogns=False,
               score_by_iceberg_level=False,
               score_by_iceberg_distance=False,
@@ -49,17 +49,17 @@ class Scores:
 
         log('__score_by_iceberg_price')
         min_penguins_for_occupy_score, min_penguins_for_occupy = self.__score_by_iceberg_price(
-            source_iceberg, destination_iceberg_to_score)
+            source_iceberg, destination_iceberg_to_score, simulation_data)
         if score_by_iceberg_price:
             log('score_by_iceberg_price')
             scores.append(min_penguins_for_occupy_score)
         # if the score will not be positive, return score.
         if sum(scores) < IRREVERSIBLE_SCORE:
-            return scores, min_penguins_for_occupy
+            return sum(scores), min_penguins_for_occupy
 
         log('penguin_amount_after_all_groups_arrived')
         penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
-            self.__game, destination_iceberg_to_score)
+            self.__game, destination_iceberg_to_score, simulation_data=simulation_data)
 
         if score_by_iceberg_belogns:
             log('score_by_iceberg_belogns')
@@ -71,7 +71,7 @@ class Scores:
         if score_by_iceberg_distance:
             log('score_by_iceberg_distance')
             scores.append(
-                self.__score_by_iceberg_distance(source_iceberg, destination_iceberg_to_score),
+                self.__score_by_iceberg_distance(source_iceberg, destination_iceberg_to_score)
             )
 
         if score_by_iceberg_level:
@@ -163,7 +163,7 @@ class Scores:
         distance = destination_iceberg_to_score.get_turns_till_arrival(source_iceberg)
         return DISTANCE_FACTOR_SCORE * (float(distance) / float(self.__max_distance))
 
-    def __score_by_iceberg_price(self, source_iceberg, destination_iceberg_to_score):
+    def __score_by_iceberg_price(self, source_iceberg, destination_iceberg_to_score, simulation_data):
         """
         Scoring by the price of the destination iceberg.
         Taking in account the number of the penguins when the penguins-group from the source iceberg will arrive.
@@ -176,7 +176,7 @@ class Scores:
         """
         score = 0
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
-            self.__game, source_iceberg, destination_iceberg_to_score)
+            self.__game, source_iceberg, destination_iceberg_to_score, simulation_data)
 
         log('min penguins for occupy', min_penguins_for_occupy)
         if min_penguins_for_occupy == 0:
@@ -196,7 +196,8 @@ class Scores:
         # Check whether source will be in danger if send the penguins.
         penguin_amount_after_all_groups_arrived, owner = utils.penguin_amount_after_all_groups_arrived(self.__game,
                                                                                                        source_iceberg,
-                                                                                                       min_penguins_for_occupy)
+                                                                                                       min_penguins_for_occupy,
+                                                                                                       simulation_data = simulation_data)
         log('(penguin_amount, owner)', penguin_amount_after_all_groups_arrived, owner)
         if not self.__game.get_myself().equals(owner):
             score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE
@@ -208,15 +209,7 @@ class Scores:
 
         :rtype: int
         """
-        game = self.__game
-        max_distance = 0
-        for iceberg1 in game.get_all_icebergs():  # type: Iceberg
-            for iceberg2 in game.get_all_icebergs():  # type: Iceberg
-                if not iceberg1.equals(iceberg2):
-                    distance = iceberg1.get_turns_till_arrival(iceberg2)
-                    if distance > max_distance:
-                        max_distance = distance
-        return max_distance
+        return utils.find_max_distance(self.__game)
 
     def __find_max_price(self):
         """

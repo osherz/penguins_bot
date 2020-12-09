@@ -4,6 +4,7 @@ from scores import Scores
 import math
 from utils import log
 from random import shuffle
+from simulationsdata import SimulationsData, OWNER, ARE_GROUP_REMAIN, PENGUIN_AMOUNT
 
 # import typing
 # from typing import List
@@ -19,31 +20,34 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    utils.active_print(game)
+    #utils.active_print(game)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
-    scores = Scores(game)
 
-    occupy_close_icebergs(scores, game)
+    occupy_close_icebergs(game)
 
 
-def occupy_close_icebergs(scores, game):
+def occupy_close_icebergs(game):
     """
     Occupy close icebergs (neutral and enemy's)
     :param scores:
     :type scores:
     :type game: Game
     """
-    # scores_for_my_icebergs = get_scored_icebergs_for_all_my_icebergs(scores, game, game.get_my_icebergs())
     scores_for_my_icebergs = game.get_my_icebergs()[:]
-    #shuffle(scores_for_my_icebergs)
+    shuffle(scores_for_my_icebergs)
+    scores = Scores(game)
+    simulation_data = SimulationsData(game)
+    simulation_data.run_simulations()
 
     log('********************************* START ACTIONS **********************************')
+    my_iceberg_cnt = 0
     for my_iceberg in scores_for_my_icebergs:  # type: Iceberg
         log('*************icebrg source', my_iceberg)
         log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
+        my_iceberg_cnt += 1
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
-                                                          game.get_all_icebergs())  # type: list
+                                                          game.get_all_icebergs(), simulation_data)  # type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
 
         log('upgrade score', upgrade_score_for_my_iceberg)
@@ -55,16 +59,24 @@ def occupy_close_icebergs(scores, game):
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
-                icebergs_to_score = map(lambda iceberg: iceberg['iceberg'], destination_scored_icebergs[1:])
-                destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score)
+                if my_iceberg_cnt < len(game.get_my_icebergs()) or \
+                        (my_iceberg.penguin_amount > 0 and len(destination_scored_icebergs) > 1):
+                        simulation_data.update_iceberg_simulation(my_iceberg, dest_iceberg)
+                if my_iceberg.penguin_amount > 0:
+                    icebergs_to_score = map(lambda iceberg: iceberg['iceberg'], destination_scored_icebergs[1:])
+                    destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
+                                                                  simulation_data)
 
         elif upgrade_score_for_my_iceberg > 0:
             my_iceberg.upgrade()
-        #if game.get_time_remaining() < 0:
-        #    break
+            if my_iceberg_cnt < len(game.get_my_icebergs()):
+                simulation_data.update_iceberg_simulation(my_iceberg)
+
+                    # if game.get_time_remaining() < 0:
+                    #    break
 
 
-def get_scored_icebergs_for_all_my_icebergs(scores, game, source_icebergs=None):
+def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, source_icebergs=None):
     """
     scores icebergs for all source_icebergs.
     If source_icebergs is None, scores for all my icebergs.
@@ -80,7 +92,7 @@ def get_scored_icebergs_for_all_my_icebergs(scores, game, source_icebergs=None):
     scores_for_my_icebergs = []
     for my_iceberg in source_icebergs:
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
-                                                          game.get_all_icebergs())  # type: list
+                                                          game.get_all_icebergs(), simulation_data)  # type: list
         if utils.is_empty(destination_scored_icebergs):
             score = 0
         else:
@@ -94,11 +106,11 @@ def get_scored_icebergs_for_all_my_icebergs(scores, game, source_icebergs=None):
     return [iceberg_data['iceberg'] for iceberg_data in scores_for_my_icebergs]
 
 
-def get_scored_icebergs(scores, game, my_iceberg, icebergs):
+def get_scored_icebergs(scores, game, my_iceberg, icebergs, simulation_data):
     all_icebergs = icebergs[:]
     if my_iceberg in all_icebergs:
         all_icebergs.remove(my_iceberg)
-    scored_icebergs = score_icebergs(game, scores, my_iceberg, all_icebergs)
+    scored_icebergs = score_icebergs(game, scores, my_iceberg, all_icebergs, simulation_data)
     ret = []
     for iceberg in scored_icebergs:
         if iceberg['min_price'] > 0:
@@ -109,7 +121,7 @@ def get_scored_icebergs(scores, game, my_iceberg, icebergs):
     return ret
 
 
-def score_icebergs(game, scores, source_iceberg, icebergs):
+def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data):
     """ Scores the given icebergs.
     Return list of the icebergs sorted by their scores, remove the icebergs with negative score.
     :type game:Game
@@ -122,7 +134,7 @@ def score_icebergs(game, scores, source_iceberg, icebergs):
 
     def get_iceberg_data(iceberg):
         log('****start score', iceberg)
-        score, min_price = score_iceberg(game, scores, source_iceberg, iceberg)
+        score, min_price = score_iceberg(game, scores, source_iceberg, iceberg, simulation_data)
         return {
             "iceberg": iceberg,
             "score": score,
@@ -167,7 +179,7 @@ def remove_smalls_score_icebergs(scores_icebergs):
     return ls
 
 
-def score_iceberg(game, scores, source_iceberg, destination_iceberg):
+def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_data):
     """ Score the given iceberg and gicen each one the.
 
     :param game:
@@ -175,12 +187,14 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg):
     :type scores: Scores
     :type source_iceberg: Iceberg
     :type destination_iceberg: Iceberg
+    :type simulation_data: SimulationsData
     :rtype: (int, int)
     :return: score, min_penguins_for_occupy)
     """
     return scores.score(
         source_iceberg,
         destination_iceberg,
+        simulation_data,
         score_by_iceberg_belogns=True,
         score_by_iceberg_level=True,
         score_by_iceberg_distance=True,
