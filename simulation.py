@@ -4,6 +4,7 @@ from penguingroupsimulate import PenguinGroupSimulate
 import utils
 import itertools
 
+MAX_ACTIONS =10
 
 class Simulation:
     """
@@ -57,7 +58,7 @@ class Simulation:
         """
         return self.__penguin_amount
 
-    def __simulate(self, turns_to_simulate):
+    def __simulate(self, turns_to_simulate,max_actions=99):
         """
         Start/continue simulation on the iceberg to check how much penguins will be in it in X turns
         Call after you inits akk groups to iceberg.
@@ -68,16 +69,19 @@ class Simulation:
         if self.are_group_remains():
             turn = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
         turns_to_continue = turn
+        actions = 0
         while turn <= turns_to_simulate:
-
             self.__current_turn += turns_to_continue
             self.__move_groups_to_destination(turns_to_continue)
             self.__treat_iceberg_by_turns(turns_to_continue)
             self.__treat_groups_arrived_destination()
-            self.__treat_bonus()
+            #self.__treat_bonus()
             # Calculate how much turns to continue
             turns_to_continue = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
             turn += turns_to_continue
+            actions += -1
+            if actions >= max_actions:
+                break
 
     def simulate(self, turns_to_simulate):
         """
@@ -97,7 +101,7 @@ class Simulation:
         self.__init_groups_to_iceberg()
         if len(self.__groups_to_iceberg) > 0:
             turns = self.get_last_group_distance()
-            self.__simulate(turns)
+            self.__simulate(turns, MAX_ACTIONS)
 
     def are_group_remains(self):
         """
@@ -225,6 +229,9 @@ class Simulation:
             if current_simulate_turn + turns_to_continue > turns_to_simulate:
                 turns_to_continue = turns_to_simulate - current_simulate_turn
 
+        return turns_to_continue
+
+        # Calculate turns for next bonus
         bonus_iceberg = self.__game.get_bonus_iceberg() # type:BonusIceberg
         turns_to_continue_to_bonus = float('inf') # infinity value
         if bonus_iceberg is not None and not bonus_iceberg.owner.equals(self.__game.get_neutral()):

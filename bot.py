@@ -20,7 +20,7 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    #utils.active_print(game)
+    # utils.active_print(game)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
 
@@ -30,8 +30,6 @@ def do_turn(game):
 def occupy_close_icebergs(game):
     """
     Occupy close icebergs (neutral and enemy's)
-    :param scores:
-    :type scores:
     :type game: Game
     """
     scores_for_my_icebergs = game.get_my_icebergs()[:]
@@ -72,23 +70,22 @@ def occupy_close_icebergs(game):
 
                 if my_iceberg_cnt < len(game.get_my_icebergs()) or \
                         (my_iceberg.penguin_amount > 0 and len(destination_scored_icebergs) > 1):
-                        simulation_data.update_iceberg_simulation(my_iceberg, dest_iceberg)
+                    simulation_data.update_iceberg_simulation(my_iceberg, dest_iceberg)
                 if my_iceberg.penguin_amount > 0:
                     icebergs_to_score = map(lambda iceberg: iceberg['iceberg'], destination_scored_icebergs[1:])
                     destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
-                                                                  simulation_data)
+                                                                      simulation_data)
 
         elif upgrade_score_for_my_iceberg > 0:
             my_iceberg.upgrade()
             if my_iceberg_cnt < len(game.get_my_icebergs()):
                 simulation_data.update_iceberg_simulation(my_iceberg)
-        
+
         if game.get_time_remaining() < 0:
             break
 
-
-                    # if game.get_time_remaining() < 0:
-                    #    break
+            # if game.get_time_remaining() < 0:
+            #    break
 
 
 def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, source_icebergs=None):
@@ -231,7 +228,6 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_
             score_by_iceberg_price=True,
             score_by_iceberg_bonus=True
         )
-
 
 
 def send_penguins(my_iceberg, destination_penguin_amount, destination):
