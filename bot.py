@@ -68,7 +68,7 @@ def occupy_close_icebergs(game):
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']  # type: (Iceberg, int)
 
                 # If got so much scores but hasn't enough penguins we prefer to wait.
-                if min_price > my_iceberg.penguin_amount:
+                if min_price > my_iceberg.penguin_amount or min_price <= 0:
                     break
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
@@ -131,11 +131,7 @@ def get_scored_icebergs(scores, game, my_iceberg, icebergs, simulation_data):
     scored_icebergs = score_icebergs(game, scores, my_iceberg, all_icebergs, simulation_data)
     ret = []
     for iceberg in scored_icebergs:
-        if iceberg['min_price'] > 0:
-            ret.append(iceberg)
-        elif iceberg['min_price'] == 0:
-            pass
-            # TODO: to decide waht to do with our iceberg that needs penguins from some reason
+        ret.append(iceberg)
     return ret
 
 
@@ -191,7 +187,7 @@ def remove_smalls_score_icebergs(scores_icebergs):
     """
     ls = []
     for iceberg in scores_icebergs:
-        if iceberg['score'] >= MIN_SCORE_FOR_SENDING or iceberg['min_price'] <= 0:
+        if iceberg['score'] >= MIN_SCORE_FOR_SENDING:
             ls.append(iceberg)
 
     return ls
