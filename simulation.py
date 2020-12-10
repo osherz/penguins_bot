@@ -1,10 +1,12 @@
 from penguin_game import Game, Iceberg, BonusIceberg, IceBuilding
 from penguingroupsimulate import PenguinGroupSimulate
 
+import math
 import utils
 import itertools
 
-MAX_ACTIONS =10
+MAX_ACTIONS = 10
+
 
 class Simulation:
     """
@@ -58,7 +60,7 @@ class Simulation:
         """
         return self.__penguin_amount
 
-    def __simulate(self, turns_to_simulate,max_actions=99):
+    def __simulate(self, turns_to_simulate, max_actions=99):
         """
         Start/continue simulation on the iceberg to check how much penguins will be in it in X turns
         Call after you inits akk groups to iceberg.
@@ -75,7 +77,7 @@ class Simulation:
             self.__move_groups_to_destination(turns_to_continue)
             self.__treat_iceberg_by_turns(turns_to_continue)
             self.__treat_groups_arrived_destination()
-            #self.__treat_bonus()
+            # self.__treat_bonus()
             # Calculate how much turns to continue
             turns_to_continue = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
             turn += turns_to_continue
@@ -110,7 +112,6 @@ class Simulation:
         :rtype: bool
         """
         return len(self.__groups_to_iceberg) > 0
-
 
     def add_penguin_group_simulate(self, penguin_group_simulate):
         """
@@ -232,8 +233,8 @@ class Simulation:
         return turns_to_continue
 
         # Calculate turns for next bonus
-        bonus_iceberg = self.__game.get_bonus_iceberg() # type:BonusIceberg
-        turns_to_continue_to_bonus = float('inf') # infinity value
+        bonus_iceberg = self.__game.get_bonus_iceberg()  # type:BonusIceberg
+        turns_to_continue_to_bonus = float('inf')  # infinity value
         if bonus_iceberg is not None and not bonus_iceberg.owner.equals(self.__game.get_neutral()):
             turns_to_continue_to_bonus = bonus_iceberg.turns_left_to_bonus
 
@@ -260,8 +261,27 @@ class Simulation:
                 groups_to_check=self.__all_groups
             )
             if not utils.is_empty(self.__groups_to_iceberg):
+                self.__analyze_groups_distance()
                 self.__sort_groups_by_distance()
                 self.__treat_groups_coming_each_other()
+
+    def __analyze_groups_distance(self):
+        """
+        Analyze real group distance.
+        Take in account the bridges.
+        """
+        for group in self.__groups_to_iceberg:  # type: PenguinGroupSimulate
+            bridges = group.get_source().bridges
+            for bridge in bridges:  # Type: bridge
+                if group.get_destination() in bridge.get_edges():
+                    turns_forward_until_bridge_gone = bridge.speed_multiplier * bridge.duration
+                    turns_till_arrival = group.get_turns_till_arrival()
+                    if turns_forward_until_bridge_gone >= turns_till_arrival:
+                        turns = math.ceil(turns_till_arrival / bridge.speed_multiplier)
+                    else:
+                        turns = bridge.duration + (turns_till_arrival - turns_forward_until_bridge_gone)
+                    group.move_toward_destination(turns_till_arrival - turns)
+
 
     def __move_groups_to_destination(self, turns_to_move=1):
         """
@@ -394,15 +414,16 @@ class Simulation:
         num_of_groups_to_iceberg = 0
         if self.__is_simulate_started:
             num_of_groups_to_iceberg = len(self.__groups_to_iceberg)
-        ret =  'Simulation: is started:' + str(self.__is_simulate_started) + ', penguin amount ' + str(
+        ret = 'Simulation: is started:' + str(self.__is_simulate_started) + ', penguin amount ' + str(
             self.get_penguin_amount()) + ', owner ' + str(
             self.__iceberg_owner)
 
         if type(self.__iceberg_to_simulate) == Iceberg:
             ret += ', level ' + str(self.__iceberg_level)
 
-        ret +=', groups: ' + str(num_of_groups_to_iceberg)
-        return  ret
+        ret += ', groups: ' + str(num_of_groups_to_iceberg)
+        return ret
+
 
 def valid_instance_of_penguin_group_simulate(penguin_group_simulate):
     """
