@@ -4,8 +4,8 @@ from utils import log
 
 ENEMY_BELONGS_SCORE = 24
 NEUTRAL_BELONGS_SCORE = 16
-MY_BELONGS_SCORE = 0
-CANT_DO_ACTION_SCORE = -1000
+MY_BELONGS_SCORE = -10
+CANT_DO_ACTION_SCORE = -50
 UPGRADE_TURNS_TO_CHECK = 20
 SUPPORT_SCORE = 10
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
@@ -15,10 +15,10 @@ MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -2000
 
 # Factprs
-DISTANCE_FACTOR_SCORE = -30
-PRICE_FACTOR_SCORE = -10
-LEVEL_FACTOR_SCORE = 10
-UPDATE_FACTOR_SCORE = 0.5
+DISTANCE_FACTOR_SCORE = -40
+PRICE_FACTOR_SCORE = -30
+LEVEL_FACTOR_SCORE = 6
+UPDATE_FACTOR_SCORE =4
 OUR_BOMUS_FACTOR_SCORE = 1
 ENEMY_BOMUS_FACTOR_SCORE = 1.1
 NATURAL_BOMUS_FACTOR_SCORE = 1
@@ -119,7 +119,7 @@ class Scores:
 
         penguin_bonus = destination_iceberg_to_score.penguin_bonus
         bonus_score = (
-                    destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
+                destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
         # check if the bonus iceberg will be ours.
         if min_penguins_for_occupy <= 0:
             return bonus_score * len(self.__game.get_my_icebergs()) * OUR_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
@@ -166,7 +166,8 @@ class Scores:
         if is_belong_to_me and is_closest_to_enemy and not iceberg_to_score is game.get_bonus_iceberg():
             score += self.__max_price - iceberg_to_score.penguin_amount
             score += self.__max_distance - avr_distance_from_enemy
-
+        else:
+            score += CANT_DO_ACTION_SCORE
         return score
 
     def __score_by_iceberg_level(self, iceberg_to_score):
