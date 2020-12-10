@@ -66,9 +66,6 @@ def occupy_close_icebergs(game):
 
                 iceberg = destination_scored_icebergs[0]  # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']  # type: (Iceberg, int)
-                if my_iceberg.get_turns_till_arrival(dest_iceberg) > 15 and utils.can_build_bridge(my_iceberg, dest_iceberg):
-                    my_iceberg.create_bridge(dest_iceberg)
-                    break
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
                 if my_iceberg_cnt < len(game.get_my_icebergs()) or \
