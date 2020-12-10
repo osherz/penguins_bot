@@ -17,13 +17,14 @@ IRREVERSIBLE_SCORE = -2000
 # Factors
 DISTANCE_FACTOR_SCORE = -40
 PRICE_FACTOR_SCORE = -30
-LEVEL_FACTOR_SCORE = 6
-UPDATE_FACTOR_SCORE =4
+LEVEL_FACTOR_SCORE = 5
+UPDATE_FACTOR_SCORE = 4
 OUR_BOMUS_FACTOR_SCORE = 1
 ENEMY_BOMUS_FACTOR_SCORE = 1.1
 NATURAL_BOMUS_FACTOR_SCORE = 1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
-PENGUINS_GAINING_SCORE_FACTOR = 0.5
+PENGUINS_GAINING_SCORE_FACTOR = 1
+
 
 class Scores:
     def __init__(self, game):
@@ -73,7 +74,8 @@ class Scores:
 
         if score_by_penguins_gaining:
             log('score_by_penguins_gaining')
-            scores.append(self.__score_by_penguins_gaining(source_iceberg, destination_iceberg_to_score))
+            scores.append(self.__score_by_penguins_gaining(source_iceberg, destination_iceberg_to_score,
+                                                           iceberg_owner_after_all_groups_arrived))
 
         if score_by_iceberg_distance:
             log('score_by_iceberg_distance')
@@ -118,16 +120,17 @@ class Scores:
             score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
         return score * UPDATE_FACTOR_SCORE
 
-    def __score_by_penguins_gaining(self, source_iceberg, destination_iceberg_to_score):
+    def __score_by_penguins_gaining(self, source_iceberg, destination_iceberg_to_score,iceberg_owner_after_all_groups_arrived):
         """
         Score by how much penguins will gain if occupy
 
         :type source_iceberg: Iceberg
         :type destination_iceberg_to_score: Iceberg
         """
+        if iceberg_owner_after_all_groups_arrived.equals(self.__game.get_myself()):
+            return 0
         turns_to_check = self.__max_distance - source_iceberg.get_turns_till_arrival(destination_iceberg_to_score)
         return turns_to_check * destination_iceberg_to_score.penguins_per_turn * PENGUINS_GAINING_SCORE_FACTOR
-
 
     def __score_by_iceberg_bonus(self, destination_iceberg_to_score, min_penguins_for_occupy):
         if self.__game.get_bonus_iceberg() is None:
