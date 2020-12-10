@@ -14,7 +14,7 @@ NEED_PROTECTED_SCORE = 50
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -2000
 
-# Factprs
+# Factors
 DISTANCE_FACTOR_SCORE = -40
 PRICE_FACTOR_SCORE = -30
 LEVEL_FACTOR_SCORE = 6
@@ -23,7 +23,7 @@ OUR_BOMUS_FACTOR_SCORE = 1
 ENEMY_BOMUS_FACTOR_SCORE = 1.1
 NATURAL_BOMUS_FACTOR_SCORE = 1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
-
+PENGUINS_GAINING_SCORE_FACTOR = 0.5
 
 class Scores:
     def __init__(self, game):
@@ -44,6 +44,7 @@ class Scores:
               score_by_iceberg_level=False,
               score_by_iceberg_distance=False,
               score_by_iceberg_price=False,
+              score_by_penguins_gaining=False,
               score_by_iceberg_bonus=False):
         """
         Score the iceberg by the scores specified.
@@ -69,6 +70,10 @@ class Scores:
             log('score_by_iceberg_belogns')
             scores.append(self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
                                                           iceberg_owner_after_all_groups_arrived))
+
+        if score_by_penguins_gaining:
+            log('score_by_penguins_gaining')
+            scores.append(self.__score_by_penguins_gaining(source_iceberg, destination_iceberg_to_score))
 
         if score_by_iceberg_distance:
             log('score_by_iceberg_distance')
@@ -112,6 +117,17 @@ class Scores:
         if not self.__game.get_myself().equals(owner):
             score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
         return score * UPDATE_FACTOR_SCORE
+
+    def __score_by_penguins_gaining(self, source_iceberg, destination_iceberg_to_score):
+        """
+        Score by how much penguins will gain if occupy
+
+        :type source_iceberg: Iceberg
+        :type destination_iceberg_to_score: Iceberg
+        """
+        turns_to_check = self.__max_distance - source_iceberg.get_turns_till_arrival(destination_iceberg_to_score)
+        return turns_to_check * destination_iceberg_to_score.penguins_per_turn * PENGUINS_GAINING_SCORE_FACTOR
+
 
     def __score_by_iceberg_bonus(self, destination_iceberg_to_score, min_penguins_for_occupy):
         if self.__game.get_bonus_iceberg() is None:

@@ -214,6 +214,7 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_
             score_by_iceberg_level=True,
             score_by_iceberg_distance=True,
             score_by_iceberg_price=True,
+            score_by_penguins_gaining=True,
             score_by_iceberg_bonus=False
         )
     else:
