@@ -70,6 +70,12 @@ def occupy_close_icebergs(game):
                 # If got so much scores but hasn't enough penguins we prefer to wait.
                 if min_price > my_iceberg.penguin_amount or min_price <= 0:
                     break
+
+                if my_iceberg.get_turns_till_arrival(dest_iceberg) > 15 and \
+                        utils.can_build_bridge(my_iceberg, dest_iceberg) and \
+                        not utils.is_belong_to_neutral(dest_iceberg):
+                    my_iceberg.create_bridge(dest_iceberg)
+                    break
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
                 if my_iceberg_cnt < len(game.get_my_icebergs()) or \
