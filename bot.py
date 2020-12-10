@@ -66,6 +66,10 @@ def occupy_close_icebergs(game):
 
                 iceberg = destination_scored_icebergs[0]  # type: (Iceberg, int)
                 dest_iceberg, min_price = iceberg['iceberg'], iceberg['min_price']  # type: (Iceberg, int)
+
+                # If got so much scores but hasn't enough penguins we prefer to wait.
+                if min_price > my_iceberg.penguin_amount:
+                    break
                 send_penguins(my_iceberg, min_price, dest_iceberg)
 
                 if my_iceberg_cnt < len(game.get_my_icebergs()) or \
