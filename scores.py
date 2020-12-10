@@ -5,19 +5,19 @@ from utils import log
 ENEMY_BELONGS_SCORE = 24
 NEUTRAL_BELONGS_SCORE = 16
 MY_BELONGS_SCORE = 0
-CANT_DO_ACTION_SCORE = -9999
+CANT_DO_ACTION_SCORE = -1000
 UPGRADE_TURNS_TO_CHECK = 20
 SUPPORT_SCORE = 10
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 NEED_PROTECTED_SCORE = 50
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
-IRREVERSIBLE_SCORE = -1000
+IRREVERSIBLE_SCORE = -2000
 
 # Factprs
 DISTANCE_FACTOR_SCORE = -30
 PRICE_FACTOR_SCORE = -10
-LEVEL_FACTOR_SCORE = 1
+LEVEL_FACTOR_SCORE = 10
 UPDATE_FACTOR_SCORE = 0.5
 OUR_BOMUS_FACTOR_SCORE = 1
 ENEMY_BOMUS_FACTOR_SCORE = 1.1
@@ -176,7 +176,7 @@ class Scores:
         :type iceberg_to_score: Iceberg
         :rtype: float
         """
-        return iceberg_to_score.level ** LEVEL_FACTOR_SCORE
+        return iceberg_to_score.penguins_per_turn ** LEVEL_FACTOR_SCORE
 
     def __score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):
         """
