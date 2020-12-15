@@ -19,10 +19,12 @@ DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
 UPDATE_FACTOR_SCORE = 0.1
-OUR_BOMUS_FACTOR_SCORE = 1
-ENEMY_BOMUS_FACTOR_SCORE = 1.1
-NATURAL_BOMUS_FACTOR_SCORE = 1
+
+OUR_BOMUS_FACTOR_SCORE = 0.1
+ENEMY_BOMUS_FACTOR_SCORE = 1.6
+NATURAL_BOMUS_FACTOR_SCORE = 1.5
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
+
 PENGUINS_GAINING_SCORE_FACTOR = 1
 
 
@@ -134,15 +136,15 @@ class Scores:
                 destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
         # check if the bonus iceberg will be ours.
         if min_penguins_for_occupy <= 0:
-            return bonus_score * len(self.__game.get_my_icebergs()) * OUR_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
+            return 26 + bonus_score * len(self.__game.get_my_icebergs())  * penguin_bonus * OUR_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
         # check if the bonus iceberg belongs to the enemy.
         elif bonus_score != 0:
-            return bonus_score * len(
-                self.__game.get_enemy_icebergs()) * ENEMY_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
+            return 26 + bonus_score * len(
+                self.__game.get_enemy_icebergs())  * penguin_bonus * ENEMY_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
         # if the bonus iceberg is netural.
         else:
             min_penguins_for_occupy = int(min_penguins_for_occupy * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
-            return NATURAL_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
+            return 26 + NATURAL_BOMUS_FACTOR_SCORE * len(self.__game.get_enemy_icebergs()) * penguin_bonus, min_penguins_for_occupy
 
     def __score_by_iceberg_belogns(self, source_iceberg, iceberg_to_score, iceberg_to_score_owner):
         """
