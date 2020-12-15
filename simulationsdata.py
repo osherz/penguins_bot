@@ -2,9 +2,11 @@ from penguin_game import *
 import utils
 from simulation import Simulation
 
-PENGUIN_AMOUNT="penguin_amount"
+PENGUIN_AMOUNT = "penguin_amount"
 OWNER = "owner"
 ARE_GROUP_REMAIN = "are_group_remains"
+TURNS_UNTIL_BONUS = "turns_until_bonus"
+GET_BONUS = "get_bonus"
 
 
 class SimulationsData:
@@ -53,28 +55,62 @@ class SimulationsData:
         :return: list of the iceberg status for all turns. list[(penguin_amount,owner,are_group_remains)].
         :rtype: list[(int,Player, bool)]
         """
-        simulation = Simulation(self.__game, iceberg)
+        game = self.__game
+        simulation = Simulation(game, iceberg)
         simulation.simulate(0)
         iceberg_simulation_turn = [self.__get_simulation_data(simulation)]
-        turns_to_run = utils.find_max_distance(self.__game)
+        turns_to_run = utils.find_max_distance(game)
         for i in range(turns_to_run):
             simulation.simulate(1)
             data = self.__get_simulation_data(simulation)
             iceberg_simulation_turn.append(data)
         return iceberg_simulation_turn
 
-    def __get_simulation_data(self, simulation):
+    def __get_simulation_data(self, simulation, iceberg):
+        """
+        Return the data from the simulation that we want to store for each turn.
+        Return different data depending on iceberg type.
+        :rtype: {}
+        """
+        if utils.is_bonus_iceberg(self.__game, iceberg):
+            return self.__get_bonus_simulation_data(simulation)
+        else:
+            return self.__get_non_bonus_simulation_data(simulation)
+
+    def __get_non_bonus_simulation_data(self, simulation):
         """
         Return the data from the simulation that we want to store for each turn.
         :type simulation: Simulation
-        :return: (penguin_amount,owner,are_group_remains)
-        :rtype: (int,Player, bool)
+        :return: {penguin_amount,owner,are_group_remains}
+        :rtype: {}
         """
         iceberg_turn_data = {
             PENGUIN_AMOUNT: simulation.get_penguin_amount(),
             OWNER: simulation.get_owner(),
             ARE_GROUP_REMAIN: simulation.are_group_remains()
         }
+        return iceberg_turn_data
+
+    def __get_bonus_simulation_data(self, simulation, last_simulation_data):
+        """
+        Return the data from the simulation of the bonus iceberg that we want to store for each turn.
+        :type simulation: Simulation
+        :return: {penguin_amount,owner,are_group_remains,turns_until_bonus, get_bonus}
+        :rtype: {}
+        """
+        iceberg_turn_data = self.__get_non_bonus_simulation_data(simulation)
+        iceberg_turn_data[GET_BONUS] = False
+        old_owner = last_simulation_data[OWNER]
+        new_owner = simulation.get_owner()
+        if old_owner.equals(new_owner):
+            turns_until_bonus = last_simulation_data[TURNS_UNTIL_BONUS] - 1
+            if turns_until_bonus == 0:
+                iceberg_turn_data[GET_BONUS] = True
+                turns_until_bonus = self.__game.bonus_iceberg_max_turns_to_bonus
+        else:
+            iceberg_turn_data[OWNER] = new_owner
+            turns_until_bonus = self.__game.bonus_iceberg_max_turns_to_bonus
+        iceberg_turn_data[TURNS_UNTIL_BONUS] = turns_until_bonus
         return iceberg_turn_data
 
     def __get_iceberg_key(self, iceberg):
