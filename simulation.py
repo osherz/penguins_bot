@@ -43,11 +43,6 @@ class Simulation:
         if type(iceberg_to_simulate) == Iceberg:
             self.__iceberg_level = iceberg_to_simulate.level
             self.__penguins_per_turn = iceberg_to_simulate.penguins_per_turn
-        else:
-            self.__max_turns_to_bonus = iceberg_to_simulate.max_turns_to_bonus
-            self.__penguin_bonus = iceberg_to_simulate.penguin_bonus
-            self.__turns_left_to_bonus = iceberg_to_simulate.turns_left_to_bonus
-
         # TODO: use penguins_per_turn instead of level
 
         self.__all_groups = map(
