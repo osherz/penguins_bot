@@ -307,3 +307,11 @@ def has_bridge_between(source_iceberg, destination_iceberg):
         if destination_iceberg in bridge.get_edges():
             return True
     return False
+
+def is_bonus_iceberg(game, iceberg):
+    """
+    Check whether this iceberg is a bonus.
+    :rtype game: Game
+    :rtype iceberg: Iceberg
+    """
+    return game.get_bonus_iceberg().equals(iceberg)
