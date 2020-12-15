@@ -49,6 +49,8 @@ class SimulationsData:
         :type iceberg:
         """
         for iceberg in icebergs:
+            if utils.is_bonus_iceberg(self.__game, iceberg):
+                self.__bonus_turns_ls = []
             key = self.__get_iceberg_key(iceberg)
             simulation_data = self.__run_simulation(iceberg)
             self.__icebergs_simulations[key] = simulation_data
@@ -64,7 +66,7 @@ class SimulationsData:
         game = self.__game
         simulation = Simulation(game, iceberg, self.get_bonus_turns())
         simulation.simulate(0)
-        iceberg_simulation_turn = [self.__get_simulation_data(simulation)]
+        iceberg_simulation_turn = [self.__get_simulation_data(simulation, iceberg)]
         turns_to_run = utils.find_max_distance(game)
         for i in range(turns_to_run):
             simulation.simulate(1)
