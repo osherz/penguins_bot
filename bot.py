@@ -23,7 +23,8 @@ def do_turn(game):
     utils.active_print(game)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
-
+    if game.turn == 1 and game.get_bonus_iceberg() is not None:
+        log('max bonus turns', game.bonus_iceberg_max_turns_to_bonus, 'bonus', game.get_bonus_iceberg().penguin_bonus)
     occupy_close_icebergs(game)
 
 
