@@ -14,6 +14,7 @@ class SimulationsData:
         self.__game = game  # type: Game
         self.__icebergs_simulations = {}
         self.__max_turn = utils.find_max_distance(game)
+        self.__bonus_turns_ls = []
 
     def get(self, iceberg):
         """
@@ -26,13 +27,17 @@ class SimulationsData:
         key = self.__get_iceberg_key(iceberg)
         return self.__icebergs_simulations[key]
 
+    def get_bonus_turns(self):
+        """
+        Return list of turns that icebergs supposed to get bonus.
+        """
+        return self.__bonus_turns_ls
+
     def run_simulations(self):
         """
-        :type icebergs_ls: List[Iceberg]
+        Run simulations for all icebergs.
         """
-        icebergs_ls = self.__game.get_all_icebergs()
-        if self.__game.get_bonus_iceberg() is not None:
-            icebergs_ls.append(self.__game.get_bonus_iceberg())
+        icebergs_ls = utils.get_all_icebergs(self.__game)
         for iceberg in icebergs_ls:
             self.update_iceberg_simulation(iceberg)
 
@@ -107,6 +112,7 @@ class SimulationsData:
             if turns_until_bonus == 0:
                 iceberg_turn_data[GET_BONUS] = True
                 turns_until_bonus = self.__game.bonus_iceberg_max_turns_to_bonus
+                self.__bonus_turns_ls.append(simulation.get_turns_simulated())
         else:
             iceberg_turn_data[OWNER] = new_owner
             turns_until_bonus = self.__game.bonus_iceberg_max_turns_to_bonus
@@ -121,4 +127,4 @@ class SimulationsData:
         :return:
         :rtype:
         """
-        return iceberg.id, iceberg.owner.id
+        return iceberg.unique_id
