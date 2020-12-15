@@ -81,7 +81,7 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     :rtype: (int, int)
     :return: (penguins, owner, turns)
     """
-    simulation = Simulation(game, destination_iceberg)
+    simulation = Simulation(game, destination_iceberg, simulation_data.get_bonus_turns())
 
     penguin_amount = 0
     owner = game.get_myself()
@@ -123,8 +123,8 @@ def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_se
     :type game: Game
     :param iceberg: Iceberg to calculate penguins amount for.
     :type iceberg: iceberg
-    :param penguins_amount_to_reduce: How much penguins to reduce before simulation.
-    :type penguins_amount_to_reduce: int
+    :param penguins_amount_to_send: How much penguins to reduce before simulation.
+    :type penguins_amount_to_send: int
     :param upgrade_cost: If assigned, upgrade iceberg first.
     :type upgrade_cost: int
     :type simulation_data: SimulationsData
@@ -137,7 +137,7 @@ def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_se
         owner = iceberg_turn_data[OWNER]
         return penguins_amount, owner
 
-    simulation = Simulation(game, iceberg)
+    simulation = Simulation(game, iceberg, simulation_data.get_bonus_turns())
     if penguins_amount_to_send > 0:
         simulation.add_penguin_amount(game.get_enemy(),
                                       penguins_amount_to_send,
@@ -287,8 +287,6 @@ def turns_until_last_group_arrived(game, destination_iceberg):
 
 def can_build_bridge(iceberg_source, iceberg_destination):
     """
-
-    :type game: Game
     :type iceberg_source: Iceberg
     :type iceberg_destination: Iceberg
     """
@@ -325,8 +323,9 @@ def get_all_icebergs(game):
     Get all icebergs, including bonus iceberg.
     :type game: Game
     """
-    all_icebergs = game.get_all_icebergs()
+    all_icebergs = []
     bonus_iceberg = game.get_bonus_iceberg()
     if bonus_iceberg is not None:
         all_icebergs.append(bonus_iceberg)
+    all_icebergs += game.get_all_icebergs()
     return all_icebergs
