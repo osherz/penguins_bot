@@ -1,5 +1,6 @@
 from penguin_game import Game, Iceberg, BonusIceberg, IceBuilding
 from penguingroupsimulate import PenguinGroupSimulate
+from bonusturndata import BonusTurnData
 
 import math
 import utils
@@ -13,15 +14,17 @@ class Simulation:
     Simulation of the game.
     """
 
-    def __init__(self, game, iceberg_to_simulate):
+    def __init__(self, game, iceberg_to_simulate, bonus_turns_ls):
         """
         :param game: Game current status
         :type game: Game
         :param iceberg_to_simulate: Iceberg to simulate his penguins amount.
         :type iceberg_to_simulate: IceBuilding
+        :type bonus_turns_ls: List[int]
         """
         self.__game = game
         self.__iceberg_to_simulate = iceberg_to_simulate
+        self.__bonus_turns_ls = bonus_turns_ls
         self.reset_to_origin()
 
     def reset_to_origin(self):
@@ -32,6 +35,7 @@ class Simulation:
         game = self.__game
         self.__is_simulate_started = False
         self.__current_turn = 0
+        self.__bonus_turn_index = 0
 
         iceberg_to_simulate = self.__iceberg_to_simulate
         self.__iceberg_owner = iceberg_to_simulate.owner
@@ -76,8 +80,9 @@ class Simulation:
             self.__current_turn += turns_to_continue
             self.__move_groups_to_destination(turns_to_continue)
             self.__treat_iceberg_by_turns(turns_to_continue)
+            self.__treat_bonus()
             self.__treat_groups_arrived_destination()
-            # self.__treat_bonus()
+
             # Calculate how much turns to continue
             turns_to_continue = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
             turn += turns_to_continue
@@ -229,16 +234,8 @@ class Simulation:
             turns_to_continue = self.__groups_to_iceberg[0].get_turns_till_arrival()
             if current_simulate_turn + turns_to_continue > turns_to_simulate:
                 turns_to_continue = turns_to_simulate - current_simulate_turn
-
         return turns_to_continue
-
         # Calculate turns for next bonus
-        bonus_iceberg = self.__game.get_bonus_iceberg()  # type:BonusIceberg
-        turns_to_continue_to_bonus = float('inf')  # infinity value
-        if bonus_iceberg is not None and not bonus_iceberg.owner.equals(self.__game.get_neutral()):
-            turns_to_continue_to_bonus = bonus_iceberg.turns_left_to_bonus
-
-        return min(turns_to_continue, turns_to_continue_to_bonus)
 
     def __sort_groups_by_distance(self):
         """
@@ -281,7 +278,6 @@ class Simulation:
                     else:
                         turns = bridge.duration + (turns_till_arrival - turns_forward_until_bridge_gone)
                     group.move_toward_destination(turns_till_arrival - turns)
-
 
     def __move_groups_to_destination(self, turns_to_move=1):
         """
@@ -406,9 +402,16 @@ class Simulation:
 
     def __treat_bonus(self):
         bonus_iceberg = self.__game.get_bonus_iceberg()  # type:BonusIceberg
-        if bonus_iceberg is not None and not bonus_iceberg.owner.equals(self.__iceberg_owner):
-            if bonus_iceberg.turns_left_to_bonus == 0:
-                self.__penguin_amount += bonus_iceberg.penguin_bonus
+        if bonus_iceberg is not None and not utils.is_bonus_iceberg(self.__game, self.__iceberg_to_simulate):
+            bonus_turns_ls = self.__bonus_turns_ls
+            index = self.__bonus_turn_index
+            while index < len(bonus_turns_ls) and \
+                    bonus_turns_ls[index].get_turn() <= self.__current_turn:
+                bonus_data = bonus_turns_ls[index]  # type:BonusTurnData
+                if self.__iceberg_owner.equals(bonus_data.get_owner()):
+                    self.__penguin_amount += bonus_data.get_pengion_bonus()
+                index += 1
+            self.__bonus_turn_index = index
 
     def __str__(self):
         num_of_groups_to_iceberg = 0
