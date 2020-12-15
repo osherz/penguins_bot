@@ -1,6 +1,6 @@
 from penguin_game import *
 from simulation import Simulation
-from simulationsdata import SimulationsData,OWNER, ARE_GROUP_REMAIN, PENGUIN_AMOUNT
+from simulationsdata import SimulationsData, OWNER, ARE_GROUP_REMAIN, PENGUIN_AMOUNT
 
 TURN_TO_START_PRINT_FROM = 0
 
@@ -71,7 +71,6 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg, simulatio
 
 
 def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns, simulation_data):
-
     """
     Return how much penguins will be in the given iceberg after x turns, and in how much turns.
 
@@ -83,17 +82,17 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     :return: (penguins, owner, turns)
     """
     simulation = Simulation(game, destination_iceberg)
-    
+
     penguin_amount = 0
     owner = game.get_myself()
     iceberg_turns_data = simulation_data.get(destination_iceberg)
     iceberg_min_turns_data = iceberg_turns_data[min_turns]
-    
+
     if not is_belong_to_me(game, iceberg_min_turns_data[OWNER]):
         penguin_amount = iceberg_min_turns_data[PENGUIN_AMOUNT]
         owner = iceberg_min_turns_data[OWNER]
         # Check what happen if we sent enough penguins to occupy.
-        
+
         simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
         simulation.simulate_until_last_group_arrived()
         new_penguin_amount = simulation.get_penguin_amount()
@@ -103,7 +102,7 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
         last_group_turns = turns_until_last_group_arrived(game, destination_iceberg)
         new_penguin_amount = iceberg_turns_data[last_group_turns][PENGUIN_AMOUNT]
         new_owner = iceberg_turns_data[last_group_turns][OWNER]
-    
+
     if is_belong_to_neutral(game, new_owner):
         new_penguin_amount += penguin_amount
         owner = game.get_enemy()  # In case we won't send penguins, the iceberg will belong to enemy.
@@ -116,7 +115,8 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     return new_penguin_amount, owner, last_group_turns
 
 
-def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_send=0, upgrade_cost=None, simulation_data = None):
+def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_send=0, upgrade_cost=None,
+                                            simulation_data=None):
     """
     Calculate how much penguins will be after all groups arrived to this iceberg.
 
@@ -268,6 +268,7 @@ def find_max_distance(game):
         __max_distance = max_distance
     return __max_distance
 
+
 def turns_until_last_group_arrived(game, destination_iceberg):
     """
     return the turns that the last group remain until arrive to destination iceberg.
@@ -278,10 +279,11 @@ def turns_until_last_group_arrived(game, destination_iceberg):
     :return: 
     :rtype: int
     """
-    penguin_groups = get_groups_way_to_iceberg(game, destination_iceberg)  #type: List[PenguinGroup]
+    penguin_groups = get_groups_way_to_iceberg(game, destination_iceberg)  # type: List[PenguinGroup]
     if is_empty(penguin_groups):
         return 0
-    return max(penguin_groups, key= lambda group: group.turns_till_arrival).turns_till_arrival
+    return max(penguin_groups, key=lambda group: group.turns_till_arrival).turns_till_arrival
+
 
 def can_build_bridge(iceberg_source, iceberg_destination):
     """
@@ -308,6 +310,7 @@ def has_bridge_between(source_iceberg, destination_iceberg):
             return True
     return False
 
+
 def is_bonus_iceberg(game, iceberg):
     """
     Check whether this iceberg is a bonus.
@@ -315,3 +318,15 @@ def is_bonus_iceberg(game, iceberg):
     :rtype iceberg: Iceberg
     """
     return game.get_bonus_iceberg().equals(iceberg)
+
+
+def get_all_icebergs(game):
+    """
+    Get all icebergs, including bonus iceberg.
+    :type game: Game
+    """
+    all_icebergs = game.get_all_icebergs()
+    bonus_iceberg = game.get_bonus_iceberg()
+    if bonus_iceberg is not None:
+        all_icebergs.append(bonus_iceberg)
+    return all_icebergs
