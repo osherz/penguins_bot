@@ -1,6 +1,7 @@
 from penguin_game import *
 import utils
 from simulation import Simulation
+from bonusturndata import BonusTurnData
 
 PENGUIN_AMOUNT = "penguin_amount"
 OWNER = "owner"
@@ -71,14 +72,14 @@ class SimulationsData:
             iceberg_simulation_turn.append(data)
         return iceberg_simulation_turn
 
-    def __get_simulation_data(self, simulation, iceberg):
+    def __get_simulation_data(self, simulation, iceberg, last_simulation_data= None):
         """
         Return the data from the simulation that we want to store for each turn.
         Return different data depending on iceberg type.
         :rtype: {}
         """
         if utils.is_bonus_iceberg(self.__game, iceberg):
-            return self.__get_bonus_simulation_data(simulation)
+            return self.__get_bonus_simulation_data(simulation,last_simulation_data)
         else:
             return self.__get_non_bonus_simulation_data(simulation)
 
@@ -96,26 +97,37 @@ class SimulationsData:
         }
         return iceberg_turn_data
 
-    def __get_bonus_simulation_data(self, simulation, last_simulation_data):
+    def __get_bonus_simulation_data(self, simulation, last_simulation_data = None):
         """
         Return the data from the simulation of the bonus iceberg that we want to store for each turn.
         :type simulation: Simulation
         :return: {penguin_amount,owner,are_group_remains,turns_until_bonus, get_bonus}
         :rtype: {}
         """
+        game = self.__game # type: Game
         iceberg_turn_data = self.__get_non_bonus_simulation_data(simulation)
         iceberg_turn_data[GET_BONUS] = False
-        old_owner = last_simulation_data[OWNER]
         new_owner = simulation.get_owner()
-        if old_owner.equals(new_owner):
+        if last_simulation_data is None:
+            iceberg_turn_data[TURNS_UNTIL_BONUS] = game.get_bonus_iceberg().turns_left_to_bonus
+            return iceberg_turn_data
+
+        old_owner = last_simulation_data[OWNER]
+        neutral = game.get_neutral()
+        if not old_owner.equals(new_owner) or old_owner.equals(neutral) or new_owner.equals(neutral):
+            turns_until_bonus = self.__game.bonus_iceberg_max_turns_to_bonus
+        else:
             turns_until_bonus = last_simulation_data[TURNS_UNTIL_BONUS] - 1
             if turns_until_bonus == 0:
                 iceberg_turn_data[GET_BONUS] = True
-                turns_until_bonus = self.__game.bonus_iceberg_max_turns_to_bonus
-                self.__bonus_turns_ls.append(simulation.get_turns_simulated())
-        else:
-            iceberg_turn_data[OWNER] = new_owner
-            turns_until_bonus = self.__game.bonus_iceberg_max_turns_to_bonus
+                turns_until_bonus = game.bonus_iceberg_max_turns_to_bonus
+                self.__bonus_turns_ls.append(
+                    BonusTurnData(
+                        simulation.get_turns_simulated(),
+                        new_owner,
+                        game.bonus_iceberg_penguin_bonus
+                    )
+                )
         iceberg_turn_data[TURNS_UNTIL_BONUS] = turns_until_bonus
         return iceberg_turn_data
 
