@@ -53,11 +53,9 @@ class Scores:
         :rtype: (float,int)
         """
         scores = []
-        log('__score_by_iceberg_price')
         min_penguins_for_occupy_score, min_penguins_for_occupy = self.__score_by_iceberg_price(
             source_iceberg, destination_iceberg_to_score, simulation_data)
         if score_by_iceberg_price:
-            log('score_by_iceberg_price')
             scores.append(min_penguins_for_occupy_score)
         # if the score will not be positive, return score.
         if sum(scores) < IRREVERSIBLE_SCORE:
@@ -68,27 +66,22 @@ class Scores:
             self.__game, destination_iceberg_to_score, simulation_data=simulation_data)
 
         if score_by_iceberg_belogns:
-            log('score_by_iceberg_belogns')
             scores.append(self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
                                                           iceberg_owner_after_all_groups_arrived))
 
         if score_by_penguins_gaining:
-            log('score_by_penguins_gaining')
             scores.append(self.__score_by_penguins_gaining(source_iceberg, destination_iceberg_to_score,
                                                            iceberg_owner_after_all_groups_arrived))
 
         if score_by_iceberg_distance:
-            log('score_by_iceberg_distance')
             scores.append(
                 self.__score_by_iceberg_distance(source_iceberg, destination_iceberg_to_score)
             )
 
         if score_by_iceberg_level:
-            log('score_by_iceberg_level')
             scores.append(self.__score_by_iceberg_level(destination_iceberg_to_score))
 
         if score_by_iceberg_bonus:
-            log('score_by_iceberg_bonus')
             bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(destination_iceberg_to_score,
                                                                                          min_penguins_for_occupy)
             scores.append(bonus_iceberg_score)
