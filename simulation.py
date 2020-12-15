@@ -408,12 +408,26 @@ class Simulation:
                 index += 1
             self.__bonus_turn_index = index
 
+    def __belong_to(self):
+        """
+        Return string to whom the iceberg is belong to.
+        :rtype: str
+        """
+        game = self.__game
+        owner = self.__iceberg_owner
+        if utils.is_neutral(game, owner):
+            return 'Netural'
+        if utils.is_enemy(game, owner):
+            return 'Enemy'
+        if utils.is_me(game, owner):
+            return 'Me'
+
     def __str__(self):
         num_of_groups_to_iceberg = 0
         if self.__is_simulate_started:
             num_of_groups_to_iceberg = len(self.__groups_to_iceberg)
         ret = 'Simulation: is started:' + str(self.__is_simulate_started) + ', penguin amount ' + str(
-            self.get_penguin_amount()) + ', owner ' + str(
+            self.get_penguin_amount()) + ', owner ' + self.__belong_to() + ' ' + str(
             self.__iceberg_owner)
 
         if type(self.__iceberg_to_simulate) == Iceberg:
