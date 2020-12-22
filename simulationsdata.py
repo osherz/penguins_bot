@@ -8,12 +8,15 @@ OWNER = "owner"
 ARE_GROUP_REMAIN = "are_group_remains"
 TURNS_UNTIL_BONUS = "turns_until_bonus"
 GET_BONUS = "get_bonus"
+OURS_AVG_DISTANCE = "ours_avg_distance"
+ENEMY_AVG_DISTANCE = "enemy_avg_distance"
 
 
 class SimulationsData:
     def __init__(self, game):
         self.__game = game  # type: Game
         self.__icebergs_simulations = {}
+        self.__icebergs_avg_distance = {}
         self.__max_turn = utils.find_max_distance(game)
         self.__bonus_turns_ls = []
 
@@ -28,6 +31,17 @@ class SimulationsData:
         key = self.__get_iceberg_key(iceberg)
         return self.__icebergs_simulations[key]
 
+    def get_avg_distance_from_players(self, iceberg):
+        """
+        Return average distance of the given iceberg from enemy and our icebergs.
+        :type iceberg: Iceberg
+        :return: (ours_avg_distance,enemy_avg_distance)
+        :rtype: (float, float)
+        """
+        key = self.__get_iceberg_key(iceberg)
+        distances = self.__icebergs_avg_distance[key]
+        return distances[OURS_AVG_DISTANCE], distances[ENEMY_AVG_DISTANCE]
+
     def get_bonus_turns(self):
         """
         Return list of turns that icebergs supposed to get bonus.
@@ -41,6 +55,7 @@ class SimulationsData:
         icebergs_ls = utils.get_all_icebergs(self.__game)
         for iceberg in icebergs_ls:
             self.update_iceberg_simulation(iceberg)
+            self.__calc_avg_distances(iceberg)
 
     def update_iceberg_simulation(self, *icebergs):
         """
@@ -74,14 +89,14 @@ class SimulationsData:
             iceberg_simulation_turn.append(data)
         return iceberg_simulation_turn
 
-    def __get_simulation_data(self, simulation, iceberg, last_simulation_data= None):
+    def __get_simulation_data(self, simulation, iceberg, last_simulation_data=None):
         """
         Return the data from the simulation that we want to store for each turn.
         Return different data depending on iceberg type.
         :rtype: {}
         """
         if utils.is_bonus_iceberg(self.__game, iceberg):
-            return self.__get_bonus_simulation_data(simulation,last_simulation_data)
+            return self.__get_bonus_simulation_data(simulation, last_simulation_data)
         else:
             return self.__get_non_bonus_simulation_data(simulation)
 
@@ -99,14 +114,14 @@ class SimulationsData:
         }
         return iceberg_turn_data
 
-    def __get_bonus_simulation_data(self, simulation, last_simulation_data = None):
+    def __get_bonus_simulation_data(self, simulation, last_simulation_data=None):
         """
         Return the data from the simulation of the bonus iceberg that we want to store for each turn.
         :type simulation: Simulation
         :return: {penguin_amount,owner,are_group_remains,turns_until_bonus, get_bonus}
         :rtype: {}
         """
-        game = self.__game # type: Game
+        game = self.__game  # type: Game
         iceberg_turn_data = self.__get_non_bonus_simulation_data(simulation)
         iceberg_turn_data[GET_BONUS] = False
         new_owner = simulation.get_owner()
@@ -142,3 +157,42 @@ class SimulationsData:
         :rtype:
         """
         return iceberg.unique_id
+
+    def __calculate_average_distance_from_enemy(self, iceberg):
+        """
+        Calculate the distance average between the given iceberg and the enemy icebergs.
+
+        :param iceberg: Iceberg to calculate the distance from him.
+        :type iceberg: Iceberg
+        :return: distance average
+        :rtype: float
+        """
+        enemy_icebergs = self.__game.get_enemy_icebergs()
+        enemy_distance = map(
+            lambda enemy_iceberg: enemy_iceberg.get_turns_till_arrival(iceberg),
+            enemy_icebergs
+        )
+        return sum(enemy_distance) / len(enemy_distance)
+
+    def __calculate_average_distance_from_ours(self, iceberg):
+        """
+        Calculate the distance average between the given iceberg and ours icebergs.
+
+        :param iceberg: Iceberg to calculate the distance from him.
+        :type iceberg: Iceberg
+        :return: distance average
+        :rtype: float
+        """
+        ours_icebergs = self.__game.get_my_icebergs()
+        ours_distance = map(
+            lambda our_iceberg: our_iceberg.get_turns_till_arrival(iceberg),
+            ours_icebergs
+        )
+        return sum(ours_distance) / len(ours_distance)
+
+    def __calc_avg_distances(self, iceberg):
+        key = self.__get_iceberg_key(iceberg)
+        self.__icebergs_avg_distance[key] = {
+            OURS_AVG_DISTANCE: self.__calculate_average_distance_from_ours(iceberg),
+            ENEMY_AVG_DISTANCE: self.__calculate_average_distance_from_enemy(iceberg)
+        }
