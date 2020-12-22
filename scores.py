@@ -22,6 +22,7 @@ DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
 UPDATE_FACTOR_SCORE = 0.2
+AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.2
 
 OUR_BOMUS_FACTOR_SCORE = 0.1
 ENEMY_BOMUS_FACTOR_SCORE = 1.2
@@ -51,7 +52,8 @@ class Scores:
               score_by_iceberg_distance=False,
               score_by_iceberg_price=False,
               score_by_penguins_gaining=False,
-              score_by_iceberg_bonus=False):
+              score_by_iceberg_bonus=False,
+              score_by_avg_distance_from_players=False):
         """
         Score the iceberg by the scores specified.
         :return: ScoreData
@@ -83,6 +85,9 @@ class Scores:
 
             if score_by_iceberg_level:
                 scores.append(self.__score_by_iceberg_level(destination_iceberg_to_score))
+
+            if score_by_avg_distance_from_players:
+                scores.append(self.__score_by_avg_distance_from_players(destination_iceberg_to_score, simulation_data))
 
             if score_by_iceberg_bonus:
                 bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(
@@ -122,6 +127,13 @@ class Scores:
         score += self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
 
         return score * UPDATE_FACTOR_SCORE
+
+    def __score_by_avg_distance_from_players(self, iceberg_to_score, simulation_data):
+        """
+        Scoring by the relation between the average distance from enemy and ours.
+        """
+        ours_avg_distance, enemy_avg_distance = simulation_data.get_avg_distance_from_players(iceberg_to_score)
+        return (enemy_avg_distance - ours_avg_distance) * AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE
 
     def __score_by_penguins_gaining(self, source_iceberg, destination_iceberg_to_score,
                                     iceberg_owner_after_all_groups_arrived):
@@ -174,7 +186,7 @@ class Scores:
 
         return NEUTRAL_BELONGS_SCORE
 
-    def __score_by_support(self, source_iceberg, iceberg_to_score, iceberg_to_score_owner):
+    def __score_by_support(self, source_iceberg, iceberg_to_score, iceberg_to_score_owner, simulation_data):
         """
         Score the destination based on his need for support.
         Taking in account his penguins amount and his distance from enemy.
@@ -187,7 +199,8 @@ class Scores:
         is_belong_to_me = iceberg_to_score_owner.equals(game.get_myself())
         score = 0
         is_closest_to_enemy, avr_distance_from_enemy = self.__is_destination_closest_to_enemy(source_iceberg,
-                                                                                              iceberg_to_score)
+                                                                                              iceberg_to_score,
+                                                                                              simulation_data)
         if is_belong_to_me and is_closest_to_enemy and not iceberg_to_score is game.get_bonus_iceberg():
             score += self.__max_price - iceberg_to_score.penguin_amount
             score += self.__max_distance - avr_distance_from_enemy
@@ -232,7 +245,8 @@ class Scores:
 
         log('min penguins for occupy', min_penguins_for_occupy)
         if min_penguins_for_occupy == 0:
-            score += self.__score_by_support(source_iceberg, destination_iceberg_to_score, self.__game.get_myself())
+            score += self.__score_by_support(source_iceberg, destination_iceberg_to_score, self.__game.get_myself(),
+                                             simulation_data)
             if type(source_iceberg) == Iceberg:
                 penguins_per_turn = source_iceberg.penguins_per_turn
                 penguin_amount_to_send = source_iceberg.penguin_amount
@@ -320,31 +334,27 @@ class Scores:
 
         return sum_distances / (all_icebergs_length * (all_icebergs_length - 1) / 2)
 
-    def __calculate_average_distance_from_enemy(self, iceberg):
+    def __calculate_average_distance_from_enemy(self, iceberg, simulation_data):
         """
         Calculate the distance average between the given iceberg and the enemy icebergs.
 
         :param iceberg: Iceberg to calculate the distance from him.
         :type iceberg: Iceberg
+        :type simulation_data: simulationdata.SimulationData
         :return: distance average
         :rtype: float
         """
-        enemy_icebergs = self.__game.get_enemy_icebergs()
-        enemy_distance = map(
-            lambda enemy_iceberg: enemy_iceberg.get_turns_till_arrival(iceberg),
-            enemy_icebergs
-        )
-        return sum(enemy_distance) / len(enemy_distance)
+        return simulation_data.get_avg_distance_from_players(iceberg)[1]
 
-    def __is_destination_closest_to_enemy(self, source_iceberg, destination_iceberg):
+    def __is_destination_closest_to_enemy(self, source_iceberg, destination_iceberg, simulation_data):
         """
         Check is the source closest to the enemy than the destination.
         :param source_iceberg:
         :param destination_iceberg:
         :return: Whether source closest
         """
-        source_avg_distance = self.__calculate_average_distance_from_enemy(source_iceberg)
-        destination_avg_distance = self.__calculate_average_distance_from_enemy(destination_iceberg)
+        source_avg_distance = self.__calculate_average_distance_from_enemy(source_iceberg, simulation_data)
+        destination_avg_distance = self.__calculate_average_distance_from_enemy(destination_iceberg, simulation_data)
         # TODO: maybe to return int value for more acurate score for distance from enemy.
         return destination_avg_distance < self.__average_distance < source_avg_distance, destination_avg_distance
 
