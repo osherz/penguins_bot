@@ -21,7 +21,7 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    # utils.active_print(game)
+    utils.active_print(game)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
     if game.turn == 1 and game.get_bonus_iceberg() is not None:
@@ -66,6 +66,7 @@ def occupy_close_icebergs(game):
             while not utils.is_empty(destination_scored_icebergs) and not continue_to_next_source:
                 icebergs_to_update = []
                 if game.get_time_remaining() < 0:
+                    log('time over')
                     break
                 log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
 
@@ -89,11 +90,12 @@ def occupy_close_icebergs(game):
                     destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
                                                                       simulation_data)
 
-        elif upgrade_score_for_my_iceberg > 0:
+        elif upgrade_score_for_my_iceberg > 0 and utils.can_be_upgrade(my_iceberg):
             my_iceberg.upgrade()
             icebergs_to_update = [my_iceberg]
 
         if game.get_time_remaining() < 0:
+            log('time over')
             break
 
         if my_iceberg_cnt < len(game.get_my_icebergs()) or \

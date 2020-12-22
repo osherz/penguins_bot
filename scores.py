@@ -15,13 +15,13 @@ OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 NEED_PROTECTED_SCORE = 30
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
-BONUS_SCORE = 15
+BONUS_SCORE = 5
 
 # Factors
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
-UPDATE_FACTOR_SCORE = 0.1
+UPDATE_FACTOR_SCORE = 0.2
 
 OUR_BOMUS_FACTOR_SCORE = 0.1
 ENEMY_BOMUS_FACTOR_SCORE = 1.2
@@ -85,8 +85,9 @@ class Scores:
                 scores.append(self.__score_by_iceberg_level(destination_iceberg_to_score))
 
             if score_by_iceberg_bonus:
-                bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(destination_iceberg_to_score,
-                                                                                             min_penguins_for_occupy)
+                bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(
+                    destination_iceberg_to_score,
+                    min_penguins_for_occupy)
                 scores.append(bonus_iceberg_score)
         log('score:', scores)
         # TODO: change "scores" to integer variabel.
@@ -105,18 +106,21 @@ class Scores:
         :return: Score
         :rtype: float
         """
-
-        if not utils.can_be_upgrade(iceberg_to_score):
+        if utils.is_bonus_iceberg(self.__game, iceberg_to_score):
             return CANT_DO_ACTION_SCORE
-
+        score = 0
         upgrade_cost = iceberg_to_score.upgrade_cost
-        next_level = iceberg_to_score.level + 1
-        score = self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
+        if not utils.can_be_upgrade(iceberg_to_score):
+            score += CANT_DO_ACTION_SCORE
+        else:
+            penguins_amount, owner = utils.penguin_amount_after_all_groups_arrived(self.__game, iceberg_to_score,
+                                                                                   upgrade_cost=upgrade_cost)
+            if not self.__game.get_myself().equals(owner):
+                score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
 
-        penguins_amount, owner = utils.penguin_amount_after_all_groups_arrived(self.__game, iceberg_to_score,
-                                                                               upgrade_cost=upgrade_cost)
-        if not self.__game.get_myself().equals(owner):
-            score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
+        next_level = iceberg_to_score.level + 1
+        score += self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
+
         return score * UPDATE_FACTOR_SCORE
 
     def __score_by_penguins_gaining(self, source_iceberg, destination_iceberg_to_score,
@@ -240,7 +244,8 @@ class Scores:
             score += NEED_PROTECTED_SCORE
 
         iceberg_simulation_data = simulation_data.get(source_iceberg)
-        max_penguins_can_be_sent = min(iceberg_simulation_data[-1][simulationsdata.PENGUIN_AMOUNT], source_iceberg.penguin_amount)
+        max_penguins_can_be_sent = min(iceberg_simulation_data[-1][simulationsdata.PENGUIN_AMOUNT],
+                                       source_iceberg.penguin_amount)
         if max_penguins_can_be_sent - min_penguins_for_occupy < self.__min_penguins_amount:
             score += CANT_DO_ACTION_SCORE
 
