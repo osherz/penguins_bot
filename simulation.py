@@ -160,7 +160,7 @@ class Simulation:
                 self.__penguin_amount -= penguin_amount
             else:
                 raise ValueError(
-                    'You can\'t send more penguins then you have: send' + str(penguin_amount) + ' has:' + str(
+                    'Simulation: You can\'t send more penguins then you have: send' + str(penguin_amount) + ' has:' + str(
                         self.__penguin_amount))
         else:
             self.__treat_group_arrived_destination(owner, penguin_amount)

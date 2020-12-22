@@ -1,14 +1,16 @@
 from penguin_game import *
 import utils
 from utils import log
+from scoredata import ScoreData
+import simulationsdata
 
 ENEMY_BELONGS_SCORE = 20
 NEUTRAL_BELONGS_SCORE = 16
 MY_BELONGS_SCORE = 0
-CANT_DO_ACTION_SCORE = -9999
+CANT_DO_ACTION_SCORE = -20
 UPGRADE_TURNS_TO_CHECK = 20
 SUPPORT_SCORE = 10
-OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
+OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -20
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 NEED_PROTECTED_SCORE = 50
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
@@ -51,8 +53,8 @@ class Scores:
               score_by_iceberg_bonus=False):
         """
         Score the iceberg by the scores specified.
-        :return: (min_penguins_for_occupy_score, min_penguins_for_occupy)
-        :rtype: (float,int)
+        :return: ScoreData
+        :rtype: ScoreData
         """
         scores = []
         min_penguins_for_occupy_score, min_penguins_for_occupy = self.__score_by_iceberg_price(
@@ -90,7 +92,11 @@ class Scores:
 
         log('score:', scores)
         # TODO: change "scores" to integer variabel.
-        return sum(scores), min_penguins_for_occupy
+        return ScoreData(source_iceberg,
+                         destination_iceberg_to_score,
+                         min_penguins_for_occupy,
+                         99,
+                         sum(scores), send_penguins=True)
 
     def score_upgrade(self, iceberg_to_score):
         """
@@ -235,9 +241,10 @@ class Scores:
         elif destination_iceberg_to_score.owner.equals(self.__game.get_myself()):
             score += NEED_PROTECTED_SCORE
 
-        if utils.get_actual_penguin_amount(self.__game,
-                                           source_iceberg) - min_penguins_for_occupy < self.__min_penguins_amount:
-            return CANT_DO_ACTION_SCORE, -1
+        iceberg_simulation_data = simulation_data.get(source_iceberg)
+        max_penguins_can_be_sent = min(iceberg_simulation_data[-1][simulationsdata.PENGUIN_AMOUNT], source_iceberg.penguin_amount)
+        if max_penguins_can_be_sent - min_penguins_for_occupy < self.__min_penguins_amount:
+            score += CANT_DO_ACTION_SCORE
 
         # If we got here, so we can and need to occupy the destination.
         score += PRICE_FACTOR_SCORE * (float(min_penguins_for_occupy) / self.__max_price)
