@@ -10,21 +10,22 @@ MY_BELONGS_SCORE = 0
 CANT_DO_ACTION_SCORE = -20
 UPGRADE_TURNS_TO_CHECK = 20
 SUPPORT_SCORE = 10
-OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -20
+OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -100
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
-NEED_PROTECTED_SCORE = 50
+NEED_PROTECTED_SCORE = 30
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
+BONUS_SCORE = 15
 
-# Factprs
+# Factors
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
 UPDATE_FACTOR_SCORE = 0.1
 
 OUR_BOMUS_FACTOR_SCORE = 0.1
-ENEMY_BOMUS_FACTOR_SCORE = 1.6
-NATURAL_BOMUS_FACTOR_SCORE = 1.5
+ENEMY_BOMUS_FACTOR_SCORE = 1.2
+NATURAL_BOMUS_FACTOR_SCORE = 1.1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 
 PENGUINS_GAINING_SCORE_FACTOR = 0.2
@@ -57,45 +58,42 @@ class Scores:
         :rtype: ScoreData
         """
         scores = []
-        min_penguins_for_occupy_score, min_penguins_for_occupy = self.__score_by_iceberg_price(
+        min_penguins_for_occupy_score, min_penguins_for_occupy, max_penguins_can_be_sent = self.__score_by_iceberg_price(
             source_iceberg, destination_iceberg_to_score, simulation_data)
         if score_by_iceberg_price:
             scores.append(min_penguins_for_occupy_score)
         # if the score will not be positive, return score.
-        if sum(scores) < IRREVERSIBLE_SCORE:
-            return sum(scores), min_penguins_for_occupy
+        if sum(scores) >= IRREVERSIBLE_SCORE:
+            log('penguin_amount_after_all_groups_arrived')
+            penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
+                self.__game, destination_iceberg_to_score, simulation_data=simulation_data)
 
-        log('penguin_amount_after_all_groups_arrived')
-        penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
-            self.__game, destination_iceberg_to_score, simulation_data=simulation_data)
+            if score_by_iceberg_belogns:
+                scores.append(self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
+                                                              iceberg_owner_after_all_groups_arrived))
 
-        if score_by_iceberg_belogns:
-            scores.append(self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
-                                                          iceberg_owner_after_all_groups_arrived))
+            if score_by_penguins_gaining:
+                scores.append(self.__score_by_penguins_gaining(source_iceberg, destination_iceberg_to_score,
+                                                               iceberg_owner_after_all_groups_arrived))
 
-        if score_by_penguins_gaining:
-            scores.append(self.__score_by_penguins_gaining(source_iceberg, destination_iceberg_to_score,
-                                                           iceberg_owner_after_all_groups_arrived))
+            if score_by_iceberg_distance:
+                scores.append(
+                    self.__score_by_iceberg_distance(source_iceberg, destination_iceberg_to_score)
+                )
 
-        if score_by_iceberg_distance:
-            scores.append(
-                self.__score_by_iceberg_distance(source_iceberg, destination_iceberg_to_score)
-            )
+            if score_by_iceberg_level:
+                scores.append(self.__score_by_iceberg_level(destination_iceberg_to_score))
 
-        if score_by_iceberg_level:
-            scores.append(self.__score_by_iceberg_level(destination_iceberg_to_score))
-
-        if score_by_iceberg_bonus:
-            bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(destination_iceberg_to_score,
-                                                                                         min_penguins_for_occupy)
-            scores.append(bonus_iceberg_score)
-
+            if score_by_iceberg_bonus:
+                bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(destination_iceberg_to_score,
+                                                                                             min_penguins_for_occupy)
+                scores.append(bonus_iceberg_score)
         log('score:', scores)
         # TODO: change "scores" to integer variabel.
         return ScoreData(source_iceberg,
                          destination_iceberg_to_score,
                          min_penguins_for_occupy,
-                         99,
+                         max_penguins_can_be_sent,
                          sum(scores), send_penguins=True)
 
     def score_upgrade(self, iceberg_to_score):
@@ -143,16 +141,16 @@ class Scores:
                 destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
         # check if the bonus iceberg will be ours.
         if min_penguins_for_occupy <= 0:
-            return 26 + bonus_score * len(
+            return BONUS_SCORE + bonus_score * len(
                 self.__game.get_my_icebergs()) * penguin_bonus * OUR_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
         # check if the bonus iceberg belongs to the enemy.
         elif bonus_score != 0:
-            return 26 + bonus_score * len(
+            return BONUS_SCORE + bonus_score * len(
                 self.__game.get_enemy_icebergs()) * penguin_bonus * ENEMY_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
         # if the bonus iceberg is netural.
         else:
             min_penguins_for_occupy = int(min_penguins_for_occupy * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
-            return 26 + NATURAL_BOMUS_FACTOR_SCORE * len(
+            return BONUS_SCORE + NATURAL_BOMUS_FACTOR_SCORE * len(
                 self.__game.get_enemy_icebergs()) * penguin_bonus, min_penguins_for_occupy
 
     def __score_by_iceberg_belogns(self, source_iceberg, iceberg_to_score, iceberg_to_score_owner):
@@ -221,8 +219,8 @@ class Scores:
         If the iceberg belong or will belong to us, return (0,0).
         :type source_iceberg: Iceberg
         :type destination_iceberg_to_score: Iceberg
-        :rtype: (int, int)
-        :return: (score, min_penguins_for_occupy)
+        :rtype: (int, int, max_penguins_can_be_sent)
+        :return: (score, min_penguins_for_occupy, max_penguins_can_be_sent)
         """
         score = 0
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
@@ -250,14 +248,15 @@ class Scores:
         score += PRICE_FACTOR_SCORE * (float(min_penguins_for_occupy) / self.__max_price)
 
         # Check whether source will be in danger if send the penguins.
+        max_penguins_will_send_for_occupy = min(max_penguins_can_be_sent, min_penguins_for_occupy)
         penguin_amount_after_all_groups_arrived, owner = utils.penguin_amount_after_all_groups_arrived(self.__game,
                                                                                                        source_iceberg,
-                                                                                                       min_penguins_for_occupy,
+                                                                                                       max_penguins_will_send_for_occupy,
                                                                                                        simulation_data=simulation_data)
         log('(penguin_amount, owner)', penguin_amount_after_all_groups_arrived, owner)
         if not self.__game.get_myself().equals(owner):
             score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE
-        return score, min_penguins_for_occupy
+        return score, min_penguins_for_occupy, max_penguins_can_be_sent
 
     def __find_max_distance(self):
         """
