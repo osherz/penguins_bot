@@ -83,36 +83,56 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     """
     simulation = Simulation(game, destination_iceberg, simulation_data.get_bonus_turns())
 
-    penguin_amount = 0
-    owner = game.get_myself()
     iceberg_turns_data = simulation_data.get(destination_iceberg)
-    iceberg_min_turns_data = iceberg_turns_data[min_turns - 1]
+    iceberg_min_turns_data = iceberg_turns_data[min_turns]
     log(simulation)
-    if not is_me(game, iceberg_min_turns_data[OWNER]):
-        penguin_amount = iceberg_min_turns_data[PENGUIN_AMOUNT]
-        owner = iceberg_min_turns_data[OWNER]
+    log(iceberg_min_turns_data)
+    last_group_turns = turns_until_last_group_arrived(game, destination_iceberg)
+    owner = destination_iceberg.owner
+    new_owner = iceberg_min_turns_data[OWNER]
+    penguin_amount = iceberg_min_turns_data[PENGUIN_AMOUNT]
+    groups_sent = True
+    not_finish_simulation = True
+    if is_neutral(game, owner) and destination_iceberg.penguin_amount > 0:
         # Check what happen if we sent enough penguins to occupy.
-
         simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
-        simulation.simulate_until_last_group_arrived()
-        new_penguin_amount = simulation.get_penguin_amount()
-        new_owner = simulation.get_owner()
-        last_group_turns = simulation.get_turns_simulated()
+        simulation.simulate(min_turns)
         log(simulation)
-    else:
-        last_group_turns = turns_until_last_group_arrived(game, destination_iceberg)
-        new_penguin_amount = iceberg_turns_data[last_group_turns][PENGUIN_AMOUNT]
-        new_owner = iceberg_turns_data[last_group_turns][OWNER]
+        owner_after_sending = simulation.get_owner()
+        if is_enemy(game, owner_after_sending):
+            penguin_amount = destination_iceberg.penguin_amount
+            simulation.reset_to_origin()
+        else:
+            simulation.simulate_until_last_group_arrived()
+            log(simulation)
+            new_penguin_amount = simulation.get_penguin_amount()
+            owner_after_sending = simulation.get_owner()
+            last_group_turns = simulation.get_turns_simulated()
+            not_finish_simulation = False
 
-    if is_neutral(game, new_owner):
-        new_penguin_amount += penguin_amount
+    if not_finish_simulation:
+        if not is_me(game, new_owner):
+            # Check what happen if we sent enough penguins to occupy.
+            simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
+            simulation.simulate_until_last_group_arrived()
+            log(simulation)
+            new_penguin_amount = simulation.get_penguin_amount()
+            owner_after_sending = simulation.get_owner()
+            last_group_turns = simulation.get_turns_simulated()
+            log(simulation)
+        else:
+            groups_sent = False
+            new_penguin_amount = iceberg_turns_data[last_group_turns][PENGUIN_AMOUNT]
+            owner = iceberg_turns_data[last_group_turns][OWNER]
+
+    if groups_sent:
         owner = game.get_enemy()  # In case we won't send penguins, the iceberg will belong to enemy.
-    elif is_me(game, new_owner):
-        new_penguin_amount = penguin_amount
-    else:
-        log(new_penguin_amount, penguin_amount)
-        new_penguin_amount += penguin_amount
-        owner = game.get_enemy()  # In case we won't send penguins, the iceberg will belong to enemy.
+        if is_neutral(game, owner_after_sending):
+            new_penguin_amount += penguin_amount + 1
+        elif is_me(game, owner_after_sending):
+            new_penguin_amount = penguin_amount
+        else:
+            new_penguin_amount += penguin_amount + 1
 
     return new_penguin_amount, owner, last_group_turns
 
