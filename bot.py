@@ -79,12 +79,17 @@ def occupy_close_icebergs(game):
                 min_price = iceberg_score_data.get_min_penguins_for_occupy()
                 max_penguins_can_be_sent = iceberg_score_data.get_max_penguins_can_be_sent()
                 # If got so much scores but hasn't enough penguins we prefer to wait.
+                is_send_penguins = iceberg_score_data.send_penguins()
                 if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent:
-                    icebergs_to_update = try_to_send_from_multiple_icebergs(game, iceberg_score_data,
-                                                                            standby_icebergs_score_data)
-                    continue_to_next_source = True
+                    if send_penguins:
+                        icebergs_to_update = try_to_send_from_multiple_icebergs(game, iceberg_score_data,
+                                                                                standby_icebergs_score_data)
+                        continue_to_next_source = True
                 else:
-                    send_penguins(my_iceberg, min_price, dest_iceberg)
+                    if is_send_penguins:
+                        send_penguins(my_iceberg, min_price, dest_iceberg)
+                    else:
+                        build_bridge(my_iceberg, dest_iceberg)
                     icebergs_to_update = [my_iceberg, dest_iceberg]
                     continue_to_next_source = my_iceberg.penguin_amount <= 0
 
@@ -314,6 +319,17 @@ def send_penguins(my_iceberg, destination_penguin_amount, destination):
     """
     log(my_iceberg, "sends", destination_penguin_amount, "penguins to", destination)
     my_iceberg.send_penguins(destination, destination_penguin_amount)
+
+
+def build_bridge(my_iceberg, destination):
+    """
+    Send penguins to destination
+    :type my_iceberg: Iceberg
+    :type destination_penguin_amount: int
+    :type destination: Iceberg
+    """
+    log(my_iceberg, "build bridge to ", destination)
+    my_iceberg.create_bridge(destination)
 
 
 def send_penguins_groups(my_icebergs, destination_penguin_amount, destination):
