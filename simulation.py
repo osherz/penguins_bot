@@ -297,7 +297,7 @@ class Simulation:
             if source_iceberg in self.__custom_bridges_to_iceberg:
                 bridges.append(self.__custom_bridges_to_iceberg[source_key])
             # Type: bridge
-            for bridge in bridges.sort(key=lambda b: b.duration, reverse=True):
+            for bridge in sorted(bridges, key=lambda b: b.duration, reverse=True):
                 if group.get_destination() in bridge.get_edges():
                     turns_forward_until_bridge_gone = bridge.speed_multiplier * bridge.duration
                     turns_till_arrival = group.get_turns_till_arrival()

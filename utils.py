@@ -232,7 +232,7 @@ def simulate_with_bridge(game, source_iceberg, destination_iceberg, simulation_d
     :return: Owner of destination after all group arrived.
     :rtype: Player
     """
-    bonus_turns_ls = simulation_data.get_bonus_turns(destination_iceberg)
+    bonus_turns_ls = simulation_data.get_bonus_turns()
     simulation = Simulation(game, destination_iceberg, bonus_turns_ls)
     simulation.add_bridge(source_iceberg, source_iceberg.max_bridge_duration,
                           source_iceberg.bridge_speed_multiplier)
