@@ -81,13 +81,15 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     :rtype: (int, int)
     :return: (penguins, owner, turns)
     """
-    simulation = Simulation(game, destination_iceberg, simulation_data.get_bonus_turns())
+    simulation = Simulation(game, destination_iceberg,
+                            simulation_data.get_bonus_turns())
 
     iceberg_turns_data = simulation_data.get(destination_iceberg)
     iceberg_min_turns_data = iceberg_turns_data[min_turns]
     log(simulation)
     log(iceberg_min_turns_data)
-    last_group_turns = turns_until_last_group_arrived(game, destination_iceberg)
+    last_group_turns = turns_until_last_group_arrived(
+        game, destination_iceberg)
     owner = destination_iceberg.owner
     new_owner = iceberg_min_turns_data[OWNER]
     penguin_amount = iceberg_min_turns_data[PENGUIN_AMOUNT]
@@ -95,7 +97,8 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     not_finish_simulation = True
     if is_neutral(game, owner) and destination_iceberg.penguin_amount > 0:
         # Check what happen if we sent enough penguins to occupy.
-        simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
+        simulation.add_penguin_group(
+            source_iceberg, destination_iceberg, penguin_amount + 1)
         simulation.simulate(min_turns)
         log(simulation)
         owner_after_sending = simulation.get_owner()
@@ -113,7 +116,8 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
     if not_finish_simulation:
         if not is_me(game, new_owner):
             # Check what happen if we sent enough penguins to occupy.
-            simulation.add_penguin_group(source_iceberg, destination_iceberg, penguin_amount + 1)
+            simulation.add_penguin_group(
+                source_iceberg, destination_iceberg, penguin_amount + 1)
             simulation.simulate_until_last_group_arrived()
             log(simulation)
             new_penguin_amount = simulation.get_penguin_amount()
@@ -126,7 +130,8 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
             owner = iceberg_turns_data[last_group_turns][OWNER]
 
     if groups_sent:
-        owner = game.get_enemy()  # In case we won't send penguins, the iceberg will belong to enemy.
+        # In case we won't send penguins, the iceberg will belong to enemy.
+        owner = game.get_enemy()
         if is_neutral(game, owner_after_sending):
             new_penguin_amount += penguin_amount + 1
         elif is_me(game, owner_after_sending):
@@ -154,7 +159,8 @@ def penguin_amount_after_all_groups_arrived(game, iceberg, penguins_amount_to_se
     :rtype: int
     """
     if upgrade_cost is None and penguins_amount_to_send == 0:
-        iceberg_turn_data = simulation_data.get(iceberg)[turns_until_last_group_arrived(game, iceberg)]
+        iceberg_turn_data = simulation_data.get(
+            iceberg)[turns_until_last_group_arrived(game, iceberg)]
         penguins_amount = iceberg_turn_data[PENGUIN_AMOUNT]
         owner = iceberg_turn_data[OWNER]
         return penguins_amount, owner
@@ -212,6 +218,28 @@ def get_additional_pengions_in_x_turns(iceberg, owner, turns, my_player, enemy):
     return 0
 
 
+def simulate_with_bridge(game, source_iceberg, destination_iceberg, simulation_data):
+    """
+    Build custom bridge between the iceberg and simulate until last group arrived.
+    Return the owner of iceberg destination after all group arrived.
+
+    :param source_iceberg: Iceberg the build the bridge.
+    :type source_iceberg: Iceberg
+    :param destination_iceberg: Destination of the bridge 
+                                and the iceberg we going to active simulate on.
+    :type destination_iceberg: Iceberg
+    :type simulation_data: SimulationsData
+    :return: Owner of destination after all group arrived.
+    :rtype: Player
+    """
+    bonus_turns_ls = simulation_data.get_bonus_turns(destination_iceberg)
+    simulation = Simulation(game, destination_iceberg, bonus_turns_ls)
+    simulation.add_bridge(source_iceberg, source_iceberg.max_bridge_duration,
+                          source_iceberg.bridge_speed_multiplier)
+    simulation.simulate_until_last_group_arrived()
+    return simulation.get_owner()
+
+
 def get_icebergs_not_in(all_icebergs, icebergs):
     """
     Return icebergs that exists in all_icebergs but not in icebergs
@@ -253,10 +281,10 @@ def can_be_upgrade(iceberg):
     :type iceberg: Iceberg
     """
     return type(iceberg) == Iceberg and \
-           iceberg.can_upgrade and \
-           iceberg.upgrade_level_limit > iceberg.level and \
-           not iceberg.already_acted and \
-           iceberg.penguin_amount >= iceberg.upgrade_cost
+        iceberg.can_upgrade and \
+        iceberg.upgrade_level_limit > iceberg.level and \
+        not iceberg.already_acted and \
+        iceberg.penguin_amount >= iceberg.upgrade_cost
 
 
 def get_actual_penguin_amount(game, iceberg):
@@ -305,7 +333,8 @@ def turns_until_last_group_arrived(game, destination_iceberg):
     :return: 
     :rtype: int
     """
-    penguin_groups = get_groups_way_to_iceberg(game, destination_iceberg)  # type: List[PenguinGroup]
+    penguin_groups = get_groups_way_to_iceberg(
+        game, destination_iceberg)  # type: List[PenguinGroup]
     if is_empty(penguin_groups):
         return 0
     return max(penguin_groups, key=lambda group: group.turns_till_arrival).turns_till_arrival
@@ -317,9 +346,9 @@ def can_build_bridge(iceberg_source, iceberg_destination):
     :type iceberg_destination: Iceberg
     """
     return iceberg_source.can_create_bridge(iceberg_destination) and \
-           iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
-           not iceberg_source.already_acted and \
-           not has_bridge_between(iceberg_source, iceberg_destination)
+        iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
+        not iceberg_source.already_acted and \
+        not has_bridge_between(iceberg_source, iceberg_destination)
 
 
 def has_bridge_between(source_iceberg, destination_iceberg):
