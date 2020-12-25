@@ -153,11 +153,14 @@ class Simulation:
         self.add_penguin_group_simulate(penguin_group_simulate)
         return penguin_group_simulate
 
-    def add_bridge(source_iceberg, duration, speed_multiplier):
+    def add_bridge(self, source_iceberg, duration, speed_multiplier):
         """Add custom bridge.
 
         :type bridge: Bridge
         """
+        if self.__is_simulate_started:
+            raise ValueError(
+                'Simulation: You can\'t build bridge after simulation started')
         custom_bridge = BridgeSimulation(
             source_iceberg,
             self.__iceberg_to_simulate,
