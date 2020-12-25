@@ -4,6 +4,9 @@ from utils import log
 from scoredata import ScoreData
 import simulationsdata
 
+BUILD_BRIDGE = "build_bridge"
+SEND_PENGUINS = "send_penguins"
+
 ENEMY_BELONGS_SCORE = 20
 NEUTRAL_BELONGS_SCORE = 16
 MY_BELONGS_SCORE = 0
@@ -44,7 +47,8 @@ class Scores:
         self.__average_distance = self.__calculate_average_distance()
         log('Average distance:', self.__average_distance)
         self.__average_penguins_in_our_icebergs = self.__calculate_average_penguins_in_our_icebergs()
-        self.__min_penguins_amount = int(MIN_PENGUINS_AMOUNT_AVG_PERCENT * self.__average_penguins_in_our_icebergs)
+        self.__min_penguins_amount = int(
+            MIN_PENGUINS_AMOUNT_AVG_PERCENT * self.__average_penguins_in_our_icebergs)
 
     def score(self, source_iceberg, destination_iceberg_to_score, simulation_data,
               score_by_iceberg_belogns=False,
@@ -60,7 +64,7 @@ class Scores:
         :rtype: ScoreData
         """
         scores = []
-        min_penguins_for_occupy_score, min_penguins_for_occupy, max_penguins_can_be_sent = self.__score_by_iceberg_price(
+        min_penguins_for_occupy_score, min_penguins_for_occupy, max_penguins_can_be_sent, action = self.__score_by_iceberg_price(
             source_iceberg, destination_iceberg_to_score, simulation_data)
         if score_by_iceberg_price:
             scores.append(min_penguins_for_occupy_score)
@@ -80,14 +84,17 @@ class Scores:
 
             if score_by_iceberg_distance:
                 scores.append(
-                    self.__score_by_iceberg_distance(source_iceberg, destination_iceberg_to_score)
+                    self.__score_by_iceberg_distance(
+                        source_iceberg, destination_iceberg_to_score)
                 )
 
             if score_by_iceberg_level:
-                scores.append(self.__score_by_iceberg_level(destination_iceberg_to_score))
+                scores.append(self.__score_by_iceberg_level(
+                    destination_iceberg_to_score))
 
             if score_by_avg_distance_from_players:
-                scores.append(self.__score_by_avg_distance_from_players(destination_iceberg_to_score, simulation_data))
+                scores.append(self.__score_by_avg_distance_from_players(
+                    destination_iceberg_to_score, simulation_data))
 
             if score_by_iceberg_bonus:
                 bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(
@@ -100,7 +107,9 @@ class Scores:
                          destination_iceberg_to_score,
                          min_penguins_for_occupy,
                          max_penguins_can_be_sent,
-                         sum(scores), send_penguins=True)
+                         sum(scores),
+                         send_penguins=action == SEND_PENGUINS,
+                         build_bridge=action == BUILD_BRIDGE)
 
     def score_upgrade(self, iceberg_to_score):
         """
@@ -132,7 +141,8 @@ class Scores:
         """
         Scoring by the relation between the average distance from enemy and ours.
         """
-        ours_avg_distance, enemy_avg_distance = simulation_data.get_avg_distance_from_players(iceberg_to_score)
+        ours_avg_distance, enemy_avg_distance = simulation_data.get_avg_distance_from_players(
+            iceberg_to_score)
         return (enemy_avg_distance - ours_avg_distance) * AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE
 
     def __score_by_penguins_gaining(self, source_iceberg, destination_iceberg_to_score,
@@ -145,7 +155,8 @@ class Scores:
         """
         if iceberg_owner_after_all_groups_arrived.equals(self.__game.get_myself()):
             return 0
-        turns_to_check = self.__max_distance - source_iceberg.get_turns_till_arrival(destination_iceberg_to_score)
+        turns_to_check = self.__max_distance - \
+            source_iceberg.get_turns_till_arrival(destination_iceberg_to_score)
         return turns_to_check * destination_iceberg_to_score.penguins_per_turn * PENGUINS_GAINING_SCORE_FACTOR
 
     def __score_by_iceberg_bonus(self, destination_iceberg_to_score, min_penguins_for_occupy):
@@ -154,7 +165,7 @@ class Scores:
 
         penguin_bonus = destination_iceberg_to_score.penguin_bonus
         bonus_score = (
-                destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
+            destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
         # check if the bonus iceberg will be ours.
         if min_penguins_for_occupy <= 0:
             return BONUS_SCORE + bonus_score * len(
@@ -165,7 +176,8 @@ class Scores:
                 self.__game.get_enemy_icebergs()) * penguin_bonus * ENEMY_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
         # if the bonus iceberg is netural.
         else:
-            min_penguins_for_occupy = int(min_penguins_for_occupy * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
+            min_penguins_for_occupy = int(
+                min_penguins_for_occupy * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
             return BONUS_SCORE + NATURAL_BOMUS_FACTOR_SCORE * len(
                 self.__game.get_enemy_icebergs()) * penguin_bonus, min_penguins_for_occupy
 
@@ -225,7 +237,8 @@ class Scores:
         :type destination_iceberg_to_score: Iceberg
         :rtype: float:
         """
-        distance = destination_iceberg_to_score.get_turns_till_arrival(source_iceberg)
+        distance = destination_iceberg_to_score.get_turns_till_arrival(
+            source_iceberg)
         return DISTANCE_FACTOR_SCORE * (float(distance) / float(self.__max_distance))
 
     def __score_by_iceberg_price(self, source_iceberg, destination_iceberg_to_score, simulation_data):
@@ -236,16 +249,18 @@ class Scores:
         If the iceberg belong or will belong to us, return (0,0).
         :type source_iceberg: Iceberg
         :type destination_iceberg_to_score: Iceberg
-        :rtype: (int, int, max_penguins_can_be_sent)
-        :return: (score, min_penguins_for_occupy, max_penguins_can_be_sent)
+        :rtype: (int, int, max_penguins_can_be_sent, string)
+        :return: (score, min_penguins_for_occupy, max_penguins_can_be_sent, action)
         """
+        action = SEND_PENGUINS
         score = 0
+        game = self.__game
         min_penguins_for_occupy = utils.min_penguins_for_occupy(
-            self.__game, source_iceberg, destination_iceberg_to_score, simulation_data)
+            game, source_iceberg, destination_iceberg_to_score, simulation_data)
 
         log('min penguins for occupy', min_penguins_for_occupy)
-        if min_penguins_for_occupy == 0:
-            score += self.__score_by_support(source_iceberg, destination_iceberg_to_score, self.__game.get_myself(),
+        if min_penguins_for_occupy == 0:  # In the end, the iceberg belongs to us.
+            score += self.__score_by_support(source_iceberg, destination_iceberg_to_score, game.get_myself(),
                                              simulation_data)
             if type(source_iceberg) == Iceberg:
                 penguins_per_turn = source_iceberg.penguins_per_turn
@@ -253,29 +268,43 @@ class Scores:
             else:
                 penguins_per_turn = 0
                 penguin_amount_to_send = source_iceberg.penguin_amount - 1
-            min_penguins_for_occupy = min(penguin_amount_to_send, penguins_per_turn)
-        elif destination_iceberg_to_score.owner.equals(self.__game.get_myself()):
-            score += NEED_PROTECTED_SCORE
+            min_penguins_for_occupy = min(
+                penguin_amount_to_send, penguins_per_turn)
+        else:
+            if destination_iceberg_to_score.owner.equals(game.get_myself()):
+                score += NEED_PROTECTED_SCORE
+
+            # Check if we prefer to build bridge
+            bridge_cost = source_iceberg.bridge_cost
+            if bridge_cost < min_penguins_for_occupy and utils.can_build_bridge(source_iceberg, destination_iceberg_to_score):
+                new_owner = utils.simulate_with_bridge(
+                    game, source_iceberg, destination_iceberg_to_score, simulation_data)
+                if utils.is_me(game, new_owner):
+                    min_penguins_for_occupy = bridge_cost
+                    action = BUILD_BRIDGE
 
         iceberg_simulation_data = simulation_data.get(source_iceberg)
-        max_penguins_can_be_sent = min(iceberg_simulation_data[-1][simulationsdata.PENGUIN_AMOUNT],
-                                       source_iceberg.penguin_amount)
-        if max_penguins_can_be_sent - min_penguins_for_occupy < self.__min_penguins_amount:
+        max_penguins_can_be_use = min(iceberg_simulation_data[-1][simulationsdata.PENGUIN_AMOUNT],
+                                      source_iceberg.penguin_amount)
+        if max_penguins_can_be_use - min_penguins_for_occupy < self.__min_penguins_amount:
             score += CANT_DO_ACTION_SCORE
 
         # If we got here, so we can and need to occupy the destination.
-        score += PRICE_FACTOR_SCORE * (float(min_penguins_for_occupy) / self.__max_price)
+        score += PRICE_FACTOR_SCORE * \
+            (float(min_penguins_for_occupy) / self.__max_price)
 
         # Check whether source will be in danger if send the penguins.
-        max_penguins_will_send_for_occupy = min(max_penguins_can_be_sent, min_penguins_for_occupy)
+        max_penguins_will_use_for_occupy = min(
+            max_penguins_can_be_use, min_penguins_for_occupy)
         penguin_amount_after_all_groups_arrived, owner = utils.penguin_amount_after_all_groups_arrived(self.__game,
                                                                                                        source_iceberg,
-                                                                                                       max_penguins_will_send_for_occupy,
+                                                                                                       max_penguins_will_use_for_occupy,
                                                                                                        simulation_data=simulation_data)
-        log('(penguin_amount, owner)', penguin_amount_after_all_groups_arrived, owner)
+        log('(penguin_amount, owner)',
+            penguin_amount_after_all_groups_arrived, owner)
         if not self.__game.get_myself().equals(owner):
             score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE
-        return score, min_penguins_for_occupy, max_penguins_can_be_sent
+        return score, min_penguins_for_occupy, max_penguins_can_be_use, action
 
     def __find_max_distance(self):
         """
@@ -292,7 +321,8 @@ class Scores:
         :rtype: int
         """
         prices_map = map(
-            lambda iceberg: utils.get_actual_penguin_amount(self.__game, iceberg),
+            lambda iceberg: utils.get_actual_penguin_amount(
+                self.__game, iceberg),
             self.__game.get_all_icebergs()
         )
         return max(prices_map)
@@ -353,8 +383,10 @@ class Scores:
         :param destination_iceberg:
         :return: Whether source closest
         """
-        source_avg_distance = self.__calculate_average_distance_from_enemy(source_iceberg, simulation_data)
-        destination_avg_distance = self.__calculate_average_distance_from_enemy(destination_iceberg, simulation_data)
+        source_avg_distance = self.__calculate_average_distance_from_enemy(
+            source_iceberg, simulation_data)
+        destination_avg_distance = self.__calculate_average_distance_from_enemy(
+            destination_iceberg, simulation_data)
         # TODO: maybe to return int value for more acurate score for distance from enemy.
         return destination_avg_distance < self.__average_distance < source_avg_distance, destination_avg_distance
 
@@ -368,6 +400,7 @@ class Scores:
         """
         min_penguins_amount = self.__min_penguins_amount
         if destination_iceberg_to_score.penguin_amount < min_penguins_amount:
-            penguins_to_send = min_penguins_amount - destination_iceberg_to_score.penguin_amount
+            penguins_to_send = min_penguins_amount - \
+                destination_iceberg_to_score.penguin_amount
             return penguins_to_send
         return 0
