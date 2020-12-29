@@ -2,11 +2,8 @@ from penguin_game import *
 import utils
 from utils import log
 from scoredata import ScoreData
-from occupymethoddecision import OccupyMethodData
+from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 import simulationsdata
-
-BUILD_BRIDGE = "build_bridge"
-SEND_PENGUINS = "send_penguins"
 
 ENEMY_BELONGS_SCORE = 20
 NEUTRAL_BELONGS_SCORE = 16
@@ -21,16 +18,16 @@ MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
 BONUS_SCORE = 15
 
-# Factprs
+# Factors
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
 UPDATE_FACTOR_SCORE = 0.1
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.15
 
-OUR_BOMUS_FACTOR_SCORE = 0.1
-ENEMY_BOMUS_FACTOR_SCORE = 1.2
-NATURAL_BOMUS_FACTOR_SCORE = 1.1
+OUR_BONUS_FACTOR_SCORE = 0.1
+ENEMY_BONUS_FACTOR_SCORE = 1.2
+NATURAL_BONUS_FACTOR_SCORE = 1.1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 
 PENGUINS_GAINING_SCORE_FACTOR = 0.2
@@ -51,7 +48,7 @@ class Scores:
         self.__min_penguins_amount = int(
             MIN_PENGUINS_AMOUNT_AVG_PERCENT * self.__average_penguins_in_our_icebergs)
 
-    def score(self, source_iceberg, destination_iceberg_to_score, simulation_data,
+    def score(self, source_iceberg, destination_iceberg_to_score, simulation_data, occupy_method_data,
               score_by_iceberg_belogns=False,
               score_by_iceberg_level=False,
               score_by_iceberg_distance=False,
@@ -61,14 +58,16 @@ class Scores:
               score_by_avg_distance_from_players=False):
         """
         Score the iceberg by the scores specified.
+        :type occupy_method_data: OccupyMethodData
         :return: ScoreData
         :rtype: ScoreData
         """
         scores = []
-        min_penguins_for_occupy_score, min_penguins_for_occupy, max_penguins_can_be_sent, action = self.__score_by_iceberg_price(
-            source_iceberg, destination_iceberg_to_score, simulation_data)
+        min_penguins_for_occupy_score, max_penguins_can_be_sent = self.__score_by_iceberg_price(
+            source_iceberg, destination_iceberg_to_score, simulation_data, occupy_method_data)
         if score_by_iceberg_price:
             scores.append(min_penguins_for_occupy_score)
+
         # if the score will not be positive, return score.
         if sum(scores) >= IRREVERSIBLE_SCORE:
             log('penguin_amount_after_all_groups_arrived')
@@ -98,15 +97,16 @@ class Scores:
                     destination_iceberg_to_score, simulation_data))
 
             if score_by_iceberg_bonus:
-                bonus_iceberg_score, min_penguins_for_occupy = self.__score_by_iceberg_bonus(
-                    destination_iceberg_to_score,
-                    min_penguins_for_occupy)
+                bonus_iceberg_score = self.__score_by_iceberg_bonus(
+                    destination_iceberg_to_score, occupy_method_data.owner)
                 scores.append(bonus_iceberg_score)
         log('score:', scores)
         # TODO: change "scores" to integer variabel.
+
+        action = occupy_method_data.method
         return ScoreData(source_iceberg,
                          destination_iceberg_to_score,
-                         min_penguins_for_occupy,
+                         occupy_method_data.min_penguins_for_occupy,
                          max_penguins_can_be_sent,
                          sum(scores),
                          send_penguins=action == SEND_PENGUINS,
@@ -171,14 +171,14 @@ class Scores:
         # check if the bonus iceberg will be ours.
         if utils.is_me(game, owner_if_no_action_will_made):
             return BONUS_SCORE + bonus_score * len(
-                self.__game.get_my_icebergs()) * penguin_bonus * OUR_BOMUS_FACTOR_SCORE
+                self.__game.get_my_icebergs()) * penguin_bonus * OUR_BONUS_FACTOR_SCORE
         # check if the bonus iceberg belongs to the enemy.
         elif utils.is_enemy(game, owner_if_no_action_will_made):
             return BONUS_SCORE + bonus_score * len(
-                self.__game.get_enemy_icebergs()) * penguin_bonus * ENEMY_BOMUS_FACTOR_SCORE
+                self.__game.get_enemy_icebergs()) * penguin_bonus * ENEMY_BONUS_FACTOR_SCORE
         # if the bonus iceberg is netural.
         else:
-            return BONUS_SCORE + NATURAL_BOMUS_FACTOR_SCORE * len(
+            return BONUS_SCORE + NATURAL_BONUS_FACTOR_SCORE * len(
                 self.__game.get_enemy_icebergs()) * penguin_bonus
 
     def __score_by_iceberg_belogns(self, source_iceberg, iceberg_to_score, iceberg_to_score_owner):
