@@ -83,4 +83,17 @@ class OccupyMethodDecision:
         :return: (is_bridge_prefer, penguins_to_use)
         :rtype: (bool, int)
         """
+        game = self.__game
+        simulation_data = self.__simulation_data
+
+        is_bridge_prefer = False
+
+        penguins_to_use = source_iceberg.bridge_cost
+        if penguins_to_use < min_penguins_to_send_for_occupy and utils.can_build_bridge(source_iceberg,
+                                                                                        destination_iceberg):
+            new_owner = utils.simulate_with_bridge(
+                game, source_iceberg, destination_iceberg, simulation_data)
+            if utils.is_me(game, new_owner):
+                is_bridge_prefer = True
+
         return is_bridge_prefer, penguins_to_use
