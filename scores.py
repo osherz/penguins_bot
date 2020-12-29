@@ -32,6 +32,9 @@ MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 
 PENGUINS_GAINING_SCORE_FACTOR = 0.2
 
+STRONG_ENEMY_CLOSE_UPDATE = 10
+STRONG_ENEMY_CLOSE = 15
+
 
 class Scores:
     def __init__(self, game):
@@ -139,7 +142,7 @@ class Scores:
         ret = score * UPDATE_FACTOR_SCORE
 
         if utils.is_strong_enemy_close_to_me(iceberg_to_score):
-            ret -= 10
+            ret -= STRONG_ENEMY_CLOSE_UPDATE
         return ret
 
     def __score_by_avg_distance_from_players(self, iceberg_to_score, simulation_data):
@@ -246,7 +249,7 @@ class Scores:
         ret = DISTANCE_FACTOR_SCORE * (float(distance) / float(self.__max_distance))
 
         if utils.is_strong_enemy_close_to_me(source_iceberg):
-            ret -= 15
+            ret -= STRONG_ENEMY_CLOSE
 
         return ret
 
