@@ -6,6 +6,7 @@ from utils import log
 from random import shuffle
 from simulationsdata import SimulationsData, OWNER, ARE_GROUP_REMAIN, PENGUIN_AMOUNT
 from scoredata import ScoreData
+from occupymethoddecision import OccupyMethodDecision
 
 # import typing
 # from typing import List
@@ -47,6 +48,7 @@ def occupy_close_icebergs(game):
     scores = Scores(game)
     simulation_data = SimulationsData(game)
     simulation_data.run_simulations()
+    occupy_method_decision = OccupyMethodDecision(game, simulation_data)
 
     log('********************************* START ACTIONS **********************************')
     my_iceberg_cnt = 0
@@ -58,7 +60,7 @@ def occupy_close_icebergs(game):
             ', ', game.get_time_remaining())
         my_iceberg_cnt += 1
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
-                                                          all_icebergs, simulation_data)  # type: list
+                                                          all_icebergs, simulation_data, occupy_method_decision)  # type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
 
         log('upgrade score', upgrade_score_for_my_iceberg)
@@ -97,7 +99,7 @@ def occupy_close_icebergs(game):
                     icebergs_to_score = map(lambda iceberg: iceberg.get_destination(),
                                             destination_scored_icebergs[1:])
                     destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
-                                                                      simulation_data)
+                                                                      simulation_data, occupy_method_decision)
 
         elif upgrade_score_for_my_iceberg > 0 and utils.can_be_upgrade(my_iceberg):
             my_iceberg.upgrade()
@@ -115,7 +117,7 @@ def occupy_close_icebergs(game):
             #    break
 
 
-def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, source_icebergs=None):
+def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, occupy_method_decision, source_icebergs=None):
     """
     scores icebergs for all source_icebergs.
     If source_icebergs is None, scores for all my icebergs.
@@ -131,7 +133,7 @@ def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, sourc
     scores_for_my_icebergs = []
     for my_iceberg in source_icebergs:
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
-                                                          game.get_all_icebergs(), simulation_data)  # type: list
+                                                          game.get_all_icebergs(), simulation_data, occupy_method_decision)  # type: list
         if utils.is_empty(destination_scored_icebergs):
             score = 0
         else:
@@ -146,7 +148,7 @@ def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, sourc
     return [iceberg_data['iceberg'] for iceberg_data in scores_for_my_icebergs]
 
 
-def get_scored_icebergs(scores, game, my_iceberg, icebergs, simulation_data):
+def get_scored_icebergs(scores, game, my_iceberg, icebergs, simulation_data, occupy_method_decision):
     """
     :type icebergs : List[IceBuilding]
     """
@@ -154,14 +156,14 @@ def get_scored_icebergs(scores, game, my_iceberg, icebergs, simulation_data):
     if my_iceberg in all_icebergs:
         all_icebergs.remove(my_iceberg)
     scored_icebergs = score_icebergs(
-        game, scores, my_iceberg, all_icebergs, simulation_data)
+        game, scores, my_iceberg, all_icebergs, simulation_data, occupy_method_decision)
     ret = []
     for iceberg in scored_icebergs:
         ret.append(iceberg)
     return ret
 
 
-def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data):
+def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data, occupy_method_decision):
     """ Scores the given icebergs.
     Return list of the icebergs sorted by their scores, remove the icebergs with negative score.
     :type game:Game
@@ -175,7 +177,7 @@ def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data):
     def get_iceberg_data(iceberg):
         log('****start score', iceberg)
         score_data = score_iceberg(
-            game, scores, source_iceberg, iceberg, simulation_data)
+            game, scores, source_iceberg, iceberg, simulation_data, occupy_method_decision)
         return score_data
 
     scores_icebergs = map(lambda iceberg: get_iceberg_data(iceberg), icebergs)
@@ -231,8 +233,8 @@ def remove_smalls_score_icebergs(scores_icebergs):
     return ls
 
 
-def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_data):
-    """ Score the given iceberg and gicen each one the.
+def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_data, occupy_method_decision):
+    """ Score the given iceberg and given each one the.
 
     :param game:
     :type game: Game
@@ -240,14 +242,18 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_
     :type source_iceberg: Iceberg
     :type destination_iceberg: Iceberg
     :type simulation_data: SimulationsData
+    :type occupy_method_decision: OccupyMethodDecision
     :rtype: ScoreData
     :return: ScoreData
     """
+    occupy_method_data = occupy_method_decision.pick_occupy_method(source_iceberg, destination_iceberg)
+
     if type(destination_iceberg) is Iceberg:
         return scores.score(
             source_iceberg,
             destination_iceberg,
             simulation_data,
+            occupy_method_data,
             score_by_iceberg_belogns=True,
             score_by_iceberg_level=True,
             score_by_iceberg_distance=True,
@@ -261,6 +267,7 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_
             source_iceberg,
             destination_iceberg,
             simulation_data,
+            occupy_method_data,
             score_by_iceberg_belogns=True,
             score_by_iceberg_level=False,
             score_by_iceberg_distance=True,
