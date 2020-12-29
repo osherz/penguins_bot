@@ -198,8 +198,8 @@ def print_scores(scores_icebergs):
         return 'iceberg: ' + str(score_data.get_destination()) + \
                ' score: ' + str(score_data.get_score()) + \
                ' min_price: ' + str(score_data.get_min_penguins_for_occupy()) + \
-               ' max_penguins_can_be_sent ' + \
-            str(score_data.get_max_penguins_can_be_sent())
+               ' max_penguins_can_be_sent ' + str(score_data.get_max_penguins_can_be_sent()) + \
+               ' send penguins: ' + str(score_data.send_penguins())
 
     log('******** scored icebergs *********')
     log('\n'.join(map(str_data, scores_icebergs)))

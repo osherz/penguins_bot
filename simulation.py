@@ -168,6 +168,7 @@ class Simulation:
             duration,
             speed_multiplier
         )
+        utils.log('Build custom bridge', custom_bridge)
         key = self.__get_iceberg_key(source_iceberg)
         self.__custom_bridges_to_iceberg[key] = custom_bridge
 
@@ -280,8 +281,6 @@ class Simulation:
                 self.__iceberg_to_simulate,
                 groups_to_check=self.__all_groups
             )
-            for group in self.__groups_to_iceberg:  # type: PenguinGroupSimulate
-                group.move_toward_destination(1)
             if not utils.is_empty(self.__groups_to_iceberg):
                 self.__analyze_groups_distance()
                 self.__sort_groups_by_distance()
@@ -300,16 +299,24 @@ class Simulation:
             source_key = self.__get_iceberg_key(source_iceberg)
             if source_key in self.__custom_bridges_to_iceberg:
                 bridges.append(self.__custom_bridges_to_iceberg[source_key])
-            # Type: bridge
-            for bridge in sorted(bridges, key=lambda b: b.duration, reverse=True):
+            has_bridge = False
+            if not utils.is_empty(bridges):
+                bridge = sorted(bridges, key=lambda b: b.duration, reverse=True)[0] # Type: bridge
                 if group.get_destination() in bridge.get_edges():
+                    has_bridge = True
                     turns_forward_until_bridge_gone = bridge.speed_multiplier * bridge.duration
                     turns_till_arrival = group.get_turns_till_arrival()
+                    if type(bridge) == BridgeSimulation:
+                        # If is custom bridge, so it effect will active only in the next turn,
+                        # so we calculate his effect from the next turn, meaning not including this turn.
+                        turns_till_arrival -= 1
                     if turns_forward_until_bridge_gone >= turns_till_arrival:
                         turns = int(math.ceil(float(turns_till_arrival) / bridge.speed_multiplier))
                     else:
-                        turns = bridge.duration +  (turns_till_arrival - turns_forward_until_bridge_gone)
-                    group.move_toward_destination(max(0,turns_till_arrival - turns))
+                        turns = bridge.duration + (turns_till_arrival - turns_forward_until_bridge_gone)
+                    group.move_toward_destination(max(0, turns_till_arrival - turns))
+            if not has_bridge:
+                group.move_toward_destination(1)
 
     def __move_groups_to_destination(self, turns_to_move=1):
         """
