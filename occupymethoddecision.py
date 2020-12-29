@@ -1,5 +1,6 @@
 from penguin_game import *
 from simulationsdata import SimulationsData
+import utils
 
 SEND_PENGUINS = 'send_penguins'
 BUILD_BRIDGE = 'build_bridge'
@@ -35,11 +36,39 @@ class OccupyMethodDecision:
         Decide how to occupy the destination iceberg by the source_iceberg
         and how much penguins to use.
         """
-        return OccupyMethodData()
+        min_penguins_to_send_for_occupy, owner = self.__clac_min_penguins_to_send(
+            source_iceberg,
+            destination_iceberg
+        )
 
-    def __clac_min_penguins_to_send(self, source_iceberg, destination_iceberg, simulation_data):
+        is_bridge_prefer = False
+        if utils.is_enemy(self.__game, owner):
+            is_bridge_prefer, penguins_to_use = self.__is_bridge_prefer(
+                source_iceberg,
+                destination_iceberg,
+                min_penguins_to_send_for_occupy
+            )
+
+        if is_bridge_prefer:
+            occupy_method_data = OccupyMethodData(
+                penguins_to_use,
+                penguins_to_use,
+                penguins_to_use,
+                BUILD_BRIDGE
+            )
+        else:
+            occupy_method_data = OccupyMethodData(
+                min_penguins_to_send_for_occupy,
+                min_penguins_to_send_for_occupy,
+                min_penguins_to_send_for_occupy,
+                SEND_PENGUINS
+            )
+
+        return occupy_method_data
+
+    def __clac_min_penguins_to_send(self, source_iceberg, destination_iceberg):
         """
-        Calculate the number of minimum penguin the need to be send to make the destination with 0 penguins
+        Calculate the number of minimum penguin the need to be send for occupy
         and who will be the owner of the destination if no penguins are send.
 
         :return: (min_penguins_for_occupy, owner)
@@ -47,12 +76,11 @@ class OccupyMethodDecision:
         """
         return min_penguins_for_occupy, owner
 
-    def __is_bridge_prefer(self, source_iceberg, destination_iceberg, simulation_data, min_penguins_to_send_for_occupy):
+    def __is_bridge_prefer(self, source_iceberg, destination_iceberg, min_penguins_to_send_for_occupy):
         """
         Check whether the bridge is prefer over sending penguins.
-        Return whether the bridge is prefer, how much penguins need to be use
-        and who will be the owner of the destination if no penguins are send.
-        :return: (is_bridge_prefer, penguins_to_use, owner)
-        :rtype: (bool, int, Player)
+        Return whether the bridge is prefer, how much penguins need to be use.
+        :return: (is_bridge_prefer, penguins_to_use)
+        :rtype: (bool, int)
         """
-        return is_bridge_prefer, penguins_to_use, owner
+        return is_bridge_prefer, penguins_to_use
