@@ -1,6 +1,7 @@
 from penguin_game import Game, Iceberg, BonusIceberg, IceBuilding
 from penguingroupsimulate import PenguinGroupSimulate
 from bonusturndata import BonusTurnData
+from bridgesimulation import BridgeSimulation
 
 import math
 import utils
@@ -37,7 +38,7 @@ class Simulation:
         self.__current_turn = 0
         self.__bonus_turn_index = 0
 
-        iceberg_to_simulate = self.__iceberg_to_simulate
+        iceberg_to_simulate = self.__iceberg_to_simulate  # type: Iceberg
         self.__iceberg_owner = iceberg_to_simulate.owner
         self.__penguin_amount = iceberg_to_simulate.penguin_amount
         if type(iceberg_to_simulate) == Iceberg:
@@ -49,6 +50,9 @@ class Simulation:
             lambda group: PenguinGroupSimulate(game, penguin_group=group),
             game.get_all_penguin_groups()
         )
+        # type: List[Bridge]
+        # type: List[Bridge]
+        self.__custom_bridges_to_iceberg = {}
 
     def get_penguin_amount(self):
         """
@@ -68,7 +72,8 @@ class Simulation:
         """
         turn = 1
         if self.are_group_remains():
-            turn = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
+            turn = self.__calculate_how_much_turns_to_continue(
+                turn, turns_to_simulate)
         turns_to_continue = turn
         actions = 0
         while turn <= turns_to_simulate:
@@ -79,7 +84,8 @@ class Simulation:
             self.__treat_groups_arrived_destination()
 
             # Calculate how much turns to continue
-            turns_to_continue = self.__calculate_how_much_turns_to_continue(turn, turns_to_simulate)
+            turns_to_continue = self.__calculate_how_much_turns_to_continue(
+                turn, turns_to_simulate)
             turn += turns_to_continue
             actions += -1
             if actions >= max_actions:
@@ -122,7 +128,8 @@ class Simulation:
         """
         valid_instance_of_penguin_group_simulate(penguin_group_simulate)
         if self.__is_simulate_started:
-            raise NotImplementedError("You can't add groups after simulate started. Please reset and try again")
+            raise NotImplementedError(
+                "You can't add groups after simulate started. Please reset and try again")
         else:
             self.__all_groups.append(penguin_group_simulate)
 
@@ -145,6 +152,23 @@ class Simulation:
                                                       penguin_amount=penguin_amount)
         self.add_penguin_group_simulate(penguin_group_simulate)
         return penguin_group_simulate
+
+    def add_bridge(self, source_iceberg, duration, speed_multiplier):
+        """Add custom bridge.
+
+        :type bridge: Bridge
+        """
+        if self.__is_simulate_started:
+            raise ValueError(
+                'Simulation: You can\'t build bridge after simulation started')
+        custom_bridge = BridgeSimulation(
+            source_iceberg,
+            self.__iceberg_to_simulate,
+            duration,
+            speed_multiplier
+        )
+        key = self.__get_iceberg_key(source_iceberg)
+        self.__custom_bridges_to_iceberg[key] = custom_bridge
 
     def add_penguin_amount(self, owner=None, penguin_amount=0, is_sending=False):
         """
@@ -226,7 +250,8 @@ class Simulation:
         """
         turns_to_continue = 1
         if self.are_group_remains() and current_simulate_turn < turns_to_simulate:
-            turns_to_continue = self.__groups_to_iceberg[0].get_turns_till_arrival()
+            turns_to_continue = self.__groups_to_iceberg[0].get_turns_till_arrival(
+            )
             if current_simulate_turn + turns_to_continue > turns_to_simulate:
                 turns_to_continue = turns_to_simulate - current_simulate_turn
         return turns_to_continue
@@ -236,7 +261,8 @@ class Simulation:
         """
         Sort groups by their distance from destination.
         """
-        self.__groups_to_iceberg.sort(key=lambda group: group.get_turns_till_arrival())
+        self.__groups_to_iceberg.sort(
+            key=lambda group: group.get_turns_till_arrival())
 
     def __init_groups_to_iceberg(self):
         """
@@ -263,15 +289,24 @@ class Simulation:
         Take in account the bridges.
         """
         for group in self.__groups_to_iceberg:  # type: PenguinGroupSimulate
-            bridges = group.get_source().bridges
-            for bridge in bridges:  # Type: bridge
+            source_iceberg = group.get_source()
+            bridges = source_iceberg.bridges  # type: List[Bridge]
+
+            # Check whether there is custom bridge going out from this source_iceberg
+            source_key = self.__get_iceberg_key(source_iceberg)
+            if source_iceberg in self.__custom_bridges_to_iceberg:
+                bridges.append(self.__custom_bridges_to_iceberg[source_key])
+            # Type: bridge
+            for bridge in sorted(bridges, key=lambda b: b.duration, reverse=True):
                 if group.get_destination() in bridge.get_edges():
                     turns_forward_until_bridge_gone = bridge.speed_multiplier * bridge.duration
                     turns_till_arrival = group.get_turns_till_arrival()
                     if turns_forward_until_bridge_gone >= turns_till_arrival:
-                        turns = math.ceil(turns_till_arrival / bridge.speed_multiplier)
+                        turns = math.ceil(
+                            turns_till_arrival / bridge.speed_multiplier)
                     else:
-                        turns = bridge.duration + (turns_till_arrival - turns_forward_until_bridge_gone)
+                        turns = bridge.duration + \
+                            (turns_till_arrival - turns_forward_until_bridge_gone)
                     group.move_toward_destination(turns_till_arrival - turns)
 
     def __move_groups_to_destination(self, turns_to_move=1):
@@ -313,7 +348,8 @@ class Simulation:
             key=lambda group: group.get_owner().id)  # If number of groups arrived, treat ours as arrived first
 
         for group in groups_arrived:  # type: PenguinGroupSimulate
-            self.__treat_group_arrived_destination(group.get_owner(), group.get_penguin_amount())
+            self.__treat_group_arrived_destination(
+                group.get_owner(), group.get_penguin_amount())
             self.__groups_to_iceberg.remove(group)
 
     def __treat_group_arrived_destination(self, owner, penguin_amount):
@@ -328,7 +364,8 @@ class Simulation:
         if self.is_belong_to_neutral():
             self.__treat_group_arrived_iceberg_neutral(owner, penguin_amount)
         else:
-            self.__treat_group_arrived_iceberg_not_neutral(owner, penguin_amount)
+            self.__treat_group_arrived_iceberg_not_neutral(
+                owner, penguin_amount)
 
     def __treat_group_arrived_iceberg_neutral(self, owner, penguin_amount):
         """
@@ -343,7 +380,8 @@ class Simulation:
             penguin_amount -= self.__penguin_amount
             self.__iceberg_owner = owner
             self.__penguin_amount = 0
-            self.__treat_group_arrived_iceberg_not_neutral(owner, penguin_amount)
+            self.__treat_group_arrived_iceberg_not_neutral(
+                owner, penguin_amount)
 
     def __treat_group_arrived_iceberg_not_neutral(self, owner, penguin_amount):
         """
@@ -373,16 +411,20 @@ class Simulation:
             for penguin_group in self.__all_groups
             if penguin_group.get_source().equals(self.__iceberg_to_simulate)
         ]
-        groups_from_destination.sort(key=lambda group: group.get_turns_till_arrival())
+        groups_from_destination.sort(
+            key=lambda group: group.get_turns_till_arrival())
 
         # Check for collision for each group send from destination.
         for source, groups_from_iceberg in itertools.groupby(groups_from_destination,
                                                              lambda x: x.get_destination()):
             groups_from_iceberg = list(groups_from_iceberg)
-            groups_from_iceberg.sort(key=lambda group: group.get_turns_till_arrival())
+            groups_from_iceberg.sort(
+                key=lambda group: group.get_turns_till_arrival())
 
-            groups_from_source = [group for group in self.__groups_to_iceberg if group.get_source().equals(source)]
-            groups_from_source.sort(key=lambda group: group.get_turns_till_arrival)
+            groups_from_source = [
+                group for group in self.__groups_to_iceberg if group.get_source().equals(source)]
+            groups_from_source.sort(
+                key=lambda group: group.get_turns_till_arrival)
 
             for group_from_iceberg in groups_from_iceberg:  # type: PenguinGroupSimulate
                 if group_from_iceberg.get_penguin_amount() > 0:
@@ -390,10 +432,12 @@ class Simulation:
                         if group_from_iceberg.get_penguin_amount() <= 0:
                             break
                         if group_from_source.get_penguin_amount() > 0:
-                            group_from_iceberg.collision_with(group_from_source)
+                            group_from_iceberg.collision_with(
+                                group_from_source)
 
         # Remove groups that not has penguins
-        self.__groups_to_iceberg = [group for group in self.__groups_to_iceberg if group.get_penguin_amount() > 0]
+        self.__groups_to_iceberg = [
+            group for group in self.__groups_to_iceberg if group.get_penguin_amount() > 0]
 
     def __treat_bonus(self):
         bonus_iceberg = self.__game.get_bonus_iceberg()  # type:BonusIceberg
@@ -422,6 +466,9 @@ class Simulation:
         if utils.is_me(game, owner):
             return 'Me'
 
+    def __get_iceberg_key(self, iceberg):
+        return iceberg.unique_id
+
     def __str__(self):
         num_of_groups_to_iceberg = 0
         if self.__is_simulate_started:
@@ -444,4 +491,5 @@ def valid_instance_of_penguin_group_simulate(penguin_group_simulate):
     :param penguin_group_simulate:
     """
     if not isinstance(penguin_group_simulate, PenguinGroupSimulate):
-        raise ValueError("penguin_group_simulate not instance of PenguinGroupSimulate")
+        raise ValueError(
+            "penguin_group_simulate not instance of PenguinGroupSimulate")

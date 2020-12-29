@@ -1,4 +1,4 @@
-from penguin_game import Player, PenguinGroup, Iceberg
+from penguin_game import Player, PenguinGroup, Iceberg, BonusIceberg
 import utils
 from scores import Scores
 import math
@@ -6,6 +6,7 @@ from utils import log
 from random import shuffle
 from simulationsdata import SimulationsData, OWNER, ARE_GROUP_REMAIN, PENGUIN_AMOUNT
 from scoredata import ScoreData
+from occupymethoddecision import OccupyMethodDecision
 
 # import typing
 # from typing import List
@@ -25,7 +26,8 @@ def do_turn(game):
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
     if game.turn == 1 and game.get_bonus_iceberg() is not None:
-        log('max bonus turns', game.bonus_iceberg_max_turns_to_bonus, 'bonus', game.get_bonus_iceberg().penguin_bonus)
+        log('max bonus turns', game.bonus_iceberg_max_turns_to_bonus,
+            'bonus', game.get_bonus_iceberg().penguin_bonus)
     occupy_close_icebergs(game)
 
 
@@ -37,7 +39,7 @@ def occupy_close_icebergs(game):
     scores_for_my_icebergs = game.get_my_icebergs()[:]
     if game.get_my_bonus_iceberg() is not None:
         scores_for_my_icebergs.append(game.get_my_bonus_iceberg())
-    shuffle(scores_for_my_icebergs)
+    scores_for_my_icebergs.sort(key=lambda x: x.penguin_amount, reverse=True)
     log('********************************* START ACTIONS **********************************')
     all_icebergs = game.get_all_icebergs()[:]  # type: list
     if game.get_bonus_iceberg() is not None:
@@ -46,6 +48,7 @@ def occupy_close_icebergs(game):
     scores = Scores(game)
     simulation_data = SimulationsData(game)
     simulation_data.run_simulations()
+    occupy_method_decision = OccupyMethodDecision(game, simulation_data)
 
     log('********************************* START ACTIONS **********************************')
     my_iceberg_cnt = 0
@@ -53,10 +56,11 @@ def occupy_close_icebergs(game):
     for my_iceberg in scores_for_my_icebergs:  # type: Iceberg
         icebergs_to_update = []
         log('*************icebrg source', my_iceberg)
-        log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
+        log('Running time: ', game.get_max_turn_time(),
+            ', ', game.get_time_remaining())
         my_iceberg_cnt += 1
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
-                                                          all_icebergs, simulation_data)  # type: list
+                                                          all_icebergs, simulation_data, occupy_method_decision)  # type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
 
         log('upgrade score', upgrade_score_for_my_iceberg)
@@ -68,19 +72,42 @@ def occupy_close_icebergs(game):
                 if game.get_time_remaining() < 0:
                     log('time over')
                     break
-                log('Running time: ', game.get_max_turn_time(), ', ', game.get_time_remaining())
+                log('Running time: ', game.get_max_turn_time(),
+                    ', ', game.get_time_remaining())
 
-                iceberg_score_data = destination_scored_icebergs[0]  # type: ScoreData
+                # type: ScoreData
+                iceberg_score_data = destination_scored_icebergs[0]
                 dest_iceberg = iceberg_score_data.get_destination()  # type: Iceberg
                 min_price = iceberg_score_data.get_min_penguins_for_occupy()
                 max_penguins_can_be_sent = iceberg_score_data.get_max_penguins_can_be_sent()
                 # If got so much scores but hasn't enough penguins we prefer to wait.
+                is_send_penguins = iceberg_score_data.send_penguins()
                 if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent:
-                    icebergs_to_update = try_to_send_from_multiple_icebergs(game, iceberg_score_data,
-                                                                            standby_icebergs_score_data)
-                    continue_to_next_source = True
+                    if send_penguins:
+                        icebergs_to_update = try_to_send_from_multiple_icebergs(game, iceberg_score_data,
+                                                                                standby_icebergs_score_data)
+                        continue_to_next_source = True
+
+                        # IF CANT DO NOTHING TO ATTACK THE ICEBERG
+                        if not icebergs_to_update and type(my_iceberg) is not BonusIceberg:
+                            if dest_iceberg.owner.equals(game.get_myself()):
+                                if my_iceberg.can_send_decoy_penguins(dest_iceberg, dest_iceberg , min_price/2):
+                                    my_iceberg.send_decoy_penguins(dest_iceberg, dest_iceberg , min_price/2)
+                            else:
+                                enemy_destination_scored_icebergs = [dest for dest in destination_scored_icebergs if dest.get_destination().owner.equals(game.get_enemy())]
+                                if enemy_destination_scored_icebergs:
+                                    weakIceberg = min(enemy_destination_scored_icebergs, key=lambda x: x.get_min_penguins_for_occupy())
+                                    if my_iceberg.can_send_decoy_penguins(weakIceberg.get_destination(), weakIceberg.get_destination() , weakIceberg.get_min_penguins_for_occupy()):
+                                        my_iceberg.send_decoy_penguins(dest_iceberg,
+                                                                           weakIceberg.get_destination(),
+                                                                           weakIceberg.get_min_penguins_for_occupy())
+
+                                #print(ERROR)
                 else:
-                    send_penguins(my_iceberg, min_price, dest_iceberg)
+                    if is_send_penguins:
+                        send_penguins(my_iceberg, min_price, dest_iceberg)
+                    else:
+                        build_bridge(my_iceberg, dest_iceberg)
                     icebergs_to_update = [my_iceberg, dest_iceberg]
                     continue_to_next_source = my_iceberg.penguin_amount <= 0
 
@@ -88,7 +115,7 @@ def occupy_close_icebergs(game):
                     icebergs_to_score = map(lambda iceberg: iceberg.get_destination(),
                                             destination_scored_icebergs[1:])
                     destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
-                                                                      simulation_data)
+                                                                      simulation_data, occupy_method_decision)
 
         elif upgrade_score_for_my_iceberg > 0 and utils.can_be_upgrade(my_iceberg):
             my_iceberg.upgrade()
@@ -106,7 +133,7 @@ def occupy_close_icebergs(game):
             #    break
 
 
-def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, source_icebergs=None):
+def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, occupy_method_decision, source_icebergs=None):
     """
     scores icebergs for all source_icebergs.
     If source_icebergs is None, scores for all my icebergs.
@@ -122,7 +149,7 @@ def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, sourc
     scores_for_my_icebergs = []
     for my_iceberg in source_icebergs:
         destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
-                                                          game.get_all_icebergs(), simulation_data)  # type: list
+                                                          game.get_all_icebergs(), simulation_data, occupy_method_decision)  # type: list
         if utils.is_empty(destination_scored_icebergs):
             score = 0
         else:
@@ -132,25 +159,27 @@ def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, sourc
             'score': score
         })
 
-    scores_for_my_icebergs.sort(key=lambda iceberg_data: iceberg_data['score'], reverse=True)
+    scores_for_my_icebergs.sort(
+        key=lambda iceberg_data: iceberg_data['score'], reverse=True)
     return [iceberg_data['iceberg'] for iceberg_data in scores_for_my_icebergs]
 
 
-def get_scored_icebergs(scores, game, my_iceberg, icebergs, simulation_data):
+def get_scored_icebergs(scores, game, my_iceberg, icebergs, simulation_data, occupy_method_decision):
     """
     :type icebergs : List[IceBuilding]
     """
     all_icebergs = icebergs[:]
     if my_iceberg in all_icebergs:
         all_icebergs.remove(my_iceberg)
-    scored_icebergs = score_icebergs(game, scores, my_iceberg, all_icebergs, simulation_data)
+    scored_icebergs = score_icebergs(
+        game, scores, my_iceberg, all_icebergs, simulation_data, occupy_method_decision)
     ret = []
     for iceberg in scored_icebergs:
         ret.append(iceberg)
     return ret
 
 
-def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data):
+def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data, occupy_method_decision):
     """ Scores the given icebergs.
     Return list of the icebergs sorted by their scores, remove the icebergs with negative score.
     :type game:Game
@@ -163,7 +192,8 @@ def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data):
 
     def get_iceberg_data(iceberg):
         log('****start score', iceberg)
-        score_data = score_iceberg(game, scores, source_iceberg, iceberg, simulation_data)
+        score_data = score_iceberg(
+            game, scores, source_iceberg, iceberg, simulation_data, occupy_method_decision)
         return score_data
 
     scores_icebergs = map(lambda iceberg: get_iceberg_data(iceberg), icebergs)
@@ -184,7 +214,8 @@ def print_scores(scores_icebergs):
         return 'iceberg: ' + str(score_data.get_destination()) + \
                ' score: ' + str(score_data.get_score()) + \
                ' min_price: ' + str(score_data.get_min_penguins_for_occupy()) + \
-               ' max_penguins_can_be_sent ' + str(score_data.get_max_penguins_can_be_sent())
+               ' max_penguins_can_be_sent ' + \
+            str(score_data.get_max_penguins_can_be_sent())
 
     log('******** scored icebergs *********')
     log('\n'.join(map(str_data, scores_icebergs)))
@@ -218,8 +249,8 @@ def remove_smalls_score_icebergs(scores_icebergs):
     return ls
 
 
-def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_data):
-    """ Score the given iceberg and gicen each one the.
+def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_data, occupy_method_decision):
+    """ Score the given iceberg and given each one the.
 
     :param game:
     :type game: Game
@@ -227,14 +258,18 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_
     :type source_iceberg: Iceberg
     :type destination_iceberg: Iceberg
     :type simulation_data: SimulationsData
+    :type occupy_method_decision: OccupyMethodDecision
     :rtype: ScoreData
     :return: ScoreData
     """
+    occupy_method_data = occupy_method_decision.pick_occupy_method(source_iceberg, destination_iceberg)
+
     if type(destination_iceberg) is Iceberg:
         return scores.score(
             source_iceberg,
             destination_iceberg,
             simulation_data,
+            occupy_method_data,
             score_by_iceberg_belogns=True,
             score_by_iceberg_level=True,
             score_by_iceberg_distance=True,
@@ -248,6 +283,7 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_
             source_iceberg,
             destination_iceberg,
             simulation_data,
+            occupy_method_data,
             score_by_iceberg_belogns=True,
             score_by_iceberg_level=False,
             score_by_iceberg_distance=True,
@@ -268,8 +304,10 @@ def try_to_send_from_multiple_icebergs(game, current_iceberg_score_data, standby
     if unique_id in standby_icebergs_score_data:
         dest_score_data_ls = standby_icebergs_score_data[unique_id]
         dest_score_data_ls.append(current_iceberg_score_data)
-        max_penguins_can_be_sent = sum([score_data.get_max_penguins_can_be_sent() for score_data in dest_score_data_ls])
-        min_penguins_for_occupy = max([score_data.get_min_penguins_for_occupy() for score_data in dest_score_data_ls])
+        max_penguins_can_be_sent = sum(
+            [score_data.get_max_penguins_can_be_sent() for score_data in dest_score_data_ls])
+        min_penguins_for_occupy = max(
+            [score_data.get_min_penguins_for_occupy() for score_data in dest_score_data_ls])
         if max_penguins_can_be_sent > min_penguins_for_occupy:
             log('Sending from multiple icebergs')
             log(min_penguins_for_occupy)
@@ -277,17 +315,20 @@ def try_to_send_from_multiple_icebergs(game, current_iceberg_score_data, standby
             for iceberg_score_data in sorted(dest_score_data_ls, key=ScoreData.get_score,
                                              reverse=True):  # type: ScoreData
                 source_iceberg = iceberg_score_data.get_source()  # type: Iceberg
-                penguins_to_send = min(iceberg_score_data.get_max_penguins_can_be_sent(), min_penguins_for_occupy)
+                penguins_to_send = min(
+                    iceberg_score_data.get_max_penguins_can_be_sent(), min_penguins_for_occupy)
                 source_iceberg.send_penguins(dest_iceberg, penguins_to_send)
                 min_penguins_for_occupy -= penguins_to_send
-                log(source_iceberg, dest_iceberg, penguins_to_send, min_penguins_for_occupy)
+                log(source_iceberg, dest_iceberg,
+                    penguins_to_send, min_penguins_for_occupy)
                 icebergs_to_update.append(source_iceberg)
                 if min_penguins_for_occupy <= 0:
                     break
             standby_icebergs_score_data.pop(unique_id)
     else:
         standby_icebergs_score_data[unique_id] = []
-        standby_icebergs_score_data[unique_id].append(current_iceberg_score_data)
+        standby_icebergs_score_data[unique_id].append(
+            current_iceberg_score_data)
 
     return icebergs_to_update
 
@@ -301,6 +342,17 @@ def send_penguins(my_iceberg, destination_penguin_amount, destination):
     """
     log(my_iceberg, "sends", destination_penguin_amount, "penguins to", destination)
     my_iceberg.send_penguins(destination, destination_penguin_amount)
+
+
+def build_bridge(my_iceberg, destination):
+    """
+    Send penguins to destination
+    :type my_iceberg: Iceberg
+    :type destination_penguin_amount: int
+    :type destination: Iceberg
+    """
+    log(my_iceberg, "build bridge to ", destination)
+    my_iceberg.create_bridge(destination)
 
 
 def send_penguins_groups(my_icebergs, destination_penguin_amount, destination):
