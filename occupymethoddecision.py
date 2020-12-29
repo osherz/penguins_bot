@@ -8,6 +8,7 @@ BUILD_BRIDGE = 'build_bridge'
 MIN_ADDITIONAL_PENGUINS_FOR_OCCUPY = 1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 
+
 class OccupyMethodData:
     """
     Handle data that important for occupy.
@@ -61,9 +62,10 @@ class OccupyMethodDecision:
                     min_penguins_to_send_for_occupy
                 )
 
-            elif utils.is_neutral(game,owner_if_no_action_will_made) and utils.is_bonus_iceberg(game, destination_iceberg):
+            elif utils.is_neutral(game, owner_if_no_action_will_made) and utils.is_bonus_iceberg(game,
+                                                                                                 destination_iceberg):
                 # If the destination iceberg will belong to neutral and its bonus, we want to send addition penguins.
-                min_penguins_to_send_for_occupy =int(min_penguins_to_make_neutral * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
+                min_penguins_to_send_for_occupy = int(min_penguins_to_make_neutral * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
 
         else:
             # If the iceberg will belong ot me,
@@ -123,7 +125,6 @@ class OccupyMethodDecision:
                 is_bridge_prefer = True
 
         return is_bridge_prefer, penguins_to_use
-
 
     def __calc_penguins_to_send_for_support(self, source_iceberg):
         """
