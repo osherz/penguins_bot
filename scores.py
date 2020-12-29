@@ -241,7 +241,7 @@ class Scores:
             source_iceberg)
         return DISTANCE_FACTOR_SCORE * (float(distance) / float(self.__max_distance))
 
-    def __score_by_iceberg_price(self, source_iceberg, destination_iceberg_to_score, simulation_data):
+    def __score_by_iceberg_price(self, source_iceberg, destination_iceberg_to_score, simulation_data, occupy_method_data):
         """
         Scoring by the price of the destination iceberg.
         Taking in account the number of the penguins when the penguins-group from the source iceberg will arrive.
