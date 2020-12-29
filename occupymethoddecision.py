@@ -5,6 +5,8 @@ import utils
 SEND_PENGUINS = 'send_penguins'
 BUILD_BRIDGE = 'build_bridge'
 
+MIN_ADDITIONAL_PENGUINS_FOR_OCCUPY = 1
+
 
 class OccupyMethodData:
     """
@@ -36,10 +38,11 @@ class OccupyMethodDecision:
         Decide how to occupy the destination iceberg by the source_iceberg
         and how much penguins to use.
         """
-        min_penguins_to_send_for_occupy, owner = self.__clac_min_penguins_to_send(
+        min_penguins_to_make_neutral, owner = self.__calc_min_penguins_to_send(
             source_iceberg,
             destination_iceberg
         )
+        min_penguins_to_send_for_occupy = min_penguins_to_make_neutral + MIN_ADDITIONAL_PENGUINS_FOR_OCCUPY
 
         is_bridge_prefer = False
         if utils.is_enemy(self.__game, owner):
@@ -59,22 +62,25 @@ class OccupyMethodDecision:
         else:
             occupy_method_data = OccupyMethodData(
                 min_penguins_to_send_for_occupy,
-                min_penguins_to_send_for_occupy,
+                min_penguins_to_make_neutral,
                 min_penguins_to_send_for_occupy,
                 SEND_PENGUINS
             )
 
         return occupy_method_data
 
-    def __clac_min_penguins_to_send(self, source_iceberg, destination_iceberg):
+    def __calc_min_penguins_to_send(self, source_iceberg, destination_iceberg):
         """
-        Calculate the number of minimum penguin the need to be send for occupy
+        Calculate the number of minimum penguin the need to be send to make destination neutral
         and who will be the owner of the destination if no penguins are send.
 
         :return: (min_penguins_for_occupy, owner)
         :rtype: (int, Player)
         """
-        return min_penguins_for_occupy, owner
+        min_penguins_to_make_neutral, owner = utils.min_penguins_for_occupy(
+            self.__game, source_iceberg, destination_iceberg, self.__simulation_data)
+
+        return min_penguins_to_make_neutral, owner
 
     def __is_bridge_prefer(self, source_iceberg, destination_iceberg, min_penguins_to_send_for_occupy):
         """
