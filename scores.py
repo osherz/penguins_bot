@@ -160,27 +160,26 @@ class Scores:
                          source_iceberg.get_turns_till_arrival(destination_iceberg_to_score)
         return turns_to_check * destination_iceberg_to_score.penguins_per_turn * PENGUINS_GAINING_SCORE_FACTOR
 
-    def __score_by_iceberg_bonus(self, destination_iceberg_to_score, min_penguins_for_occupy):
-        if self.__game.get_bonus_iceberg() is None:
+    def __score_by_iceberg_bonus(self, destination_iceberg_to_score, owner_if_no_action_will_made):
+        game = self.__game
+        if game.get_bonus_iceberg() is None:
             return 0
 
         penguin_bonus = destination_iceberg_to_score.penguin_bonus
         bonus_score = (
                 destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
         # check if the bonus iceberg will be ours.
-        if min_penguins_for_occupy <= 0:
+        if utils.is_me(game, owner_if_no_action_will_made):
             return BONUS_SCORE + bonus_score * len(
-                self.__game.get_my_icebergs()) * penguin_bonus * OUR_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
+                self.__game.get_my_icebergs()) * penguin_bonus * OUR_BOMUS_FACTOR_SCORE
         # check if the bonus iceberg belongs to the enemy.
-        elif bonus_score != 0:
+        elif utils.is_enemy(game, owner_if_no_action_will_made):
             return BONUS_SCORE + bonus_score * len(
-                self.__game.get_enemy_icebergs()) * penguin_bonus * ENEMY_BOMUS_FACTOR_SCORE, min_penguins_for_occupy
+                self.__game.get_enemy_icebergs()) * penguin_bonus * ENEMY_BOMUS_FACTOR_SCORE
         # if the bonus iceberg is netural.
         else:
-            min_penguins_for_occupy = int(
-                min_penguins_for_occupy * MIN_PENGUIN_BONUS_ICEBERG_FACTOR)
             return BONUS_SCORE + NATURAL_BOMUS_FACTOR_SCORE * len(
-                self.__game.get_enemy_icebergs()) * penguin_bonus, min_penguins_for_occupy
+                self.__game.get_enemy_icebergs()) * penguin_bonus
 
     def __score_by_iceberg_belogns(self, source_iceberg, iceberg_to_score, iceberg_to_score_owner):
         """
