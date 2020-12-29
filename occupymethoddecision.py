@@ -27,6 +27,13 @@ class OccupyMethodData:
         self.method = method
         self.owner = owner
 
+    def __str__(self):
+        return 'self.min_penguins_for_occupy=' + str(self.min_penguins_for_occupy) + \
+               ' self.min_penguins_for_neutral=' + str(self.min_penguins_for_neutral) + \
+               ' self.recommended_penguins_for_occupy=' + str(self.recommended_penguins_for_occupy) + \
+               ' self.method=' + str(self.method) + \
+               ' self.owner=' + str(self.owner)
+
 
 class OccupyMethodDecision:
     """

@@ -347,7 +347,6 @@ def can_build_bridge(iceberg_source, iceberg_destination):
     """
     return iceberg_source.can_create_bridge(iceberg_destination) and \
         iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
-        not iceberg_source.already_acted and \
         not has_bridge_between(iceberg_source, iceberg_destination)
 
 

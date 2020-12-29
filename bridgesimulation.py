@@ -7,6 +7,8 @@ class BridgeSimulation:
             source_iceberg,
             destination_iceberg
         ]
+        self.duration = duration
+        self.speed_multiplier = speed_multiplier
 
     def get_edges(self):
         return self.__edges

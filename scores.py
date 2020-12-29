@@ -22,7 +22,7 @@ BONUS_SCORE = 15
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
-UPDATE_FACTOR_SCORE = 0.1
+UPDATE_FACTOR_SCORE = 0.2
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.15
 
 OUR_BONUS_FACTOR_SCORE = 0.1
@@ -258,7 +258,7 @@ class Scores:
         game = self.__game
         min_penguins_for_occupy = occupy_method_data.min_penguins_for_occupy
 
-        log('min penguins for occupy', min_penguins_for_occupy)
+        log(occupy_method_data)
         if utils.is_me(game, occupy_method_data.owner):  # In the end, the iceberg belongs to us.
             score += self.__score_by_support(source_iceberg, destination_iceberg_to_score, game.get_myself(),
                                              simulation_data)
