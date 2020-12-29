@@ -1,5 +1,5 @@
 from penguin_game import *
-from simulationsdata import SimulationsData
+from simulationsdata import SimulationsData, OWNER
 import utils
 
 SEND_PENGUINS = 'send_penguins'
@@ -99,9 +99,11 @@ class OccupyMethodDecision:
         :return: (min_penguins_for_occupy, owner)
         :rtype: (int, Player)
         """
-        min_penguins_to_make_neutral, owner = utils.min_penguins_for_occupy(
+        min_penguins_to_make_neutral = utils.min_penguins_to_make_neutral(
             self.__game, source_iceberg, destination_iceberg, self.__simulation_data)
 
+        simulation_data_turns = self.__simulation_data.get(destination_iceberg)
+        owner = simulation_data_turns[-1][OWNER]
         return min_penguins_to_make_neutral, owner
 
     def __is_bridge_prefer(self, source_iceberg, destination_iceberg, min_penguins_to_send_for_occupy):

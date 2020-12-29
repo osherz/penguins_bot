@@ -46,10 +46,10 @@ def log(*args):
         print ' '.join([str(x) for x in args])
 
 
-def min_penguins_for_occupy(game, source_iceberg, destination_iceberg, simulation_data):
+def min_penguins_to_make_neutral(game, source_iceberg, destination_iceberg, simulation_data):
     """
     Calculate how much penguins need to be send
-    so the source_iceberg will occupy the destination_iceberg.
+    so the source_iceberg will make the destination_iceberg neutral.
     Taking in account the level of the destination iceberg, the distance
     and the groups that in their way to the destination iceberg.
 
@@ -65,7 +65,7 @@ def min_penguins_for_occupy(game, source_iceberg, destination_iceberg, simulatio
 
     log('min penguins:', penguins, "owner:", owner)
     if not owner.equals(game.get_myself()):
-        return penguins + 1
+        return penguins
     else:
         return 0
 
