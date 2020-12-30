@@ -386,15 +386,15 @@ def get_all_icebergs(game):
     return all_icebergs
 
 
-def is_strong_enemy_close_to_me(Iceberg):
+def is_strong_enemy_close_to_me(game , my_iceberg):
     all_icebergs = game.get_all_icebergs()
 
-    if type(Iceberg) is not BonusIceberg:
-        all_icebergs.remove(Iceberg)
+    if type(my_iceberg) is not BonusIceberg:
+        all_icebergs.remove(my_iceberg)
         closedIceberg = min(all_icebergs,
-                            key=lambda iceberg: iceberg.get_turns_till_arrival(Iceberg))  # type: Iceberg
+                            key=lambda iceberg: iceberg.get_turns_till_arrival(my_iceberg))  # type: my_iceberg
         if is_enemy(game,
-                    closedIceberg.owner) and closedIceberg.penguin_amount >= Iceberg.penguin_amount and closedIceberg.penguins_per_turn >= Iceberg.penguins_per_turn:
+                    closedIceberg.owner) and closedIceberg.penguin_amount >= my_iceberg.penguin_amount and closedIceberg.penguins_per_turn >= my_iceberg.penguins_per_turn:
             return True
 
     return False

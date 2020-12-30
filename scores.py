@@ -96,7 +96,7 @@ class Scores:
                     destination_iceberg_to_score))
 
             if score_by_avg_distance_from_players:
-                scores.append(self.__score_by_avg_distance_from_players(
+                scores.append(self.__score_by_avg_distance_from_players(source_iceberg,
                     destination_iceberg_to_score, simulation_data))
 
             if score_by_iceberg_bonus:
@@ -141,17 +141,23 @@ class Scores:
 
         ret = score * UPDATE_FACTOR_SCORE
 
-        if utils.is_strong_enemy_close_to_me(iceberg_to_score):
+        if utils.is_strong_enemy_close_to_me(self.__game, iceberg_to_score):
             ret -= STRONG_ENEMY_CLOSE_UPDATE
         return ret
 
-    def __score_by_avg_distance_from_players(self, iceberg_to_score, simulation_data):
+    def __score_by_avg_distance_from_players(self,source_iceberg, iceberg_to_score, simulation_data):
         """
         Scoring by the relation between the average distance from enemy and ours.
         """
         ours_avg_distance, enemy_avg_distance = simulation_data.get_avg_distance_from_players(
             iceberg_to_score)
-        return (enemy_avg_distance - ours_avg_distance) * AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE
+
+        score = (enemy_avg_distance - ours_avg_distance) * AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE
+
+        if utils.is_strong_enemy_close_to_me(self.__game, source_iceberg):
+            score -= STRONG_ENEMY_CLOSE
+
+        return score
 
     def __score_by_penguins_gaining(self, source_iceberg, destination_iceberg_to_score,
                                     iceberg_owner_after_all_groups_arrived):
@@ -246,12 +252,8 @@ class Scores:
         """
 
         distance = destination_iceberg_to_score.get_turns_till_arrival(source_iceberg)
-        ret = DISTANCE_FACTOR_SCORE * (float(distance) / float(self.__max_distance))
 
-        if utils.is_strong_enemy_close_to_me(source_iceberg):
-            ret -= STRONG_ENEMY_CLOSE
-
-        return ret
+        return DISTANCE_FACTOR_SCORE * (float(distance) / float(self.__max_distance))
 
     def __score_by_iceberg_price(self, source_iceberg, destination_iceberg_to_score, simulation_data,
                                  occupy_method_data):

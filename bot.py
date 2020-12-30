@@ -90,11 +90,11 @@ def occupy_close_icebergs(game):
 
                         # IF CANT DO NOTHING TO ATTACK THE ICEBERG
                         if not icebergs_to_update and type(my_iceberg) is not BonusIceberg:
-                            if dest_iceberg.owner.equals(game.get_myself()):
+                            if utils.is_me(game, dest_iceberg.owner):
                                 if my_iceberg.can_send_decoy_penguins(dest_iceberg, dest_iceberg , min_price/2):
                                     my_iceberg.send_decoy_penguins(dest_iceberg, dest_iceberg , min_price/2)
-                            else:
-                                enemy_destination_scored_icebergs = [dest for dest in destination_scored_icebergs if dest.get_destination().owner.equals(game.get_enemy())]
+                            elif utils.is_enemy(game, dest_iceberg.owner):
+                                enemy_destination_scored_icebergs = [dest for dest in destination_scored_icebergs if utils.is_enemy(game, dest.owner)]
                                 if enemy_destination_scored_icebergs:
                                     weakIceberg = min(enemy_destination_scored_icebergs, key=lambda x: x.get_min_penguins_for_occupy())
                                     if my_iceberg.can_send_decoy_penguins(weakIceberg.get_destination(), weakIceberg.get_destination() , weakIceberg.get_min_penguins_for_occupy()):
@@ -102,7 +102,6 @@ def occupy_close_icebergs(game):
                                                                            weakIceberg.get_destination(),
                                                                            weakIceberg.get_min_penguins_for_occupy())
 
-                                #print(ERROR)
                 else:
                     if is_send_penguins:
                         send_penguins(my_iceberg, min_price, dest_iceberg)
