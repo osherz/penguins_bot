@@ -94,7 +94,7 @@ def occupy_close_icebergs(game):
                                 if my_iceberg.can_send_decoy_penguins(dest_iceberg, dest_iceberg , min_price/2):
                                     my_iceberg.send_decoy_penguins(dest_iceberg, dest_iceberg , min_price/2)
                             elif utils.is_enemy(game, dest_iceberg.owner):
-                                enemy_destination_scored_icebergs = [dest for dest in destination_scored_icebergs if utils.is_enemy(game, dest.owner)]
+                                enemy_destination_scored_icebergs = [dest for dest in destination_scored_icebergs if utils.is_enemy(game, dest.get_destination().owner)]
                                 if enemy_destination_scored_icebergs:
                                     weakIceberg = min(enemy_destination_scored_icebergs, key=lambda x: x.get_min_penguins_for_occupy())
                                     if my_iceberg.can_send_decoy_penguins(weakIceberg.get_destination(), weakIceberg.get_destination() , weakIceberg.get_min_penguins_for_occupy()):
