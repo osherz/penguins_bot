@@ -76,6 +76,7 @@ class Simulation:
                 turn, turns_to_simulate)
         turns_to_continue = turn
         actions = 0
+        self.__treat_groups_arrived_destination()
         while turn <= turns_to_simulate:
             self.__current_turn += turns_to_continue
             self.__move_groups_to_destination(turns_to_continue)
@@ -184,7 +185,8 @@ class Simulation:
                 self.__penguin_amount -= penguin_amount
             else:
                 raise ValueError(
-                    'Simulation: You can\'t send more penguins then you have: send' + str(penguin_amount) + ' has:' + str(
+                    'Simulation: You can\'t send more penguins then you have: send' + str(
+                        penguin_amount) + ' has:' + str(
                         self.__penguin_amount))
         else:
             self.__treat_group_arrived_destination(owner, penguin_amount)
@@ -294,20 +296,26 @@ class Simulation:
 
             # Check whether there is custom bridge going out from this source_iceberg
             source_key = self.__get_iceberg_key(source_iceberg)
-            if source_iceberg in self.__custom_bridges_to_iceberg:
+            if source_key in self.__custom_bridges_to_iceberg:
                 bridges.append(self.__custom_bridges_to_iceberg[source_key])
-            # Type: bridge
-            for bridge in sorted(bridges, key=lambda b: b.duration, reverse=True):
+            has_bridge = False
+            if not utils.is_empty(bridges):
+                bridge = sorted(bridges, key=lambda b: b.duration, reverse=True)[0] # Type: bridge
                 if group.get_destination() in bridge.get_edges():
+                    has_bridge = True
                     turns_forward_until_bridge_gone = bridge.speed_multiplier * bridge.duration
                     turns_till_arrival = group.get_turns_till_arrival()
+                    if type(bridge) == BridgeSimulation:
+                        # If is custom bridge, so it effect will active only in the next turn,
+                        # so we calculate his effect from the next turn, meaning not including this turn.
+                        turns_till_arrival -= 1
                     if turns_forward_until_bridge_gone >= turns_till_arrival:
-                        turns = math.ceil(
-                            turns_till_arrival / bridge.speed_multiplier)
+                        turns = int(math.ceil(float(turns_till_arrival) / bridge.speed_multiplier))
                     else:
-                        turns = bridge.duration + \
-                            (turns_till_arrival - turns_forward_until_bridge_gone)
-                    group.move_toward_destination(turns_till_arrival - turns)
+                        turns = bridge.duration + (turns_till_arrival - turns_forward_until_bridge_gone)
+                    group.move_toward_destination(max(0, turns_till_arrival - turns))
+            if not has_bridge:
+                group.move_toward_destination(1)
 
     def __move_groups_to_destination(self, turns_to_move=1):
         """
@@ -478,7 +486,7 @@ class Simulation:
             self.__iceberg_owner)
 
         if type(self.__iceberg_to_simulate) == Iceberg:
-            ret += ', level ' + str(self.__iceberg_level)
+            ret += ', level ' + str(self.__iceberg_level) + ', penguins_per_turn ' + str(self.__penguins_per_turn)
 
         ret += ', groups: ' + str(num_of_groups_to_iceberg)
         return ret

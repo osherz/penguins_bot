@@ -114,7 +114,7 @@ class PenguinGroupSimulate:
             self.__turns_till_arrival -= turns
             return self.is_arrived()
         else:
-            raise ValueError("Turns bigger than turns-till-arrival")
+            raise ValueError("Turns ", str(turns), "bigger than turns-till-arrival "+str(self.__turns_till_arrival))
 
     def is_arrived(self):
         """

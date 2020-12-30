@@ -225,7 +225,7 @@ def simulate_with_bridge(game, source_iceberg, destination_iceberg, simulation_d
 
     :param source_iceberg: Iceberg the build the bridge.
     :type source_iceberg: Iceberg
-    :param destination_iceberg: Destination of the bridge
+    :param destination_iceberg: Destination of the bridge 
                                 and the iceberg we going to active simulate on.
     :type destination_iceberg: Iceberg
     :type simulation_data: SimulationsData
@@ -281,10 +281,10 @@ def can_be_upgrade(iceberg):
     :type iceberg: Iceberg
     """
     return type(iceberg) == Iceberg and \
-           iceberg.can_upgrade and \
-           iceberg.upgrade_level_limit > iceberg.level and \
-           not iceberg.already_acted and \
-           iceberg.penguin_amount >= iceberg.upgrade_cost
+        iceberg.can_upgrade and \
+        iceberg.upgrade_level_limit > iceberg.level and \
+        not iceberg.already_acted and \
+        iceberg.penguin_amount >= iceberg.upgrade_cost
 
 
 def get_actual_penguin_amount(game, iceberg):
@@ -346,9 +346,8 @@ def can_build_bridge(iceberg_source, iceberg_destination):
     :type iceberg_destination: Iceberg
     """
     return iceberg_source.can_create_bridge(iceberg_destination) and \
-           iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
-           not iceberg_source.already_acted and \
-           not has_bridge_between(iceberg_source, iceberg_destination)
+        iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
+        not has_bridge_between(iceberg_source, iceberg_destination)
 
 
 def has_bridge_between(source_iceberg, destination_iceberg):
