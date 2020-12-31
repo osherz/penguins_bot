@@ -34,7 +34,6 @@ class OccupyMethodData:
                ' self.method=' + str(self.method) + \
                ' self.owner=' + str(self.owner)
 
-
 class OccupyMethodDecision:
     """
     Making the decision of which method to choose for occupy and how much penguins need to be use.
@@ -78,6 +77,7 @@ class OccupyMethodDecision:
             # If the iceberg will belong ot me,
             # we want to think about sending some support.
             min_penguins_to_send_for_occupy = self.__calc_penguins_to_send_for_support(source_iceberg)
+            min_penguins_to_make_neutral = 0
 
         if is_bridge_prefer:
             occupy_method_data = OccupyMethodData(

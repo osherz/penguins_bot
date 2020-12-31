@@ -41,7 +41,7 @@ def log(*args):
     """
     Print to log all params if print enabled.
     """
-    global __print_enable
+    global __print_enable, game
     if __print_enable and game.turn >= TURN_TO_START_PRINT_FROM:
         print ' '.join([str(x) for x in args])
 
@@ -345,6 +345,7 @@ def can_build_bridge(iceberg_source, iceberg_destination):
     :type iceberg_source: Iceberg
     :type iceberg_destination: Iceberg
     """
+    print iceberg_source, iceberg_destination
     return iceberg_source.can_create_bridge(iceberg_destination) and \
         iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
         not has_bridge_between(iceberg_source, iceberg_destination)

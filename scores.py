@@ -4,6 +4,7 @@ from utils import log
 from scoredata import ScoreData
 from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 import simulationsdata
+from simulationsdata import SimulationsData, PENGUIN_AMOUNT
 
 ENEMY_BELONGS_SCORE = 20
 NEUTRAL_BELONGS_SCORE = 16
@@ -22,7 +23,7 @@ BONUS_SCORE = 15
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
-UPDATE_FACTOR_SCORE = 0.1
+UPDATE_FACTOR_SCORE = 0.2
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.15
 
 OUR_BONUS_FACTOR_SCORE = 0.1
@@ -218,6 +219,7 @@ class Scores:
 
         :type source_iceberg: Iceberg
         :type iceberg_to_score: Iceberg
+        :type simulation_data: SimulationsData
         :rtype: int
         """
         game = self.__game
@@ -227,7 +229,9 @@ class Scores:
                                                                                               iceberg_to_score,
                                                                                               simulation_data)
         if is_belong_to_me and is_closest_to_enemy and not iceberg_to_score is game.get_bonus_iceberg():
-            score += self.__max_price - iceberg_to_score.penguin_amount
+            last_group_turn = simulation_data.get_last_group_turn(iceberg_to_score)
+            penguin_amount_after_all_groups_arrived = simulation_data.get(iceberg_to_score)[last_group_turn][PENGUIN_AMOUNT]
+            score += self.__max_price - penguin_amount_after_all_groups_arrived
             score += self.__max_distance - avr_distance_from_enemy
         else:
             score += CANT_DO_ACTION_SCORE
