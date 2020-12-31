@@ -111,6 +111,7 @@ class Scores:
         return ScoreData(source_iceberg,
                          destination_iceberg_to_score,
                          occupy_method_data.min_penguins_for_occupy,
+                         occupy_method_data.min_penguins_for_neutral,
                          max_penguins_can_be_sent,
                          sum(scores),
                          send_penguins=action == SEND_PENGUINS,
