@@ -75,14 +75,14 @@ def occupy_close_icebergs(game):
                 log('Running time: ', game.get_max_turn_time(),
                     ', ', game.get_time_remaining())
 
-                # type: ScoreData
-                iceberg_score_data = destination_scored_icebergs[0]
+                iceberg_score_data = destination_scored_icebergs[0] # type: ScoreData
                 dest_iceberg = iceberg_score_data.get_destination()  # type: Iceberg
-                print(type(dest_iceberg))
-                min_price = iceberg_score_data.get_min_penguins_for_occupy()
                 max_penguins_can_be_sent = iceberg_score_data.get_max_penguins_can_be_sent()
+                min_price = iceberg_score_data.get_min_penguins_for_occupy()
                 # If got so much scores but hasn't enough penguins we prefer to wait.
                 is_send_penguins = iceberg_score_data.send_penguins()
+                if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent:
+                    min_price = iceberg_score_data.get_min_penguins_for_neutral()
                 if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent:
                     if send_penguins:
                         icebergs_to_update = try_to_send_from_multiple_icebergs(game, iceberg_score_data,
