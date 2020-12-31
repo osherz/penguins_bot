@@ -6,14 +6,15 @@ from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 import simulationsdata
 from simulationsdata import SimulationsData, PENGUIN_AMOUNT, OWNER
 
-ENEMY_BELONGS_SCORE = 25
-NEUTRAL_BELONGS_SCORE = 20
+ENEMY_BELONGS_SCORE = 15
+NEUTRAL_BELONGS_SCORE = 15
 MY_BELONGS_SCORE = 0
 CANT_DO_ACTION_SCORE = -20
 UPGRADE_TURNS_TO_CHECK = 20
 SUPPORT_SCORE = 20
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -100
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
+UPGRADE_NOT_RELEVANT = -9999
 NEED_PROTECTED_SCORE = 30
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
@@ -25,6 +26,7 @@ PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
 UPDATE_FACTOR_SCORE = 0.2
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.15
+AVG_DISTANCE_FROM_EVEMY_THRESHOLD = 0.7
 
 OUR_BONUS_FACTOR_SCORE = 0.1
 ENEMY_BONUS_FACTOR_SCORE = 1.2
@@ -50,6 +52,9 @@ class Scores:
         self.__average_penguins_in_our_icebergs = self.__calculate_average_penguins_in_our_icebergs()
         self.__min_penguins_amount = int(
             MIN_PENGUINS_AMOUNT_AVG_PERCENT * self.__average_penguins_in_our_icebergs)
+
+        if utils.is_empty(game.get_neutral_icebergs()):
+            UPDATE_FACTOR_SCORE = 0.3
 
     def score(self, source_iceberg, destination_iceberg_to_score, simulation_data, occupy_method_data,
               score_by_iceberg_belogns=False,
@@ -113,6 +118,7 @@ class Scores:
                          occupy_method_data.min_penguins_for_occupy,
                          occupy_method_data.min_penguins_for_neutral,
                          max_penguins_can_be_sent,
+                         occupy_method_data.close_strong_enemy_to_destination,
                          sum(scores),
                          send_penguins=action == SEND_PENGUINS,
                          build_bridge=action == BUILD_BRIDGE)
@@ -127,7 +133,9 @@ class Scores:
         :rtype: float
         """
         if utils.is_bonus_iceberg(self.__game, iceberg_to_score):
-            return CANT_DO_ACTION_SCORE
+            return UPGRADE_NOT_RELEVANT
+        if iceberg_to_score.upgrade_level_limit <= iceberg_to_score.level:
+            return UPGRADE_NOT_RELEVANT
         score = 0
         upgrade_cost = iceberg_to_score.upgrade_cost
         if not utils.can_be_upgrade(iceberg_to_score):
@@ -143,7 +151,7 @@ class Scores:
 
         ret = score * UPDATE_FACTOR_SCORE
 
-        if utils.is_strong_enemy_close_to_me(self.__game, iceberg_to_score):
+        if utils.is_strong_enemy_close_to(self.__game, iceberg_to_score):
             ret -= STRONG_ENEMY_CLOSE_UPDATE
         return ret
 
@@ -156,7 +164,7 @@ class Scores:
 
         score = (enemy_avg_distance - ours_avg_distance) * AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE
 
-        if utils.is_strong_enemy_close_to_me(self.__game, source_iceberg):
+        if utils.is_strong_enemy_close_to(self.__game, source_iceberg):
             score -= STRONG_ENEMY_CLOSE
 
         return score
@@ -390,7 +398,7 @@ class Scores:
         destination_avg_distance = self.__calculate_average_distance_from_enemy(
             destination_iceberg, simulation_data)
         # TODO: maybe to return int value for more acurate score for distance from enemy.
-        return destination_avg_distance < self.__average_distance < source_avg_distance, destination_avg_distance
+        return destination_avg_distance < source_avg_distance * AVG_DISTANCE_FROM_EVEMY_THRESHOLD, destination_avg_distance
 
     def __calculate_min_penguins_for_support(self, destination_iceberg_to_score):
         """

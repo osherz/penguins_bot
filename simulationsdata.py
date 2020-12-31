@@ -18,8 +18,6 @@ class SimulationsData:
         self.__icebergs_simulations = {}
         self.__icebergs_last_group_turns = {}
         self.__icebergs_avg_distance = {}
-        self.__enemy_icebergs = []
-        self.__my_icebergs = []
         self.__max_turn = utils.find_max_distance(game)
         self.__bonus_turns_ls = []
 
@@ -108,16 +106,6 @@ class SimulationsData:
         Do some action after all groups have arrived.
         """
         self.__set_last_group_turn(iceberg, turn)
-
-        if utils.is_me(self.__game, owner):
-            self.__my_icebergs.append(iceberg)
-            if iceberg in self.__enemy_icebergs: # Remove iceberg from enemy icebergs
-                self.__enemy_icebergs.remove(iceberg)
-
-        elif utils.is_enemy(self.__game, owner):
-            self.__enemy_icebergs.append(iceberg)
-            if iceberg in self.__my_icebergs: # Remove iceberg from my icebergs
-                self.__my_icebergs.remove(iceberg)
 
     def __set_last_group_turn(self, iceberg, last_group_turn):
         """
