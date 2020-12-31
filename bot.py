@@ -105,7 +105,12 @@ def occupy_close_icebergs(game):
 
                 else:
                     if is_send_penguins:
-                        send_penguins(my_iceberg, min_price, dest_iceberg)
+                        close_strong_enemy = iceberg_score_data.get_close_strong_enemy_to_destination()
+                        if close_strong_enemy and \
+                                my_iceberg.can_send_decoy_penguins(dest_iceberg,close_strong_enemy, min_price):
+                            my_iceberg.send_decoy_penguins(dest_iceberg, close_strong_enemy, min_price)
+                        else:
+                            send_penguins(my_iceberg, min_price, dest_iceberg)
                     else:
                         build_bridge(my_iceberg, dest_iceberg)
                     icebergs_to_update = [my_iceberg, dest_iceberg]
