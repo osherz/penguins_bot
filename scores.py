@@ -4,20 +4,20 @@ from utils import log
 from scoredata import ScoreData
 from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 import simulationsdata
-from simulationsdata import SimulationsData, PENGUIN_AMOUNT
+from simulationsdata import SimulationsData, PENGUIN_AMOUNT, OWNER
 
-ENEMY_BELONGS_SCORE = 20
-NEUTRAL_BELONGS_SCORE = 16
+ENEMY_BELONGS_SCORE = 25
+NEUTRAL_BELONGS_SCORE = 20
 MY_BELONGS_SCORE = 0
 CANT_DO_ACTION_SCORE = -20
 UPGRADE_TURNS_TO_CHECK = 20
-SUPPORT_SCORE = 10
+SUPPORT_SCORE = 20
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -100
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 NEED_PROTECTED_SCORE = 30
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
-BONUS_SCORE = 15
+BONUS_SCORE = 10
 
 # Factors
 DISTANCE_FACTOR_SCORE = -35
@@ -29,7 +29,6 @@ AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.15
 OUR_BONUS_FACTOR_SCORE = 0.1
 ENEMY_BONUS_FACTOR_SCORE = 1.2
 NATURAL_BONUS_FACTOR_SCORE = 1.1
-MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 
 PENGUINS_GAINING_SCORE_FACTOR = 0.2
 
@@ -75,8 +74,9 @@ class Scores:
         # if the score will not be positive, return score.
         if sum(scores) >= IRREVERSIBLE_SCORE:
             log('penguin_amount_after_all_groups_arrived')
-            penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
-                self.__game, destination_iceberg_to_score, simulation_data=simulation_data)
+
+            penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = self.__penguin_amount_after_all_groups_arrived(
+                destination_iceberg_to_score, simulation_data=simulation_data)
 
             if score_by_iceberg_belogns:
                 scores.append(self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
@@ -98,7 +98,7 @@ class Scores:
 
             if score_by_avg_distance_from_players:
                 scores.append(self.__score_by_avg_distance_from_players(source_iceberg,
-                    destination_iceberg_to_score, simulation_data))
+                                                                        destination_iceberg_to_score, simulation_data))
 
             if score_by_iceberg_bonus:
                 bonus_iceberg_score = self.__score_by_iceberg_bonus(
@@ -147,7 +147,7 @@ class Scores:
             ret -= STRONG_ENEMY_CLOSE_UPDATE
         return ret
 
-    def __score_by_avg_distance_from_players(self,source_iceberg, iceberg_to_score, simulation_data):
+    def __score_by_avg_distance_from_players(self, source_iceberg, iceberg_to_score, simulation_data):
         """
         Scoring by the relation between the average distance from enemy and ours.
         """
@@ -230,10 +230,9 @@ class Scores:
                                                                                               iceberg_to_score,
                                                                                               simulation_data)
         if is_belong_to_me and is_closest_to_enemy and not iceberg_to_score is game.get_bonus_iceberg():
-            last_group_turn = simulation_data.get_last_group_turn(iceberg_to_score)
-            penguin_amount_after_all_groups_arrived = simulation_data.get(iceberg_to_score)[last_group_turn][PENGUIN_AMOUNT]
-            score += self.__max_price - penguin_amount_after_all_groups_arrived
+            score += self.__max_price - iceberg_to_score.penguin_amount
             score += self.__max_distance - avr_distance_from_enemy
+            score += SUPPORT_SCORE
         else:
             score += CANT_DO_ACTION_SCORE
         return score
@@ -408,3 +407,13 @@ class Scores:
             return penguins_to_send
         return 0
 
+    def __penguin_amount_after_all_groups_arrived(self, destination_iceberg_to_score, simulation_data):
+        """
+        Return how much penguins will be after all groups arrive and the owner then.
+
+        :type simulation_data:SimulationsData
+        :return: (penguin_amount, owner_after_all_groups_arrived)
+        """
+        last_group_turn = simulation_data.get_last_group_turn(destination_iceberg_to_score)
+        turn_data = simulation_data.get(destination_iceberg_to_score)[last_group_turn]
+        return turn_data[PENGUIN_AMOUNT], turn_data[OWNER]
