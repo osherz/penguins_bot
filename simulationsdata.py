@@ -11,6 +11,7 @@ GET_BONUS = "get_bonus"
 OURS_AVG_DISTANCE = "ours_avg_distance"
 ENEMY_AVG_DISTANCE = "enemy_avg_distance"
 
+icebergs_max_distance = {}
 
 class SimulationsData:
     def __init__(self, game):
@@ -20,6 +21,9 @@ class SimulationsData:
         self.__icebergs_max_penguins_can_be_use = {}
         self.__max_turn = utils.find_max_distance(game)
         self.__bonus_turns_ls = []
+        if len(icebergs_max_distance) <= 0:
+            self.__calc_max_distances()
+        len(icebergs_max_distance)
 
     def get(self, iceberg):
         """
@@ -31,6 +35,14 @@ class SimulationsData:
         """
         key = self.__get_iceberg_key(iceberg)
         return self.__icebergs_simulations[key]
+
+    def get_max_distance(self,iceberg):
+        """
+        Return max distance of the given iceberg from all icebergs.
+        """
+        global icebergs_max_distance
+        key = self.__get_iceberg_key(iceberg)
+        return icebergs_max_distance[key]
 
     def get_avg_distance_from_players(self, iceberg):
         """
@@ -91,7 +103,7 @@ class SimulationsData:
         simulation = Simulation(game, iceberg, self.get_bonus_turns())
         simulation.simulate(0)
         iceberg_simulation_turn = [self.__get_simulation_data(simulation, iceberg)]
-        turns_to_run = utils.find_max_distance(game)  # TODO: Use self.__max_distance
+        turns_to_run = self.get_max_distance(iceberg)
         enable_calculate_max_penguins_to_use = utils.is_me(game, iceberg.owner)
         if enable_calculate_max_penguins_to_use:
             max_penguins_can_be_use = simulation.get_penguin_amount()
@@ -219,3 +231,16 @@ class SimulationsData:
             OURS_AVG_DISTANCE: self.__calculate_average_distance_from_ours(iceberg),
             ENEMY_AVG_DISTANCE: self.__calculate_average_distance_from_enemy(iceberg)
         }
+
+    def __calc_max_distances(self):
+        """
+        For each iceberg, calculate the maximum distances from all icebergs
+        """
+        global icebergs_max_distance
+        all_icebergs = utils.get_all_icebergs(self.__game)
+        for iceberg in all_icebergs:
+            key = self.__get_iceberg_key(iceberg)
+            all_distances = [iceberg.get_turns_till_arrival(iceberg2)
+                             for iceberg2 in all_icebergs]
+            max_distance = max(all_distances)
+            icebergs_max_distance[key] = max_distance
