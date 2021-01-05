@@ -100,7 +100,7 @@ class Scores:
 
             if score_by_avg_distance_from_players:
                 scores.append(self.__score_by_avg_distance_from_players(source_iceberg,
-                    destination_iceberg_to_score, simulation_data))
+                                                                        destination_iceberg_to_score, simulation_data))
 
             if score_by_iceberg_bonus:
                 bonus_iceberg_score = self.__score_by_iceberg_bonus(
@@ -133,7 +133,8 @@ class Scores:
         score = 0
         upgrade_cost = iceberg_to_score.upgrade_cost
         if not utils.can_be_upgrade(iceberg_to_score):
-            if utils.is_bonus_iceberg(game, iceberg_to_score) or iceberg_to_score.level >= iceberg_to_score.upgrade_level_limit:
+            if utils.is_bonus_iceberg(game,
+                                      iceberg_to_score) or iceberg_to_score.level >= iceberg_to_score.upgrade_level_limit:
                 return UNUPGRADEABLE_ICEBERG_SCORE
             score += CANT_DO_ACTION_SCORE
         else:
@@ -151,7 +152,7 @@ class Scores:
             ret -= STRONG_ENEMY_CLOSE_UPDATE
         return ret
 
-    def __score_by_avg_distance_from_players(self,source_iceberg, iceberg_to_score, simulation_data):
+    def __score_by_avg_distance_from_players(self, source_iceberg, iceberg_to_score, simulation_data):
         """
         Scoring by the relation between the average distance from enemy and ours.
         """
@@ -257,7 +258,7 @@ class Scores:
         :rtype: float:
         """
 
-        distance = destination_iceberg_to_score.get_turns_till_arrival(source_iceberg)
+        distance = utils.get_real_distance_between_icebergs(source_iceberg, destination_iceberg_to_score)
 
         return DISTANCE_FACTOR_SCORE * (float(distance) / float(self.__max_distance))
 
@@ -402,4 +403,3 @@ class Scores:
                                destination_iceberg_to_score.penguin_amount
             return penguins_to_send
         return 0
-

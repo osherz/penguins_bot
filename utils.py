@@ -283,10 +283,10 @@ def can_be_upgrade(iceberg):
     :type iceberg: Iceberg
     """
     return type(iceberg) == Iceberg and \
-        iceberg.can_upgrade and \
-        iceberg.upgrade_level_limit > iceberg.level and \
-        not iceberg.already_acted and \
-        iceberg.penguin_amount >= iceberg.upgrade_cost
+           iceberg.can_upgrade and \
+           iceberg.upgrade_level_limit > iceberg.level and \
+           not iceberg.already_acted and \
+           iceberg.penguin_amount >= iceberg.upgrade_cost
 
 
 def get_actual_penguin_amount(game, iceberg):
@@ -348,8 +348,8 @@ def can_build_bridge(iceberg_source, iceberg_destination):
     :type iceberg_destination: Iceberg
     """
     return iceberg_source.can_create_bridge(iceberg_destination) and \
-        iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
-        not has_bridge_between(iceberg_source, iceberg_destination)
+           iceberg_source.penguin_amount >= iceberg_source.bridge_cost and \
+           not has_bridge_between(iceberg_source, iceberg_destination)
 
 
 def has_bridge_between(source_iceberg, destination_iceberg):
@@ -387,7 +387,7 @@ def get_all_icebergs(game):
     return all_icebergs
 
 
-def is_strong_enemy_close_to(game, my_iceberg):
+def is_strong_enemy_close_to_me(game, my_iceberg):
     all_icebergs = game.get_all_icebergs()
 
     if type(my_iceberg) is not BonusIceberg:
@@ -399,3 +399,24 @@ def is_strong_enemy_close_to(game, my_iceberg):
             return closedIceberg
 
     return None
+
+
+def get_real_distance_between_icebergs(source_iceberg, destination_iceberg):
+    """
+    Return the real distance between two icebergs, considering bridges.
+    :type source_iceberg: Iceberg
+    :type destination_iceberg: Iceberg
+    """
+    distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
+    bridges = [
+        bridge
+        for bridge in source_iceberg.bridges
+        if destination_iceberg in bridge.get_edges()
+    ]
+    if is_empty(bridges):
+        return distance
+    bridge = max(bridges, key=lambda x: x.duration)
+    if bridge.duration > distance:
+        return distance // bridge.speed_multiplier
+    else:
+        return (distance - bridge.duration) + bridge.duration // bridge.speed_multiplier
