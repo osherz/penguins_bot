@@ -67,11 +67,9 @@ def occupy_close_icebergs(game):
         continue_to_next_source = False
         if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
                 destination_scored_icebergs[0].get_score():
+            penguins_used = 0
             while not utils.is_empty(destination_scored_icebergs) and not continue_to_next_source:
                 icebergs_to_update = []
-                if game.get_time_remaining() < 0:
-                    log('time over')
-                    break
                 log('Running time: ', game.get_max_turn_time(),
                     ', ', game.get_time_remaining())
 
@@ -82,39 +80,28 @@ def occupy_close_icebergs(game):
                 max_penguins_can_be_sent = iceberg_score_data.get_max_penguins_can_be_sent()
                 # If got so much scores but hasn't enough penguins we prefer to wait.
                 is_send_penguins = iceberg_score_data.send_penguins()
-                if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent:
+                if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent - penguins_used:
                     if send_penguins:
                         icebergs_to_update = try_to_send_from_multiple_icebergs(game, iceberg_score_data,
                                                                                 standby_icebergs_score_data)
                         continue_to_next_source = True
-
-                        # # IF CANT DO NOTHING TO ATTACK THE ICEBERG
-                        # if not icebergs_to_update and type(my_iceberg) is not BonusIceberg:
-                        #     if utils.is_me(game, dest_iceberg.owner):
-                        #         if my_iceberg.can_send_decoy_penguins(dest_iceberg, dest_iceberg , min_price/2):
-                        #             my_iceberg.send_decoy_penguins(dest_iceberg, dest_iceberg , min_price/2)
-                        #     elif utils.is_enemy(game, dest_iceberg.owner):
-                        #         enemy_destination_scored_icebergs = [dest for dest in destination_scored_icebergs if utils.is_enemy(game, dest.get_destination().owner)]
-                        #         if enemy_destination_scored_icebergs:
-                        #             weakIceberg = min(enemy_destination_scored_icebergs, key=lambda x: x.get_min_penguins_for_occupy())
-                        #             if my_iceberg.can_send_decoy_penguins(weakIceberg.get_destination(), weakIceberg.get_destination() , weakIceberg.get_min_penguins_for_occupy()):
-                        #                 my_iceberg.send_decoy_penguins(dest_iceberg,
-                        #                                                   weakIceberg.get_destination(),
-                        #                                                   weakIceberg.get_min_penguins_for_occupy())
 
                 else:
                     if is_send_penguins:
                         send_penguins(my_iceberg, min_price, dest_iceberg)
                     else:
                         build_bridge(my_iceberg, dest_iceberg)
+                    penguins_used += min_price
                     icebergs_to_update = [my_iceberg, dest_iceberg]
                     continue_to_next_source = my_iceberg.penguin_amount <= 0
 
                 if not continue_to_next_source:
-                    icebergs_to_score = map(lambda iceberg: iceberg.get_destination(),
-                                            destination_scored_icebergs[1:])
-                    destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
-                                                                      simulation_data, occupy_method_decision)
+                    # TODO: Unnecessary. We just need to update the max penguins that can be use by this source iceberg.
+                    # icebergs_to_score = map(lambda iceberg: iceberg.get_destination(),
+                    #                         destination_scored_icebergs[1:])
+                    destination_scored_icebergs = destination_scored_icebergs[1:]
+                    # destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
+                    #                                                   simulation_data, occupy_method_decision)
 
         elif upgrade_score_for_my_iceberg > 0 and utils.can_be_upgrade(my_iceberg):
             my_iceberg.upgrade()
