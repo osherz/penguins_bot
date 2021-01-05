@@ -6,25 +6,25 @@ from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 from simulationsdata import SimulationsData, OWNER
 
 ENEMY_BELONGS_SCORE = 20
-NEUTRAL_BELONGS_SCORE = 16
+NEUTRAL_BELONGS_SCORE = 17
 MY_BELONGS_SCORE = 0
 CANT_DO_ACTION_SCORE = -20
 UPGRADE_TURNS_TO_CHECK = 20
-SUPPORT_SCORE = 50
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 UNUPGRADEABLE_ICEBERG_SCORE = -9999
 NEED_PROTECTED_SCORE = 30
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
-BONUS_SCORE = 18
+BONUS_SCORE = 10
 
 # Factors
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
-UPDATE_FACTOR_SCORE = 0.2
-AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.15
+UPDATE_FACTOR_SCORE = 0.3
+AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.3
+SUPPORT_SCORE_FACTOR = 0.5
 
 OUR_BONUS_FACTOR_SCORE = 0.1
 ENEMY_BONUS_FACTOR_SCORE = 1.2
@@ -34,7 +34,7 @@ MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 PENGUINS_GAINING_SCORE_FACTOR = 0.2
 
 STRONG_ENEMY_CLOSE_UPDATE = 10
-STRONG_ENEMY_CLOSE = 15
+STRONG_ENEMY_CLOSE = -15
 
 
 class Scores:
@@ -77,8 +77,7 @@ class Scores:
         # if the score will not be positive, return score.
         if sum(scores) >= IRREVERSIBLE_SCORE:
             log('penguin_amount_after_all_groups_arrived')
-            penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
-                self.__game, destination_iceberg_to_score, simulation_data=simulation_data)
+            iceberg_owner_after_all_groups_arrived = simulation_data.get(destination_iceberg_to_score)[-1][OWNER]
 
             if score_by_iceberg_belogns:
                 scores.append(self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
@@ -148,8 +147,7 @@ class Scores:
 
         ret = score * UPDATE_FACTOR_SCORE
 
-        if utils.is_strong_enemy_close_to_me(game, iceberg_to_score):
-            ret -= STRONG_ENEMY_CLOSE_UPDATE
+        ret += self.__score_by_strong_enemy_close_to_me(iceberg_to_score)
         return ret
 
     def __score_by_avg_distance_from_players(self, source_iceberg, iceberg_to_score, simulation_data):
@@ -160,11 +158,13 @@ class Scores:
             iceberg_to_score)
 
         score = (enemy_avg_distance - ours_avg_distance) * AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE
-
-        if utils.is_strong_enemy_close_to_me(self.__game, source_iceberg):
-            score -= STRONG_ENEMY_CLOSE
-
+        score += self.__score_by_strong_enemy_close_to_me(source_iceberg)
         return score
+
+    def __score_by_strong_enemy_close_to_me(self, source_iceberg):
+        if utils.is_strong_enemy_close_to_me(self.__game, source_iceberg):
+            return STRONG_ENEMY_CLOSE
+        return 0
 
     def __score_by_penguins_gaining(self, source_iceberg, destination_iceberg_to_score,
                                     iceberg_owner_after_all_groups_arrived):
@@ -234,8 +234,7 @@ class Scores:
                                                                                               iceberg_to_score,
                                                                                               simulation_data)
         if is_belong_to_me and is_closest_to_enemy and not iceberg_to_score is game.get_bonus_iceberg():
-            score += self.__max_price - iceberg_to_score.penguin_amount
-            score += self.__max_distance - avr_distance_from_enemy
+            score += (self.__max_distance - avr_distance_from_enemy) * SUPPORT_SCORE_FACTOR
         else:
             score += CANT_DO_ACTION_SCORE
         return score
@@ -386,8 +385,8 @@ class Scores:
             source_iceberg, simulation_data)
         destination_avg_distance = self.__calculate_average_distance_from_enemy(
             destination_iceberg, simulation_data)
-        # TODO: maybe to return int value for more acurate score for distance from enemy.
-        return destination_avg_distance < self.__average_distance < source_avg_distance, destination_avg_distance
+        # TODO: maybe to return int value for more accurate score for distance from enemy.
+        return destination_avg_distance < source_avg_distance, destination_avg_distance
 
     def __calculate_min_penguins_for_support(self, destination_iceberg_to_score):
         """

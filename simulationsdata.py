@@ -13,6 +13,7 @@ ENEMY_AVG_DISTANCE = "enemy_avg_distance"
 
 icebergs_max_distance = {}
 
+
 class SimulationsData:
     def __init__(self, game):
         self.__game = game  # type: Game
@@ -36,7 +37,7 @@ class SimulationsData:
         key = self.__get_iceberg_key(iceberg)
         return self.__icebergs_simulations[key]
 
-    def get_max_distance(self,iceberg):
+    def get_max_distance(self, iceberg):
         """
         Return max distance of the given iceberg from all icebergs.
         """
@@ -101,19 +102,26 @@ class SimulationsData:
         """
         game = self.__game
         simulation = Simulation(game, iceberg, self.get_bonus_turns())
+        max_distance = self.get_max_distance(iceberg)
+        iceberg_simulation_turn = [0] * (max_distance + 1)
         simulation.simulate(0)
-        iceberg_simulation_turn = [self.__get_simulation_data(simulation, iceberg)]
-        turns_to_run = self.get_max_distance(iceberg)
+        iceberg_simulation_turn[0] = self.__get_simulation_data(simulation, iceberg)
         enable_calculate_max_penguins_to_use = utils.is_me(game, iceberg.owner)
         if enable_calculate_max_penguins_to_use:
             max_penguins_can_be_use = simulation.get_penguin_amount()
             was_occupied = False
         else:
             max_penguins_can_be_use = 0
-        for i in range(turns_to_run):
-            simulation.simulate(1)
-            data = self.__get_simulation_data(simulation, iceberg, iceberg_simulation_turn[-1])
-            iceberg_simulation_turn.append(data)
+        my_iceberg_distances = self.__get_turns_to_save_data_for(game, iceberg, max_distance)
+        turns_pass = 0
+        for distance in my_iceberg_distances:
+            turns_to_simulate = distance - turns_pass
+            if turns_to_simulate <= 0:
+                continue
+            turns_pass = distance
+            simulation.simulate(turns_to_simulate)
+            data = self.__get_simulation_data(simulation, iceberg, iceberg_simulation_turn[turns_pass - 1])
+            iceberg_simulation_turn[turns_pass] = data
             if enable_calculate_max_penguins_to_use:
                 if not simulation.is_belong_to_me():
                     was_occupied = True
@@ -123,6 +131,16 @@ class SimulationsData:
         if enable_calculate_max_penguins_to_use and was_occupied and max_penguins_can_be_use > 0:
             max_penguins_can_be_use -= 1
         return iceberg_simulation_turn, max_penguins_can_be_use
+
+    def __get_turns_to_save_data_for(self, game, iceberg, max_distance):
+        if utils.is_bonus_iceberg(game, iceberg):
+            my_iceberg_distances = range(1, max_distance + 1)
+        else:
+            icebergs_distances = [source_iceberg.get_turns_till_arrival(iceberg)
+                                  for source_iceberg in utils.get_all_my_icebergs(game)]
+            last_group_turns = utils.turns_until_last_group_arrived(game, iceberg)
+            my_iceberg_distances = sorted(icebergs_distances + [last_group_turns]) + [max_distance]
+        return my_iceberg_distances
 
     def __get_simulation_data(self, simulation, iceberg, last_simulation_data=None):
         """

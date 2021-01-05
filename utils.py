@@ -387,6 +387,19 @@ def get_all_icebergs(game):
     return all_icebergs
 
 
+def get_all_my_icebergs(game):
+    """
+    Get all icebergs, including bonus iceberg.
+    :type game: Game
+    """
+    all_icebergs = []
+    bonus_iceberg = game.get_bonus_iceberg()
+    if bonus_iceberg is not None:
+        all_icebergs.append(bonus_iceberg)
+    all_icebergs += game.get_my_icebergs()
+    return all_icebergs
+
+
 def is_strong_enemy_close_to_me(game, my_iceberg):
     all_icebergs = game.get_all_icebergs()
 
