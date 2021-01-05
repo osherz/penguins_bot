@@ -11,7 +11,7 @@ from occupymethoddecision import OccupyMethodDecision
 # import typing
 # from typing import List
 
-MIN_SCORE_FOR_SENDING = 0
+MIN_SCORE_FOR_SENDING = 10
 TURNS_TO_CHECK = 15
 
 
