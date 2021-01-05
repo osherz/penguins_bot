@@ -82,7 +82,7 @@ class SimulationsData:
         simulation = Simulation(game, iceberg, self.get_bonus_turns())
         simulation.simulate(0)
         iceberg_simulation_turn = [self.__get_simulation_data(simulation, iceberg)]
-        turns_to_run = utils.find_max_distance(game)
+        turns_to_run = utils.find_max_distance(game) # TODO: Use self.__max_distance
         for i in range(turns_to_run):
             simulation.simulate(1)
             data = self.__get_simulation_data(simulation, iceberg, iceberg_simulation_turn[-1])

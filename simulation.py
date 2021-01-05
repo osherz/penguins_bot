@@ -79,7 +79,9 @@ class Simulation:
         self.__treat_groups_arrived_destination()
         while turn <= turns_to_simulate:
             self.__current_turn += turns_to_continue
-            self.__move_groups_to_destination(turns_to_continue)
+            # We don't need to move groups to destination
+            # because we using __current_turn to check which groups arrived
+            # self.__move_groups_to_destination(turns_to_continue)
             self.__treat_iceberg_by_turns(turns_to_continue)
             self.__treat_bonus()
             self.__treat_groups_arrived_destination()
@@ -300,7 +302,7 @@ class Simulation:
                 bridges.append(self.__custom_bridges_to_iceberg[source_key])
             has_bridge = False
             if not utils.is_empty(bridges):
-                bridge = sorted(bridges, key=lambda b: b.duration, reverse=True)[0] # Type: bridge
+                bridge = sorted(bridges, key=lambda b: b.duration, reverse=True)[0]  # Type: bridge
                 if group.get_destination() in bridge.get_edges():
                     has_bridge = True
                     turns_forward_until_bridge_gone = bridge.speed_multiplier * bridge.duration
@@ -346,10 +348,10 @@ class Simulation:
         If enemy, reduce number of penguins.
         If our, append the number of penguins.
         """
-
+        self.__current_turn
         groups_arrived = [
             penguin_group for penguin_group in self.__groups_to_iceberg
-            if penguin_group.is_arrived()
+            if penguin_group.get_turns_till_arrival() <= self.__current_turn or penguin_group.is_arrived()
         ]
 
         groups_arrived.sort(
