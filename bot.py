@@ -45,9 +45,9 @@ def occupy_close_icebergs(game):
     if game.get_bonus_iceberg() is not None:
         all_icebergs.append(game.get_bonus_iceberg())
 
-    scores = Scores(game)
     simulation_data = SimulationsData(game)
     simulation_data.run_simulations()
+    scores = Scores(game, simulation_data)
     occupy_method_decision = OccupyMethodDecision(game, simulation_data)
 
     log('********************************* START ACTIONS **********************************')
@@ -66,6 +66,7 @@ def occupy_close_icebergs(game):
 
         log('upgrade score', upgrade_score_for_my_iceberg)
         continue_to_next_source = False
+        max_penguins_can_be_use = simulation_data.get_max_penguins_can_be_use(my_iceberg)
         if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
                 destination_scored_icebergs[0].get_score():
             penguins_used = 0
@@ -78,19 +79,16 @@ def occupy_close_icebergs(game):
                 iceberg_score_data = destination_scored_icebergs[0]
                 dest_iceberg = iceberg_score_data.get_destination()  # type: Iceberg
                 min_price = iceberg_score_data.get_min_penguins_for_occupy()
-                max_penguins_can_be_sent = iceberg_score_data.get_max_penguins_can_be_sent()
                 # If got so much scores but hasn't enough penguins we prefer to wait.
                 is_send_penguins = iceberg_score_data.send_penguins()
                 print my_iceberg.penguin_amount
-                if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent - penguins_used:
-                    print 'aaaa'
+                if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_use - penguins_used:
                     if send_penguins:
                         icebergs_to_update = try_to_send_from_multiple_icebergs(game, iceberg_score_data,
                                                                                 standby_icebergs_score_data)
                         continue_to_next_source = True
 
                 else:
-                    print 'bbb'
                     # TODO: Check if we can to do another action.
                     if is_send_penguins:
                         send_penguins(my_iceberg, min_price, dest_iceberg)
@@ -109,13 +107,14 @@ def occupy_close_icebergs(game):
                     # destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
                     #                                                   simulation_data, occupy_method_decision)
 
-        elif upgrade_score_for_my_iceberg > 0 and utils.can_be_upgrade(my_iceberg):
+        elif 0 < upgrade_score_for_my_iceberg <= max_penguins_can_be_use and \
+                utils.can_be_upgrade(my_iceberg):
             my_iceberg.upgrade()
             icebergs_to_update = [my_iceberg]
 
-        if game.get_time_remaining() < 0:
-            log('time over')
-            break
+        # if game.get_time_remaining() < 0:
+        #     log('time over')
+        #     break
 
         if my_iceberg_cnt < len(game.get_my_icebergs()) or \
                 (my_iceberg.penguin_amount > 0 and len(destination_scored_icebergs) > 1):
@@ -262,7 +261,6 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_
         return scores.score(
             source_iceberg,
             destination_iceberg,
-            simulation_data,
             occupy_method_data,
             score_by_iceberg_belogns=True,
             score_by_iceberg_level=True,
@@ -276,7 +274,6 @@ def score_iceberg(game, scores, source_iceberg, destination_iceberg, simulation_
         return scores.score(
             source_iceberg,
             destination_iceberg,
-            simulation_data,
             occupy_method_data,
             score_by_iceberg_belogns=True,
             score_by_iceberg_level=False,

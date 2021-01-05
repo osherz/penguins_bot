@@ -17,6 +17,7 @@ class SimulationsData:
         self.__game = game  # type: Game
         self.__icebergs_simulations = {}
         self.__icebergs_avg_distance = {}
+        self.__icebergs_max_penguins_can_be_use = {}
         self.__max_turn = utils.find_max_distance(game)
         self.__bonus_turns_ls = []
 
@@ -41,6 +42,13 @@ class SimulationsData:
         key = self.__get_iceberg_key(iceberg)
         distances = self.__icebergs_avg_distance[key]
         return distances[OURS_AVG_DISTANCE], distances[ENEMY_AVG_DISTANCE]
+
+    def get_max_penguins_can_be_use(self, iceberg):
+        """
+        Return how much penguins can be use without being occupied.
+        """
+        key = self.__get_iceberg_key(iceberg)
+        return self.__icebergs_max_penguins_can_be_use[key]
 
     def get_bonus_turns(self):
         """
@@ -67,27 +75,42 @@ class SimulationsData:
             if utils.is_bonus_iceberg(self.__game, iceberg):
                 self.__bonus_turns_ls = []
             key = self.__get_iceberg_key(iceberg)
-            simulation_data = self.__run_simulation(iceberg)
+            simulation_data, max_penguins_can_be_use = self.__run_simulation(iceberg)
             self.__icebergs_simulations[key] = simulation_data
+            self.__icebergs_max_penguins_can_be_use[key] = max_penguins_can_be_use
 
     def __run_simulation(self, iceberg):
         """
         Run simulation for current iceberg.
         :param iceberg: iceberg to simulate
         :type iceberg: Iceberg
-        :return: list of the iceberg status for all turns. list[(penguin_amount,owner,are_group_remains)].
-        :rtype: list[(int,Player, bool)]
+        :return: (list of the iceberg status for all turns. list[(penguin_amount,owner,are_group_remains)], max_penguins_can_be_use)
+        :rtype: (list[(int,Player, bool)], int)
         """
         game = self.__game
         simulation = Simulation(game, iceberg, self.get_bonus_turns())
         simulation.simulate(0)
         iceberg_simulation_turn = [self.__get_simulation_data(simulation, iceberg)]
-        turns_to_run = utils.find_max_distance(game) # TODO: Use self.__max_distance
+        turns_to_run = utils.find_max_distance(game)  # TODO: Use self.__max_distance
+        enable_calculate_max_penguins_to_use = utils.is_me(game, iceberg.owner)
+        if enable_calculate_max_penguins_to_use:
+            max_penguins_can_be_use = simulation.get_penguin_amount()
+            was_occupied = False
+        else:
+            max_penguins_can_be_use = 0
         for i in range(turns_to_run):
             simulation.simulate(1)
             data = self.__get_simulation_data(simulation, iceberg, iceberg_simulation_turn[-1])
             iceberg_simulation_turn.append(data)
-        return iceberg_simulation_turn
+            if enable_calculate_max_penguins_to_use:
+                if not simulation.is_belong_to_me():
+                    was_occupied = True
+                else:
+                    max_penguins_can_be_use = min(max_penguins_can_be_use, simulation.get_penguin_amount())
+
+        if enable_calculate_max_penguins_to_use and was_occupied and max_penguins_can_be_use > 0:
+            max_penguins_can_be_use -= 1
+        return iceberg_simulation_turn, max_penguins_can_be_use
 
     def __get_simulation_data(self, simulation, iceberg, last_simulation_data=None):
         """
