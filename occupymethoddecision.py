@@ -126,6 +126,11 @@ class OccupyMethodDecision:
         is_bridge_prefer = False
 
         penguins_to_use = source_iceberg.bridge_cost
+        # If destination or source are bonus - we can't build bridge.
+        if utils.is_bonus_iceberg(self.__game, source_iceberg) or \
+                utils.is_bonus_iceberg(self.__game, destination_iceberg):
+            return False, penguins_to_use
+
         if penguins_to_use < min_penguins_to_send_for_occupy and utils.can_build_bridge(source_iceberg,
                                                                                         destination_iceberg):
             new_owner = utils.simulate_with_bridge(
