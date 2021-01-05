@@ -15,7 +15,7 @@ class OccupyMethodData:
     """
 
     def __init__(self, min_penguins_for_occupy, min_penguins_for_neutral, recommended_penguins_for_occupy, method,
-                 owner, close_strong_enemy):
+                 owner):
         """
         :param method: SEND_PENGUINS or BUILD_BRIDGE
         :type method: str
@@ -26,7 +26,6 @@ class OccupyMethodData:
         self.recommended_penguins_for_occupy = recommended_penguins_for_occupy
         self.method = method
         self.owner = owner
-        self.close_strong_enemy_to_destination = close_strong_enemy
 
     def __str__(self):
         return 'self.min_penguins_for_occupy=' + str(self.min_penguins_for_occupy) + \
@@ -34,6 +33,7 @@ class OccupyMethodData:
                ' self.recommended_penguins_for_occupy=' + str(self.recommended_penguins_for_occupy) + \
                ' self.method=' + str(self.method) + \
                ' self.owner=' + str(self.owner)
+
 
 class OccupyMethodDecision:
     """
@@ -78,17 +78,14 @@ class OccupyMethodDecision:
             # If the iceberg will belong ot me,
             # we want to think about sending some support.
             min_penguins_to_send_for_occupy = self.__calc_penguins_to_send_for_support(source_iceberg)
-            min_penguins_to_make_neutral = 0
 
-        close_strong_enemy = utils.is_strong_enemy_close_to(game, destination_iceberg)
         if is_bridge_prefer:
             occupy_method_data = OccupyMethodData(
                 penguins_to_use,
                 penguins_to_use,
                 penguins_to_use,
                 BUILD_BRIDGE,
-                owner_if_no_action_will_made,
-                close_strong_enemy
+                owner_if_no_action_will_made
             )
         else:
             occupy_method_data = OccupyMethodData(
@@ -96,8 +93,7 @@ class OccupyMethodDecision:
                 min_penguins_to_make_neutral,
                 min_penguins_to_send_for_occupy,
                 SEND_PENGUINS,
-                owner_if_no_action_will_made,
-                close_strong_enemy
+                owner_if_no_action_will_made
             )
 
         return occupy_method_data

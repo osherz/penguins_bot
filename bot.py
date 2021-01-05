@@ -75,14 +75,13 @@ def occupy_close_icebergs(game):
                 log('Running time: ', game.get_max_turn_time(),
                     ', ', game.get_time_remaining())
 
-                iceberg_score_data = destination_scored_icebergs[0] # type: ScoreData
+                # type: ScoreData
+                iceberg_score_data = destination_scored_icebergs[0]
                 dest_iceberg = iceberg_score_data.get_destination()  # type: Iceberg
-                max_penguins_can_be_sent = iceberg_score_data.get_max_penguins_can_be_sent()
                 min_price = iceberg_score_data.get_min_penguins_for_occupy()
+                max_penguins_can_be_sent = iceberg_score_data.get_max_penguins_can_be_sent()
                 # If got so much scores but hasn't enough penguins we prefer to wait.
                 is_send_penguins = iceberg_score_data.send_penguins()
-                if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent:
-                    min_price = iceberg_score_data.get_min_penguins_for_neutral()
                 if min_price > my_iceberg.penguin_amount or min_price > max_penguins_can_be_sent:
                     if send_penguins:
                         icebergs_to_update = try_to_send_from_multiple_icebergs(game, iceberg_score_data,
@@ -100,17 +99,12 @@ def occupy_close_icebergs(game):
                         #             weakIceberg = min(enemy_destination_scored_icebergs, key=lambda x: x.get_min_penguins_for_occupy())
                         #             if my_iceberg.can_send_decoy_penguins(weakIceberg.get_destination(), weakIceberg.get_destination() , weakIceberg.get_min_penguins_for_occupy()):
                         #                 my_iceberg.send_decoy_penguins(dest_iceberg,
-                        #                                                    weakIceberg.get_destination(),
-                        #                                                    weakIceberg.get_min_penguins_for_occupy())
+                        #                                                   weakIceberg.get_destination(),
+                        #                                                   weakIceberg.get_min_penguins_for_occupy())
 
                 else:
                     if is_send_penguins:
-                        close_strong_enemy = iceberg_score_data.get_close_strong_enemy_to_destination()
-                        if close_strong_enemy and \
-                                my_iceberg.can_send_decoy_penguins(dest_iceberg,close_strong_enemy, min_price):
-                            my_iceberg.send_decoy_penguins(dest_iceberg, close_strong_enemy, min_price)
-                        else:
-                            send_penguins(my_iceberg, min_price, dest_iceberg)
+                        send_penguins(my_iceberg, min_price, dest_iceberg)
                     else:
                         build_bridge(my_iceberg, dest_iceberg)
                     icebergs_to_update = [my_iceberg, dest_iceberg]

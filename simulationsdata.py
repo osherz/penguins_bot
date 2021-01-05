@@ -16,7 +16,6 @@ class SimulationsData:
     def __init__(self, game):
         self.__game = game  # type: Game
         self.__icebergs_simulations = {}
-        self.__icebergs_last_group_turns = {}
         self.__icebergs_avg_distance = {}
         self.__max_turn = utils.find_max_distance(game)
         self.__bonus_turns_ls = []
@@ -49,13 +48,6 @@ class SimulationsData:
         """
         return self.__bonus_turns_ls
 
-    def get_last_group_turn(self, iceberg):
-        """
-        Return how much turns take for the last group to come.
-        """
-        key = self.__get_iceberg_key(iceberg)
-        return self.__icebergs_last_group_turns[key]
-
     def run_simulations(self):
         """
         Run simulations for all icebergs.
@@ -63,8 +55,6 @@ class SimulationsData:
         icebergs_ls = utils.get_all_icebergs(self.__game)
         for iceberg in icebergs_ls:
             self.update_iceberg_simulation(iceberg)
-
-        for iceberg in icebergs_ls:
             self.__calc_avg_distances(iceberg)
 
     def update_iceberg_simulation(self, *icebergs):
@@ -97,22 +87,7 @@ class SimulationsData:
             simulation.simulate(1)
             data = self.__get_simulation_data(simulation, iceberg, iceberg_simulation_turn[-1])
             iceberg_simulation_turn.append(data)
-            if not simulation.are_group_remains():
-                self.__all_groups_arrived(iceberg, simulation.get_owner() ,i)
         return iceberg_simulation_turn
-
-    def __all_groups_arrived(self, iceberg, owner, turn):
-        """
-        Do some action after all groups have arrived.
-        """
-        self.__set_last_group_turn(iceberg, turn)
-
-    def __set_last_group_turn(self, iceberg, last_group_turn):
-        """
-        Set the last group turn for this iceberg.
-        """
-        key = self.__get_iceberg_key(iceberg)
-        self.__icebergs_last_group_turns[key] = last_group_turn
 
     def __get_simulation_data(self, simulation, iceberg, last_simulation_data=None):
         """
@@ -193,8 +168,6 @@ class SimulationsData:
         :rtype: float
         """
         enemy_icebergs = self.__game.get_enemy_icebergs()
-        if len(enemy_icebergs) == 0:
-            return 0
         enemy_distance = map(
             lambda enemy_iceberg: enemy_iceberg.get_turns_till_arrival(iceberg),
             enemy_icebergs
@@ -211,8 +184,6 @@ class SimulationsData:
         :rtype: float
         """
         ours_icebergs = self.__game.get_my_icebergs()
-        if len(ours_icebergs) == 0:
-            return 0
         ours_distance = map(
             lambda our_iceberg: our_iceberg.get_turns_till_arrival(iceberg),
             ours_icebergs

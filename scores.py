@@ -4,8 +4,6 @@ from utils import log
 from scoredata import ScoreData
 from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 import simulationsdata
-from simulationsdata import SimulationsData, PENGUIN_AMOUNT, OWNER
-
 
 ENEMY_BELONGS_SCORE = 20
 NEUTRAL_BELONGS_SCORE = 16
@@ -19,7 +17,6 @@ NEED_PROTECTED_SCORE = 30
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
 BONUS_SCORE = 18
-UPGRADE_NOT_RELEVANT = -9999
 
 # Factors
 DISTANCE_FACTOR_SCORE = -35
@@ -27,11 +24,11 @@ PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
 UPDATE_FACTOR_SCORE = 0.2
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.15
-AVG_DISTANCE_FROM_EVEMY_THRESHOLD = 0.7
 
 OUR_BONUS_FACTOR_SCORE = 0.1
 ENEMY_BONUS_FACTOR_SCORE = 1.2
 NATURAL_BONUS_FACTOR_SCORE = 1.1
+MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 
 PENGUINS_GAINING_SCORE_FACTOR = 0.2
 
@@ -53,9 +50,6 @@ class Scores:
         self.__average_penguins_in_our_icebergs = self.__calculate_average_penguins_in_our_icebergs()
         self.__min_penguins_amount = int(
             MIN_PENGUINS_AMOUNT_AVG_PERCENT * self.__average_penguins_in_our_icebergs)
-
-        if utils.is_empty(game.get_neutral_icebergs()):
-            UPDATE_FACTOR_SCORE = 0.3
 
     def score(self, source_iceberg, destination_iceberg_to_score, simulation_data, occupy_method_data,
               score_by_iceberg_belogns=False,
@@ -80,9 +74,8 @@ class Scores:
         # if the score will not be positive, return score.
         if sum(scores) >= IRREVERSIBLE_SCORE:
             log('penguin_amount_after_all_groups_arrived')
-
-            penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = self.__penguin_amount_after_all_groups_arrived(
-                destination_iceberg_to_score, simulation_data=simulation_data)
+            penguin_amount_after_all_groups_arrived, iceberg_owner_after_all_groups_arrived = utils.penguin_amount_after_all_groups_arrived(
+                self.__game, destination_iceberg_to_score, simulation_data=simulation_data)
 
             if score_by_iceberg_belogns:
                 scores.append(self.__score_by_iceberg_belogns(source_iceberg, destination_iceberg_to_score,
@@ -104,7 +97,7 @@ class Scores:
 
             if score_by_avg_distance_from_players:
                 scores.append(self.__score_by_avg_distance_from_players(source_iceberg,
-                                                                        destination_iceberg_to_score, simulation_data))
+                    destination_iceberg_to_score, simulation_data))
 
             if score_by_iceberg_bonus:
                 bonus_iceberg_score = self.__score_by_iceberg_bonus(
@@ -117,9 +110,7 @@ class Scores:
         return ScoreData(source_iceberg,
                          destination_iceberg_to_score,
                          occupy_method_data.min_penguins_for_occupy,
-                         occupy_method_data.min_penguins_for_neutral,
                          max_penguins_can_be_sent,
-                         occupy_method_data.close_strong_enemy_to_destination,
                          sum(scores),
                          send_penguins=action == SEND_PENGUINS,
                          build_bridge=action == BUILD_BRIDGE)
@@ -134,9 +125,7 @@ class Scores:
         :rtype: float
         """
         if utils.is_bonus_iceberg(self.__game, iceberg_to_score):
-            return UPGRADE_NOT_RELEVANT
-        if iceberg_to_score.upgrade_level_limit <= iceberg_to_score.level:
-            return UPGRADE_NOT_RELEVANT
+            return CANT_DO_ACTION_SCORE
         score = 0
         upgrade_cost = iceberg_to_score.upgrade_cost
         if not utils.can_be_upgrade(iceberg_to_score):
@@ -152,11 +141,11 @@ class Scores:
 
         ret = score * UPDATE_FACTOR_SCORE
 
-        if utils.is_strong_enemy_close_to(self.__game, iceberg_to_score):
+        if utils.is_strong_enemy_close_to_me(self.__game, iceberg_to_score):
             ret -= STRONG_ENEMY_CLOSE_UPDATE
         return ret
 
-    def __score_by_avg_distance_from_players(self, source_iceberg, iceberg_to_score, simulation_data):
+    def __score_by_avg_distance_from_players(self,source_iceberg, iceberg_to_score, simulation_data):
         """
         Scoring by the relation between the average distance from enemy and ours.
         """
@@ -165,7 +154,7 @@ class Scores:
 
         score = (enemy_avg_distance - ours_avg_distance) * AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE
 
-        if utils.is_strong_enemy_close_to(self.__game, source_iceberg):
+        if utils.is_strong_enemy_close_to_me(self.__game, source_iceberg):
             score -= STRONG_ENEMY_CLOSE
 
         return score
@@ -229,7 +218,6 @@ class Scores:
 
         :type source_iceberg: Iceberg
         :type iceberg_to_score: Iceberg
-        :type simulation_data: SimulationsData
         :rtype: int
         """
         game = self.__game
@@ -241,7 +229,6 @@ class Scores:
         if is_belong_to_me and is_closest_to_enemy and not iceberg_to_score is game.get_bonus_iceberg():
             score += self.__max_price - iceberg_to_score.penguin_amount
             score += self.__max_distance - avr_distance_from_enemy
-            score += SUPPORT_SCORE
         else:
             score += CANT_DO_ACTION_SCORE
         return score
@@ -399,7 +386,7 @@ class Scores:
         destination_avg_distance = self.__calculate_average_distance_from_enemy(
             destination_iceberg, simulation_data)
         # TODO: maybe to return int value for more acurate score for distance from enemy.
-        return destination_avg_distance < source_avg_distance * AVG_DISTANCE_FROM_EVEMY_THRESHOLD, destination_avg_distance
+        return destination_avg_distance < self.__average_distance < source_avg_distance, destination_avg_distance
 
     def __calculate_min_penguins_for_support(self, destination_iceberg_to_score):
         """
@@ -416,13 +403,3 @@ class Scores:
             return penguins_to_send
         return 0
 
-    def __penguin_amount_after_all_groups_arrived(self, destination_iceberg_to_score, simulation_data):
-        """
-        Return how much penguins will be after all groups arrive and the owner then.
-
-        :type simulation_data:SimulationsData
-        :return: (penguin_amount, owner_after_all_groups_arrived)
-        """
-        last_group_turn = simulation_data.get_last_group_turn(destination_iceberg_to_score)
-        turn_data = simulation_data.get(destination_iceberg_to_score)[last_group_turn]
-        return turn_data[PENGUIN_AMOUNT], turn_data[OWNER]
