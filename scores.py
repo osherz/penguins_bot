@@ -8,24 +8,25 @@ from simulationsdata import SimulationsData, OWNER
 ENEMY_BELONGS_SCORE = 17
 NEUTRAL_BELONGS_SCORE = 17
 MY_BELONGS_SCORE = 0
-CANT_DO_ACTION_SCORE = -20
+CANT_DO_ACTION_SCORE = -10
 UPGRADE_TURNS_TO_CHECK = 20
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 UNUPGRADEABLE_ICEBERG_SCORE = -9999
 DONT_DO_ACTION_SCORE = -9999
-NEED_PROTECTED_SCORE = 60
+NEED_PROTECTED_SCORE = 200
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
 BONUS_SCORE = 0
+SOURCE_LEVEL_SMALL_THAN_DESTINATION_SCORE = 0
 
 # Factors
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
-LEVEL_FACTOR_SCORE = 3
-UPDATE_FACTOR_SCORE = 0.3
+LEVEL_FACTOR_SCORE = 4
+UPDATE_FACTOR_SCORE = 0.25
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.3
-SUPPORT_SCORE_FACTOR = 1.5
+SUPPORT_SCORE_FACTOR = 1.2
 
 OUR_BONUS_FACTOR_SCORE = 0.1
 ENEMY_BONUS_FACTOR_SCORE = 1.2
@@ -95,7 +96,7 @@ class Scores:
                 )
 
             if score_by_iceberg_level:
-                scores.append(self.__score_by_iceberg_level(
+                scores.append(self.__score_by_iceberg_level(source_iceberg,
                     destination_iceberg_to_score, iceberg_owner_after_all_groups_arrived))
 
             if score_by_avg_distance_from_players:
@@ -243,18 +244,22 @@ class Scores:
             score += CANT_DO_ACTION_SCORE
         return score
 
-    def __score_by_iceberg_level(self, iceberg_to_score, iceberg_owner_after_all_groups_arrived):
+    def __score_by_iceberg_level(self,source_iceberg, iceberg_to_score, iceberg_owner_after_all_groups_arrived):
         """
         Scoring by the iceberg level.
 
+        :type source_iceberg: Iceberg
         :type iceberg_to_score: Iceberg
         :rtype: float
         """
-        if utils.is_me(self.__game, iceberg_owner_after_all_groups_arrived) and \
-            iceberg_to_score.level < iceberg_to_score.upgrade_level_limit:
+        if utils.is_me(self.__game, iceberg_owner_after_all_groups_arrived):
+            if source_iceberg.level <= iceberg_to_score.level:
+                return SOURCE_LEVEL_SMALL_THAN_DESTINATION_SCORE
+            if iceberg_to_score.level < iceberg_to_score.upgrade_level_limit:
+                return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
+        elif utils.is_neutral(self.__game, iceberg_owner_after_all_groups_arrived):
             return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
-        else:
-            return iceberg_to_score.penguins_per_turn
+        return iceberg_to_score.penguins_per_turn
 
     def __score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):
         """
