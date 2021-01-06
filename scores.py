@@ -96,7 +96,7 @@ class Scores:
 
             if score_by_iceberg_level:
                 scores.append(self.__score_by_iceberg_level(
-                    destination_iceberg_to_score))
+                    destination_iceberg_to_score, iceberg_owner_after_all_groups_arrived))
 
             if score_by_avg_distance_from_players:
                 scores.append(self.__score_by_avg_distance_from_players(source_iceberg,
@@ -243,14 +243,18 @@ class Scores:
             score += CANT_DO_ACTION_SCORE
         return score
 
-    def __score_by_iceberg_level(self, iceberg_to_score):
+    def __score_by_iceberg_level(self, iceberg_to_score, iceberg_owner_after_all_groups_arrived):
         """
         Scoring by the iceberg level.
 
         :type iceberg_to_score: Iceberg
         :rtype: float
         """
-        return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
+        if utils.is_me(self.__game, iceberg_owner_after_all_groups_arrived) and \
+            iceberg_to_score.level < iceberg_to_score.upgrade_level_limit:
+            return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
+        else:
+            return iceberg_to_score.penguins_per_turn
 
     def __score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):
         """
