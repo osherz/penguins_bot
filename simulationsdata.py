@@ -236,11 +236,13 @@ class SimulationsData:
         :return: distance average
         :rtype: float
         """
-        ours_icebergs = self.__game.get_my_icebergs()
-        ours_distance = map(
-            lambda our_iceberg: our_iceberg.get_turns_till_arrival(iceberg),
-            ours_icebergs
-        )
+        ours_distance = [
+            our_iceberg.get_turns_till_arrival(iceberg)
+            for our_iceberg in self.__game.get_my_icebergs()
+            if not our_iceberg.equals(iceberg)
+        ]
+        if len(ours_distance) ==0:
+            return 0
         return sum(ours_distance) / len(ours_distance)
 
     def __calc_avg_distances(self, iceberg):

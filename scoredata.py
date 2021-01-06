@@ -7,7 +7,7 @@ class ScoreData:
         self.__source_iceberg = source_iceberg
         self.__destination_iceberg = destination_iceberg
         self.__min_penguins_for_occupy = min_penguins_for_occupy
-        self.__max_penguins_can_be_sent = max_penguins_can_be_sent
+        self.max_penguins_can_be_sent = max_penguins_can_be_sent
         self.__score = score
         self.__send_penguins = send_penguins
         self.__build_bridge = build_bridge
@@ -22,7 +22,7 @@ class ScoreData:
         return self.__min_penguins_for_occupy
 
     def get_max_penguins_can_be_sent(self):
-        return self.__max_penguins_can_be_sent
+        return self.max_penguins_can_be_sent
 
     def get_score(self):
         return self.__score

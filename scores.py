@@ -5,7 +5,7 @@ from scoredata import ScoreData
 from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 from simulationsdata import SimulationsData, OWNER
 
-ENEMY_BELONGS_SCORE = 20
+ENEMY_BELONGS_SCORE = 17
 NEUTRAL_BELONGS_SCORE = 17
 MY_BELONGS_SCORE = 0
 CANT_DO_ACTION_SCORE = -20
@@ -13,10 +13,11 @@ UPGRADE_TURNS_TO_CHECK = 20
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 UNUPGRADEABLE_ICEBERG_SCORE = -9999
-NEED_PROTECTED_SCORE = 30
+DONT_DO_ACTION_SCORE = -9999
+NEED_PROTECTED_SCORE = 60
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
-BONUS_SCORE = 10
+BONUS_SCORE = 0
 
 # Factors
 DISTANCE_FACTOR_SCORE = -35
@@ -24,17 +25,15 @@ PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 3
 UPDATE_FACTOR_SCORE = 0.3
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.3
-SUPPORT_SCORE_FACTOR = 0.5
+SUPPORT_SCORE_FACTOR = 1.5
 
 OUR_BONUS_FACTOR_SCORE = 0.1
 ENEMY_BONUS_FACTOR_SCORE = 1.2
 NATURAL_BONUS_FACTOR_SCORE = 1.1
-MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 
 PENGUINS_GAINING_SCORE_FACTOR = 0.2
 
-STRONG_ENEMY_CLOSE_UPDATE = 10
-STRONG_ENEMY_CLOSE = -15
+STRONG_ENEMY_CLOSE = 0
 
 
 class Scores:
@@ -69,11 +68,13 @@ class Scores:
         """
         scores = []
         simulation_data = self.__simulation_data
-        min_penguins_for_occupy_score, max_penguins_can_be_sent = self.__score_by_iceberg_price(
+        max_penguins_can_be_use = occupy_method_data.max_penguins_can_be_use
+        min_penguins_for_occupy_score = self.__score_by_iceberg_price(
             source_iceberg, destination_iceberg_to_score, simulation_data, occupy_method_data)
         if score_by_iceberg_price:
             scores.append(min_penguins_for_occupy_score)
-
+        if utils.is_bonus_iceberg(self.__game, source_iceberg) or source_iceberg.level <= 1:
+            scores.append(DONT_DO_ACTION_SCORE)
         # if the score will not be positive, return score.
         if sum(scores) >= IRREVERSIBLE_SCORE:
             log('penguin_amount_after_all_groups_arrived')
@@ -112,7 +113,7 @@ class Scores:
         return ScoreData(source_iceberg,
                          destination_iceberg_to_score,
                          occupy_method_data.min_penguins_for_occupy,
-                         max_penguins_can_be_sent,
+                         max_penguins_can_be_use,
                          sum(scores),
                          send_penguins=action == SEND_PENGUINS,
                          build_bridge=action == BUILD_BRIDGE)
@@ -185,6 +186,9 @@ class Scores:
         if game.get_bonus_iceberg() is None:
             return 0
 
+        if utils.is_neutral(game, owner_if_no_action_will_made) and destination_iceberg_to_score.penguin_amount > 0:
+            return DONT_DO_ACTION_SCORE
+
         penguin_bonus = destination_iceberg_to_score.penguin_bonus
         bonus_score = (
                 destination_iceberg_to_score.max_turns_to_bonus - destination_iceberg_to_score.turns_left_to_bonus)
@@ -246,7 +250,7 @@ class Scores:
         :type iceberg_to_score: Iceberg
         :rtype: float
         """
-        return iceberg_to_score.penguins_per_turn ** LEVEL_FACTOR_SCORE
+        return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
 
     def __score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):
         """
@@ -271,8 +275,8 @@ class Scores:
         :type source_iceberg: Iceberg
         :type destination_iceberg_to_score: Iceberg
         :type occupy_method_data: OccupyMethodData
-        :rtype: (float, int)
-        :return: (score, max_penguins_can_be_use)
+        :rtype: float
+        :return: score
         """
         score = 0
         game = self.__game
@@ -287,7 +291,7 @@ class Scores:
             score += NEED_PROTECTED_SCORE
 
         # Max penguins can be used
-        max_penguins_can_be_use = simulation_data.get_max_penguins_can_be_use(source_iceberg)
+        max_penguins_can_be_use = occupy_method_data.max_penguins_can_be_use
 
         # Is source has enough penguins to send
         if max_penguins_can_be_use - min_penguins_for_occupy < self.__min_penguins_amount:
@@ -297,12 +301,11 @@ class Scores:
         score += PRICE_FACTOR_SCORE * (float(min_penguins_for_occupy) / self.__max_price)
 
         # Check whether source will be in danger if send the penguins.
-        max_penguins_will_use_for_occupy = min(max_penguins_can_be_use, min_penguins_for_occupy)
         iceberg_simulation_data = simulation_data.get(source_iceberg)
         owner = iceberg_simulation_data[-1][OWNER]
         if not self.__game.get_myself().equals(owner):
             score += OUR_SOURCE_ICEBERG_IN_DANGER_SCORE
-        return score, max_penguins_can_be_use
+        return score
 
     def __find_max_distance(self):
         """

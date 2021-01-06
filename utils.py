@@ -20,13 +20,14 @@ def is_neutral(game, owner):
     return owner.equals(game.get_neutral())
 
 
-def active_print(game_):
+def active_print(game_, turns_to_start_from= 0):
     """
     Enable prints
     """
-    global __print_enable, game
+    global __print_enable, game, TURN_TO_START_PRINT_FROM
     game = game_
     __print_enable = True
+    TURN_TO_START_PRINT_FROM = turns_to_start_from
 
 
 def disable_print():

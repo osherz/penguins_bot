@@ -7,14 +7,16 @@ BUILD_BRIDGE = 'build_bridge'
 
 MIN_ADDITIONAL_PENGUINS_FOR_OCCUPY = 1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
-
+MIN_DISTANCE_TO_CHECK = 10
+MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS = 30
 
 class OccupyMethodData:
     """
     Handle data that important for occupy.
     """
 
-    def __init__(self, min_penguins_for_occupy, min_penguins_for_neutral, recommended_penguins_for_occupy, method,
+    def __init__(self, min_penguins_for_occupy, min_penguins_for_neutral, recommended_penguins_for_occupy,
+                 max_penguins_can_be_use, method,
                  owner):
         """
         :param method: SEND_PENGUINS or BUILD_BRIDGE
@@ -24,6 +26,7 @@ class OccupyMethodData:
         self.min_penguins_for_occupy = min_penguins_for_occupy
         self.min_penguins_for_neutral = min_penguins_for_neutral
         self.recommended_penguins_for_occupy = recommended_penguins_for_occupy
+        self.max_penguins_can_be_use = max_penguins_can_be_use
         self.method = method
         self.owner = owner
 
@@ -77,13 +80,17 @@ class OccupyMethodDecision:
         else:
             # If the iceberg will belong ot me,
             # we want to think about sending some support.
-            min_penguins_to_send_for_occupy = self.__calc_penguins_to_send_for_support(source_iceberg)
+            is_bridge_prefer, penguins_to_use = self.__is_bridge_to_our_prefer(destination_iceberg, game, source_iceberg)
+            if not is_bridge_prefer:
+                min_penguins_to_send_for_occupy = self.__calc_penguins_to_send_for_support(source_iceberg)
 
+        max_penguins_can_be_use = self.__calc_max_penguins_can_be_use_consider_close_enemy_icebergs(source_iceberg)
         if is_bridge_prefer:
             occupy_method_data = OccupyMethodData(
                 penguins_to_use,
                 penguins_to_use,
                 penguins_to_use,
+                max_penguins_can_be_use,
                 BUILD_BRIDGE,
                 owner_if_no_action_will_made
             )
@@ -92,11 +99,34 @@ class OccupyMethodDecision:
                 min_penguins_to_send_for_occupy,
                 min_penguins_to_make_neutral,
                 min_penguins_to_send_for_occupy,
+                max_penguins_can_be_use,
                 SEND_PENGUINS,
                 owner_if_no_action_will_made
             )
 
         return occupy_method_data
+
+    def __is_bridge_to_our_prefer(self, destination_iceberg, game, source_iceberg):
+        if utils.can_build_bridge(source_iceberg, destination_iceberg):
+            ours_groups = utils.get_groups_way_to_iceberg(game, destination_iceberg, [
+                group
+                for group in game.get_my_penguin_groups()
+                if group.source.equals(source_iceberg)
+            ])
+            our_penguin_groups_amount = sum(map(lambda x: x.penguin_amount, ours_groups))
+            if our_penguin_groups_amount > MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS:
+                return True, game.iceberg_bridge_cost
+        return False, game.iceberg_bridge_cost
+
+    def __calc_max_penguins_can_be_use_consider_close_enemy_icebergs(self, source_iceberg):
+        max_penguins_can_be_use = self.__simulation_data.get_max_penguins_can_be_use(source_iceberg)
+        penguins_of_close_iceberg, max_distance = self.__calc_penguins_of_close_iceberg_and_max_distance(source_iceberg)
+        penguins_per_turn = 0 if utils.is_bonus_iceberg(self.__game,
+                                                        source_iceberg) else source_iceberg.penguins_per_turn
+        distance_with_bridge = max_distance / self.__game.iceberg_bridge_speed_multiplier
+        reduce_penguins = int(max(0, penguins_of_close_iceberg - distance_with_bridge * penguins_per_turn))
+        max_penguins_can_be_use = max(0, max_penguins_can_be_use - reduce_penguins)
+        return max_penguins_can_be_use
 
     def __calc_min_penguins_to_send(self, source_iceberg, destination_iceberg):
         """
@@ -153,3 +183,22 @@ class OccupyMethodDecision:
             penguin_amount_to_send = source_iceberg.penguin_amount - 1
 
         return min(penguin_amount_to_send, penguins_per_turn)
+
+    def __calc_penguins_of_close_iceberg_and_max_distance(self, iceberg):
+        """
+        Calculate how much penguins has the close enemies icebergs.
+        """
+        ours_avg_distance, enemy_avg_distance = self.__simulation_data.get_avg_distance_from_players(iceberg)
+        if ours_avg_distance <= 0:
+            max_distance_to_check = max(ours_avg_distance, MIN_DISTANCE_TO_CHECK)
+        else:
+            max_distance_to_check = ours_avg_distance
+        close_icebergs = [
+            enemy_iceberg
+            for enemy_iceberg in self.__game.get_enemy_icebergs()
+            if utils.get_real_distance_between_icebergs(iceberg, enemy_iceberg) <= max_distance_to_check
+        ]
+        if utils.is_empty(close_icebergs):
+            return 0, 0
+        return sum(map(lambda x: x.penguin_amount, close_icebergs)), \
+               max(close_icebergs, key=lambda x: x.get_turns_till_arrival(iceberg)).get_turns_till_arrival(iceberg)

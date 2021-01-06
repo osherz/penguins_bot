@@ -11,7 +11,7 @@ from occupymethoddecision import OccupyMethodDecision
 # import typing
 # from typing import List
 
-MIN_SCORE_FOR_SENDING = 10
+MIN_SCORE_FOR_SENDING = 0
 TURNS_TO_CHECK = 15
 
 
@@ -22,7 +22,7 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    # utils.active_print(game)
+    utils.active_print(game, 90)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
     if game.turn == 1 and game.get_bonus_iceberg() is not None:
@@ -59,14 +59,13 @@ def occupy_close_icebergs(game):
         log('Running time: ', game.get_max_turn_time(),
             ', ', game.get_time_remaining())
         my_iceberg_cnt += 1
-        destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg,
-                                                          all_icebergs, simulation_data,
-                                                          occupy_method_decision)  # type: list
+        destination_scored_icebergs, max_penguins_can_be_use = get_scored_icebergs(scores, game, my_iceberg,
+                                                                                   all_icebergs, simulation_data,
+                                                                                   occupy_method_decision)  # type: list
         upgrade_score_for_my_iceberg = scores.score_upgrade(my_iceberg)
 
         log('upgrade score', upgrade_score_for_my_iceberg)
         continue_to_next_source = False
-        max_penguins_can_be_use = simulation_data.get_max_penguins_can_be_use(my_iceberg)
         if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
                 destination_scored_icebergs[0].get_score():
             penguins_used = 0
@@ -106,15 +105,18 @@ def occupy_close_icebergs(game):
                     destination_scored_icebergs = destination_scored_icebergs[1:]
                     # destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
                     #                                                   simulation_data, occupy_method_decision)
+                    if not utils.is_empty(destination_scored_icebergs):
+                        continue_to_next_source = destination_scored_icebergs[
+                                                      0].get_score() < upgrade_score_for_my_iceberg
 
-        elif 0 < upgrade_score_for_my_iceberg <= max_penguins_can_be_use and \
-                utils.can_be_upgrade(my_iceberg):
+        elif upgrade_score_for_my_iceberg > 0 and utils.can_be_upgrade(
+                my_iceberg) and my_iceberg.upgrade_cost <= max_penguins_can_be_use:
             my_iceberg.upgrade()
             icebergs_to_update = [my_iceberg]
 
-        # if game.get_time_remaining() < 0:
-        #     log('time over')
-        #     break
+        if game.get_time_remaining() < -40:
+            log('time over')
+            break
 
         if my_iceberg_cnt < len(game.get_my_icebergs()) or \
                 (my_iceberg.penguin_amount > 0 and len(destination_scored_icebergs) > 1):
@@ -160,16 +162,17 @@ def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, occup
 def get_scored_icebergs(scores, game, my_iceberg, icebergs, simulation_data, occupy_method_decision):
     """
     :type icebergs : List[IceBuilding]
+    :return: All scored icebergs and max penguins can be use.
     """
     all_icebergs = icebergs[:]
     if my_iceberg in all_icebergs:
         all_icebergs.remove(my_iceberg)
-    scored_icebergs = score_icebergs(
+    scored_icebergs, max_penguins_can_be_use = score_icebergs(
         game, scores, my_iceberg, all_icebergs, simulation_data, occupy_method_decision)
     ret = []
     for iceberg in scored_icebergs:
         ret.append(iceberg)
-    return ret
+    return ret, max_penguins_can_be_use
 
 
 def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data, occupy_method_decision):
@@ -179,8 +182,8 @@ def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data, occu
     :type scores: Scores
     :type source_iceberg: Iceberg
     :type icebergs: List[Iceberg]
-    :rtype: List[{Iceberg, int}]
-    :return: List[{iceberg, min_price}]
+    :rtype: List[{Iceberg, int}], int
+    :return: List[{iceberg, min_price}], max_penguins_can_be_use
     """
 
     def get_iceberg_data(iceberg):
@@ -190,13 +193,12 @@ def score_icebergs(game, scores, source_iceberg, icebergs, simulation_data, occu
         return score_data
 
     scores_icebergs = map(lambda iceberg: get_iceberg_data(iceberg), icebergs)
-
     sort_icebergs_by_score(scores_icebergs)
     print_scores(scores_icebergs)
-
+    max_penguins_can_be_use = scores_icebergs[0].get_max_penguins_can_be_sent()
     scores_icebergs = remove_smalls_score_icebergs(scores_icebergs)
 
-    return scores_icebergs
+    return scores_icebergs, max_penguins_can_be_use
 
 
 def print_scores(scores_icebergs):
