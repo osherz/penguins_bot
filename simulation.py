@@ -248,17 +248,16 @@ class Simulation:
     def is_belong_to_neutral(self):
         return self.__iceberg_owner.equals(self.__game.get_neutral())
 
-    def __calculate_how_much_turns_to_continue(self, current_simulate_turn, turns_to_simulate):
+    def __calculate_how_much_turns_to_continue(self, turn_of_the_current_simulate, turns_to_simulate):
         """
         Calculate how much turns need the closest group to arrive.
         If its bigger than the turns remind, return the turns remind.
         """
         turns_to_continue = 1
-        if self.are_group_remains() and current_simulate_turn < turns_to_simulate:
-            turns_to_continue = self.__groups_to_iceberg[0].get_turns_till_arrival(
-            )
-            if current_simulate_turn + turns_to_continue > turns_to_simulate:
-                turns_to_continue = turns_to_simulate - current_simulate_turn
+        if self.are_group_remains() and turn_of_the_current_simulate < turns_to_simulate:
+            turns_to_continue = self.__groups_to_iceberg[0].get_turns_till_arrival() - self.__current_turn
+            if turn_of_the_current_simulate + turns_to_continue > turns_to_simulate:
+                turns_to_continue = turns_to_simulate - turn_of_the_current_simulate
         return turns_to_continue
         # Calculate turns for next bonus
 
@@ -349,7 +348,6 @@ class Simulation:
         If enemy, reduce number of penguins.
         If our, append the number of penguins.
         """
-        self.__current_turn
         groups_arrived = [
             penguin_group for penguin_group in self.__groups_to_iceberg
             if penguin_group.get_turns_till_arrival() <= self.__current_turn or penguin_group.is_arrived()

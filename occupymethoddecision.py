@@ -81,8 +81,7 @@ class OccupyMethodDecision:
         else:
             # If the iceberg will belong ot me,
             # we want to think about sending some support.
-            is_bridge_prefer, penguins_to_use = self.__is_bridge_to_our_prefer(destination_iceberg, game,
-                                                                               source_iceberg)
+            is_bridge_prefer, penguins_to_use = self.__is_bridge_to_our_prefer(destination_iceberg, source_iceberg)
             if not is_bridge_prefer:
                 min_penguins_to_send_for_occupy = self.__calc_penguins_to_send_for_support(source_iceberg)
 
@@ -154,6 +153,20 @@ class OccupyMethodDecision:
 
         return is_bridge_prefer, penguins_to_use
 
+    def __is_bridge_to_our_prefer(self, destination_iceberg, source_iceberg):
+        game = self.__game
+        simulation_data = self.__simulation_data
+
+        is_bridge_prefer = False
+        if utils.can_build_bridge(source_iceberg, destination_iceberg):
+            is_bridge_prefer = self.__is_ours_after_bridge_creating(destination_iceberg, source_iceberg)
+
+            our_penguin_groups_amount = self.__calc_amount_of_our_penguins_to_destination(destination_iceberg, game,
+                                                                                          source_iceberg)
+            if is_bridge_prefer and our_penguin_groups_amount > MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS:
+                is_bridge_prefer = True
+        return is_bridge_prefer, game.iceberg_bridge_cost
+
     def __is_ours_after_bridge_creating(self, destination_iceberg, source_iceberg):
         game = self.__game
         simulation_data = self.__simulation_data
@@ -161,18 +174,6 @@ class OccupyMethodDecision:
         new_owner = utils.simulate_with_bridge(
             game, source_iceberg, destination_iceberg, simulation_data)
         return utils.is_me(game, new_owner)
-
-    def __is_bridge_to_our_prefer(self, destination_iceberg, game, source_iceberg, simulation_data):
-        is_bridge_prefer = False
-        if utils.can_build_bridge(source_iceberg, destination_iceberg):
-            is_bridge_prefer = self.__is_ours_after_bridge_creating(destination_iceberg, game, simulation_data,
-                                                                    source_iceberg)
-            #
-            our_penguin_groups_amount = self.__calc_amount_of_our_penguins_to_destination(destination_iceberg, game,
-                                                                                          source_iceberg)
-            if our_penguin_groups_amount > MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS:
-                is_bridge_prefer = True
-        return is_bridge_prefer, game.iceberg_bridge_cost
 
     def __calc_amount_of_our_penguins_to_destination(self, destination_iceberg, game, source_iceberg):
         ours_groups = utils.get_groups_way_to_iceberg(game, destination_iceberg, [
