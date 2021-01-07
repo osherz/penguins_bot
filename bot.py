@@ -22,7 +22,7 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    utils.active_print(game, 90)
+    # utils.active_print(game, 30)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
     if game.turn == 1 and game.get_bonus_iceberg() is not None:
@@ -90,6 +90,8 @@ def occupy_close_icebergs(game):
                 else:
                     # TODO: Check if we can to do another action.
                     if is_send_penguins:
+                        if utils.is_enemy(game,dest_iceberg.owner):
+                            min_price=max_penguins_can_be_use-penguins_used
                         send_penguins(my_iceberg, min_price, dest_iceberg)
                     elif not my_iceberg.already_acted:
                         build_bridge(my_iceberg, dest_iceberg)
@@ -114,7 +116,7 @@ def occupy_close_icebergs(game):
             my_iceberg.upgrade()
             icebergs_to_update = [my_iceberg]
 
-        if game.get_time_remaining() < -40:
+        if game.get_time_remaining() < -100:
             log('time over')
             break
 
@@ -312,7 +314,7 @@ def try_to_send_from_multiple_icebergs(game, current_iceberg_score_data, standby
                 penguins_to_send = min(
                     iceberg_score_data.get_max_penguins_can_be_sent(), min_penguins_for_occupy,
                     source_iceberg.penguin_amount)
-                source_iceberg.send_penguins(dest_iceberg, penguins_to_send)
+                source_iceberg.send_penguins(dest_iceberg, int(penguins_to_send))
                 min_penguins_for_occupy -= penguins_to_send
                 log(source_iceberg, dest_iceberg,
                     penguins_to_send, min_penguins_for_occupy)
@@ -336,7 +338,7 @@ def send_penguins(my_iceberg, destination_penguin_amount, destination):
     :type destination: Iceberg
     """
     log(my_iceberg, "sends", destination_penguin_amount, "penguins to", destination)
-    my_iceberg.send_penguins(destination, destination_penguin_amount)
+    my_iceberg.send_penguins(destination, int(destination_penguin_amount))
 
 
 def build_bridge(my_iceberg, destination):
@@ -358,4 +360,4 @@ def send_penguins_groups(my_icebergs, destination_penguin_amount, destination):
     :type destination: Iceberg
     """
     for iceberg in my_icebergs:
-        send_penguins(iceberg, destination_penguin_amount, destination)
+        send_penguins(iceberg, int(destination_penguin_amount), destination)

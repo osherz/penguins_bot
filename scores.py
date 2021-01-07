@@ -5,11 +5,11 @@ from scoredata import ScoreData
 from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 from simulationsdata import SimulationsData, OWNER
 
-ENEMY_BELONGS_SCORE = 17
+ENEMY_BELONGS_SCORE = 27
 NEUTRAL_BELONGS_SCORE = 17
 MY_BELONGS_SCORE = 0
 CANT_DO_ACTION_SCORE = -10
-UPGRADE_TURNS_TO_CHECK = 20
+UPGRADE_TURNS_TO_CHECK = 15
 OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 UNUPGRADEABLE_ICEBERG_SCORE = -9999
@@ -24,7 +24,7 @@ SOURCE_LEVEL_SMALL_THAN_DESTINATION_SCORE = 0
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 4
-UPDATE_FACTOR_SCORE = 0.25
+UPDATE_FACTOR_SCORE = 0.4
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.3
 SUPPORT_SCORE_FACTOR = 1.2
 
@@ -74,7 +74,7 @@ class Scores:
             source_iceberg, destination_iceberg_to_score, simulation_data, occupy_method_data)
         if score_by_iceberg_price:
             scores.append(min_penguins_for_occupy_score)
-        if utils.is_bonus_iceberg(self.__game, source_iceberg) or source_iceberg.level <= 1:
+        if utils.is_bonus_iceberg(self.__game, source_iceberg) or source_iceberg.level <= 0:
             scores.append(DONT_DO_ACTION_SCORE)
         # if the score will not be positive, return score.
         if sum(scores) >= IRREVERSIBLE_SCORE:
@@ -238,10 +238,13 @@ class Scores:
         is_closest_to_enemy, avr_distance_from_enemy = self.__is_destination_closest_to_enemy(source_iceberg,
                                                                                               iceberg_to_score,
                                                                                               simulation_data)
-        if is_belong_to_me and is_closest_to_enemy and not iceberg_to_score is game.get_bonus_iceberg():
-            score += (self.__max_distance - avr_distance_from_enemy) * SUPPORT_SCORE_FACTOR
-        else:
-            score += CANT_DO_ACTION_SCORE
+        if is_belong_to_me and is_closest_to_enemy:
+            if not iceberg_to_score is game.get_bonus_iceberg():
+                score += (self.__max_distance - avr_distance_from_enemy) * SUPPORT_SCORE_FACTOR
+            else:
+                score+=CANT_DO_ACTION_SCORE
+        elif is_belong_to_me:
+            score += -80
         return score
 
     def __score_by_iceberg_level(self,source_iceberg, iceberg_to_score, iceberg_owner_after_all_groups_arrived):

@@ -7,7 +7,7 @@ import math
 import utils
 import itertools
 
-MAX_ACTIONS = 10
+MAX_ACTIONS = 99
 
 
 class Simulation:
