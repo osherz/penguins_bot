@@ -76,7 +76,8 @@ class Simulation:
                 turn, turns_to_simulate)
         turns_to_continue = turn
         actions = 0
-        self.__treat_groups_arrived_destination()
+
+        # self.__treat_groups_arrived_destination()
         while turn <= turns_to_simulate:
             self.__current_turn += turns_to_continue
             # We don't need to move groups to destination
