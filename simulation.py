@@ -486,7 +486,7 @@ class Simulation:
             num_of_groups_to_iceberg = len(self.__groups_to_iceberg)
         ret = 'Simulation: is started:' + str(self.__is_simulate_started) + ', penguin amount ' + str(
             self.get_penguin_amount()) + ', owner ' + self.__belong_to() + ' ' + str(
-            self.__iceberg_owner)
+            self.__iceberg_owner) + ', turn ' + str(self.__current_turn)
 
         if type(self.__iceberg_to_simulate) == Iceberg:
             ret += ', level ' + str(self.__iceberg_level) + ', penguins_per_turn ' + str(self.__penguins_per_turn)
