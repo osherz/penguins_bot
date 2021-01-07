@@ -57,14 +57,16 @@ def min_penguins_to_make_neutral(game, source_iceberg, destination_iceberg, simu
     :type game: Game
     :type source_iceberg: Iceberg
     :type destination_iceberg: Iceberg
+    :type simulation_data: SimulationsData
     :rtype: int
     """
     # TODO: Think of another way to calculate min penguins to send, without another simulation.
-    distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
-    log('distance', distance)
-    penguins, owner, min_turns = get_penguins_in_x_turns(
-        game, source_iceberg, destination_iceberg, distance, simulation_data)
-
+    # distance = source_iceberg.get_turns_till_arrival(destination_iceberg)
+    # log('distance', distance)
+    # penguins, owner, min_turns = get_penguins_in_x_turns(
+    #     game, source_iceberg, destination_iceberg, distance, simulation_data)
+    penguins = simulation_data.get_max_enemy_penguins(destination_iceberg)
+    owner = simulation_data.get(destination_iceberg)[-1][OWNER]
     log('min penguins:', penguins, "owner:", owner)
     if not owner.equals(game.get_myself()):
         return penguins
