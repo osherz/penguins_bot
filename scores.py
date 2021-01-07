@@ -14,11 +14,13 @@ OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 UNUPGRADEABLE_ICEBERG_SCORE = -9999
 DONT_DO_ACTION_SCORE = -9999
-NEED_PROTECTED_SCORE = 200
+OUR_DESTINATION_ICEBERG_IN_DANGER_SCORE = 200
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
 BONUS_SCORE = 0
 SOURCE_LEVEL_SMALL_THAN_DESTINATION_SCORE = 0
+MIN_LEVEL_FOR_ACTION = 1
+OUR_DESTINATION_ICEBERG_FAR_FROM_ENEMY_SCORE = -80
 
 # Factors
 DISTANCE_FACTOR_SCORE = -35
@@ -74,7 +76,7 @@ class Scores:
             source_iceberg, destination_iceberg_to_score, simulation_data, occupy_method_data)
         if score_by_iceberg_price:
             scores.append(min_penguins_for_occupy_score)
-        if utils.is_bonus_iceberg(self.__game, source_iceberg) or source_iceberg.level <= 0:
+        if utils.is_bonus_iceberg(self.__game, source_iceberg) or source_iceberg.level < MIN_LEVEL_FOR_ACTION:
             scores.append(DONT_DO_ACTION_SCORE)
         # if the score will not be positive, return score.
         if sum(scores) >= IRREVERSIBLE_SCORE:
@@ -244,7 +246,7 @@ class Scores:
             else:
                 score+=CANT_DO_ACTION_SCORE
         elif is_belong_to_me:
-            score += -80
+            score += OUR_DESTINATION_ICEBERG_FAR_FROM_ENEMY_SCORE
         return score
 
     def __score_by_iceberg_level(self,source_iceberg, iceberg_to_score, iceberg_owner_after_all_groups_arrived):
@@ -300,7 +302,7 @@ class Scores:
                                              simulation_data)
         elif destination_iceberg_to_score.owner.equals(game.get_myself()):
             # We want to protect out iceberg if it gonna to be occupied.
-            score += NEED_PROTECTED_SCORE
+            score += OUR_DESTINATION_ICEBERG_IN_DANGER_SCORE
 
         # Max penguins can be used
         max_penguins_can_be_use = occupy_method_data.max_penguins_can_be_use
