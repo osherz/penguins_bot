@@ -22,6 +22,7 @@ class SimulationsData:
         self.__icebergs_max_penguins_can_be_use = {}
         self.__icebergs_max_enemy_penguins = {}
         self.__max_turn = utils.find_max_distance(game)
+        self.__turns_until_last_group_arrived = {}
         self.__bonus_turns_ls = []
         if len(icebergs_max_distance) <= 0:
             self.__calc_max_distances()
@@ -70,6 +71,13 @@ class SimulationsData:
         """
         key = self.__get_iceberg_key(iceberg)
         return self.__icebergs_max_enemy_penguins[key]
+
+    def get_turns_until_last_group_arrived(self, iceberg):
+        """
+        Return when the last group will arrive to this iceberg.
+        """
+        key = self.__get_iceberg_key(iceberg)
+        return self.__turns_until_last_group_arrived[key]
 
     def get_bonus_turns(self):
         """
@@ -151,7 +159,10 @@ class SimulationsData:
             icebergs_distances = [source_iceberg.get_turns_till_arrival(iceberg)
                                   for source_iceberg in utils.get_all_my_icebergs(game)]
             last_group_turns = utils.turns_until_last_group_arrived(game, iceberg)
-            my_iceberg_distances = sorted(icebergs_distances + [last_group_turns]) + [max_distance]
+            iceberg_key = self.get_iceberg_key(iceberg)
+            self.__turns_until_last_group_arrived[iceberg_key] = last_group_turns
+            if last_group_turns > 0:
+                my_iceberg_distances = sorted(icebergs_distances + [last_group_turns]) + [max_distance]
         return my_iceberg_distances
 
     def __get_simulation_data(self, simulation, iceberg, last_simulation_data=None):
@@ -253,7 +264,7 @@ class SimulationsData:
             for our_iceberg in self.__game.get_my_icebergs()
             if not our_iceberg.equals(iceberg)
         ]
-        if len(ours_distance) ==0:
+        if len(ours_distance) == 0:
             return 0
         return sum(ours_distance) / len(ours_distance)
 
