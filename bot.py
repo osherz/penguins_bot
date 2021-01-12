@@ -12,6 +12,7 @@ from occupymethoddecision import OccupyMethodDecision
 # from typing import List
 
 MIN_SCORE_FOR_SENDING = 0
+TURNS_TO_CHECK = 15
 
 
 def do_turn(game):
@@ -21,7 +22,10 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    # utils.active_print(game, 30)
+    for group in game.get_my_penguin_groups():
+        print group.turns_till_arrival
+
+    # utils.active_print(game, 0)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
     if game.turn == 1 and game.get_bonus_iceberg() is not None:
@@ -100,7 +104,12 @@ def occupy_close_icebergs(game):
                     continue_to_next_source = my_iceberg.penguin_amount <= 0
 
                 if not continue_to_next_source:
+                    # TODO: Unnecessary. We just need to update the max penguins that can be use by this source iceberg.
+                    # icebergs_to_score = map(lambda iceberg: iceberg.get_destination(),
+                    #                         destination_scored_icebergs[1:])
                     destination_scored_icebergs = destination_scored_icebergs[1:]
+                    # destination_scored_icebergs = get_scored_icebergs(scores, game, my_iceberg, icebergs_to_score,
+                    #                                                   simulation_data, occupy_method_decision)
                     if not utils.is_empty(destination_scored_icebergs):
                         continue_to_next_source = destination_scored_icebergs[
                                                       0].get_score() < upgrade_score_for_my_iceberg
@@ -110,13 +119,16 @@ def occupy_close_icebergs(game):
             my_iceberg.upgrade()
             icebergs_to_update = [my_iceberg]
 
-        if game.get_time_remaining() < -100:
-            log('time over')
+        if game.get_time_remaining() < -50:
+            print('time over')
             break
 
         if my_iceberg_cnt < len(game.get_my_icebergs()) or \
                 (my_iceberg.penguin_amount > 0 and len(destination_scored_icebergs) > 1):
             simulation_data.update_iceberg_simulation(*icebergs_to_update)
+
+            # if game.get_time_remaining() < 0:
+            #    break
 
 
 def get_scored_icebergs_for_all_my_icebergs(scores, game, simulation_data, occupy_method_decision,

@@ -29,8 +29,7 @@ class PenguinGroupSimulate:
             self.__owner = source_iceberg.owner
             self.destination = destination_iceberg
             self.__origin_penguin_amount = penguin_amount
-            self.__origin_turns_till_arrival = self.__source_iceberg.get_turns_till_arrival(
-                self.destination)  #  todo: If it custom, so the sending it self is 1 turn less. (-1)
+            self.__origin_turns_till_arrival = self.__source_iceberg.get_turns_till_arrival(self.destination)
             self.__is_enemy = source_iceberg.owner.equals(game.get_enemy())
         else:
             self.__source_iceberg = penguin_group.source
@@ -115,7 +114,7 @@ class PenguinGroupSimulate:
             self.__turns_till_arrival -= turns
             return self.is_arrived()
         else:
-            raise ValueError("Turns ", str(turns), "bigger than turns-till-arrival " + str(self.__turns_till_arrival))
+            raise ValueError("Turns ", str(turns), "bigger than turns-till-arrival "+str(self.__turns_till_arrival))
 
     def is_arrived(self):
         """
