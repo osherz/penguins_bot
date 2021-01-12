@@ -140,10 +140,7 @@ class SimulationsData:
             if not simulation.is_belong_to_me():
                 max_enemy_penguins = max(max_enemy_penguins, simulation.get_penguin_amount())
 
-        if enable_calculate_max_penguins_to_use and max_penguins_can_be_use > 0:
-            if was_occupied:
-                max_penguins_can_be_use = 0
-            else:
+        if enable_calculate_max_penguins_to_use and max_penguins_can_be_use > 0 and was_occupied:
                 max_penguins_can_be_use -= 1
 
         return iceberg_simulation_turn, max_penguins_can_be_use, max_enemy_penguins
