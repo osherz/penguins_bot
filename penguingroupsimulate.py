@@ -30,7 +30,7 @@ class PenguinGroupSimulate:
             self.destination = destination_iceberg
             self.__origin_penguin_amount = penguin_amount
             self.__origin_turns_till_arrival = self.__source_iceberg.get_turns_till_arrival(
-                self.destination) - 1  # If it custom, so the sending it self is 1 turn less.
+                self.destination)  #  todo: If it custom, so the sending it self is 1 turn less. (-1)
             self.__is_enemy = source_iceberg.owner.equals(game.get_enemy())
         else:
             self.__source_iceberg = penguin_group.source

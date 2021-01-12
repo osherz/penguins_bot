@@ -20,7 +20,7 @@ def is_neutral(game, owner):
     return owner.equals(game.get_neutral())
 
 
-def active_print(game_, turns_to_start_from= 0):
+def active_print(game_, turns_to_start_from=0):
     """
     Enable prints
     """
@@ -91,12 +91,15 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
 
     iceberg_turns_data = simulation_data.get(destination_iceberg)
     iceberg_min_turns_data = iceberg_turns_data[min_turns]
+    last_turn_data = simulation_data.get(destination_iceberg)[-1]
     log(simulation)
     log(iceberg_min_turns_data)
+    log(last_turn_data)
     last_group_turns = turns_until_last_group_arrived(
         game, destination_iceberg)
     owner = destination_iceberg.owner
     new_owner = iceberg_min_turns_data[OWNER]
+    owner_if_no_action_will_made = last_turn_data[OWNER]
     penguin_amount = iceberg_min_turns_data[PENGUIN_AMOUNT]
     groups_sent = True
     not_finish_simulation = True
@@ -119,12 +122,12 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
             not_finish_simulation = False
 
     if not_finish_simulation:
-        if not is_me(game, new_owner):
+        if not is_me(game, owner_if_no_action_will_made):
             # Check what happen if we sent enough penguins to occupy.
             simulation.add_penguin_group(
                 source_iceberg, destination_iceberg, penguin_amount + 1)
-            simulation.simulate_until_last_group_arrived()
             log(simulation)
+            simulation.simulate_until_last_group_arrived()
             new_penguin_amount = simulation.get_penguin_amount()
             owner_after_sending = simulation.get_owner()
             last_group_turns = simulation.get_turns_simulated()
@@ -136,7 +139,7 @@ def get_penguins_in_x_turns(game, source_iceberg, destination_iceberg, min_turns
 
     if groups_sent:
         # In case we won't send penguins, the iceberg will belong to enemy.
-        owner = simulation_data.get(destination_iceberg)[-1][OWNER]
+        owner = owner_if_no_action_will_made
         if is_neutral(game, owner_after_sending):
             new_penguin_amount += penguin_amount + 1
         elif is_me(game, owner_after_sending):
@@ -241,7 +244,10 @@ def simulate_with_bridge(game, source_iceberg, destination_iceberg, simulation_d
     simulation = Simulation(game, destination_iceberg, bonus_turns_ls)
     simulation.add_bridge(source_iceberg, source_iceberg.max_bridge_duration,
                           source_iceberg.bridge_speed_multiplier)
+    log('Check bridge building')
+    log(simulation)
     simulation.simulate_until_last_group_arrived()
+    log(simulation)
     return simulation.get_owner()
 
 

@@ -77,7 +77,8 @@ class Simulation:
         turns_to_continue = turn
         actions = 0
 
-        # self.__treat_groups_arrived_destination()
+        self.__treat_groups_arrived_destination()
+        utils.log(turn, turns_to_simulate)
         while turn <= turns_to_simulate:
             self.__current_turn += turns_to_continue
             # We don't need to move groups to destination
@@ -102,7 +103,8 @@ class Simulation:
         :type turns_to_simulate: int
         """
         self.__init_groups_to_iceberg()
-        self.__simulate(turns_to_simulate)
+        if turns_to_simulate > 0:
+            self.__simulate(turns_to_simulate)
 
     def simulate_until_last_group_arrived(self):
         """
@@ -111,6 +113,7 @@ class Simulation:
         :return:
         """
         self.__init_groups_to_iceberg()
+        utils.log(self.__groups_to_iceberg)
         if len(self.__groups_to_iceberg) > 0:
             turns = self.get_last_group_distance()
             self.__simulate(turns, MAX_ACTIONS)

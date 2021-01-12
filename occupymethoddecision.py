@@ -159,11 +159,11 @@ class OccupyMethodDecision:
 
         is_bridge_prefer = False
         if utils.can_build_bridge(source_iceberg, destination_iceberg):
-            is_bridge_prefer = self.__is_ours_after_bridge_creating(destination_iceberg, source_iceberg)
+            is_ours_after_bridge_creating = self.__is_ours_after_bridge_creating(destination_iceberg, source_iceberg)
 
             our_penguin_groups_amount = self.__calc_amount_of_our_penguins_to_destination(destination_iceberg, game,
                                                                                           source_iceberg)
-            if is_bridge_prefer and our_penguin_groups_amount > MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS:
+            if is_ours_after_bridge_creating and our_penguin_groups_amount > MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS:
                 is_bridge_prefer = True
         return is_bridge_prefer, game.iceberg_bridge_cost
 
