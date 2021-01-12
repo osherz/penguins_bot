@@ -9,7 +9,7 @@ MIN_ADDITIONAL_PENGUINS_FOR_OCCUPY = 1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 MIN_DISTANCE_TO_CHECK = 90
 MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS = 15
-
+BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR = 0.6
 
 class OccupyMethodData:
     """
@@ -112,7 +112,7 @@ class OccupyMethodDecision:
         penguins_of_close_iceberg, max_distance = self.__calc_penguins_of_close_iceberg_and_max_distance(source_iceberg)
         penguins_per_turn = 0 if utils.is_bonus_iceberg(self.__game,
                                                         source_iceberg) else source_iceberg.penguins_per_turn
-        distance_with_bridge = max_distance / self.__game.iceberg_bridge_speed_multiplier
+        distance_with_bridge = max_distance / max(1,(self.__game.iceberg_bridge_speed_multiplier * BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR))
         reduce_penguins = int(max(0, penguins_of_close_iceberg - distance_with_bridge * penguins_per_turn))
         max_penguins_can_be_use = max(0, max_penguins_can_be_use - reduce_penguins)
         return max_penguins_can_be_use

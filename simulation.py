@@ -353,7 +353,7 @@ class Simulation:
         """
         groups_arrived = [
             penguin_group for penguin_group in self.__groups_to_iceberg
-            if penguin_group.get_turns_till_arrival() <= self.__current_turn or penguin_group.is_arrived()
+            if penguin_group.get_turns_till_arrival() - self.__current_turn <= 1 or penguin_group.is_arrived()
         ]
 
         groups_arrived.sort(

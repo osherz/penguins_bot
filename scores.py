@@ -14,6 +14,7 @@ OUR_SOURCE_ICEBERG_IN_DANGER_SCORE = -9999
 OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE = -9999
 UNUPGRADEABLE_ICEBERG_SCORE = -9999
 DONT_DO_ACTION_SCORE = -9999
+LAST_ENEMY_ICEBERG_THAT_CAN_BE_OCCUPIED = 100
 OUR_DESTINATION_ICEBERG_IN_DANGER_SCORE = 200
 MIN_PENGUINS_AMOUNT_AVG_PERCENT = 0
 IRREVERSIBLE_SCORE = -1000
@@ -26,7 +27,7 @@ OUR_DESTINATION_ICEBERG_FAR_FROM_ENEMY_SCORE = -80
 DISTANCE_FACTOR_SCORE = -35
 PRICE_FACTOR_SCORE = -5
 LEVEL_FACTOR_SCORE = 4
-UPDATE_FACTOR_SCORE = 0.4
+UPDATE_FACTOR_SCORE = 1.4
 AVG_DISTANCE_FROM_PLAYERS_FACTOR_SCORE = 0.3
 SUPPORT_SCORE_FACTOR = 1.2
 
@@ -264,7 +265,7 @@ class Scores:
             if iceberg_to_score.level < iceberg_to_score.upgrade_level_limit:
                 return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
         elif utils.is_neutral(self.__game, iceberg_owner_after_all_groups_arrived):
-            return LEVEL_FACTOR_SCORE * iceberg_to_score.penguins_per_turn
+            return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
         return iceberg_to_score.penguins_per_turn
 
     def __score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):
@@ -314,6 +315,11 @@ class Scores:
 
         # Score by price
         score += PRICE_FACTOR_SCORE * (float(min_penguins_for_occupy) / self.__max_price)
+
+        if utils.is_enemy(game, destination_iceberg_to_score.owner) \
+            and min_penguins_for_occupy <= max_penguins_can_be_use \
+                and len(game.get_enemy_icebergs()) == 1:
+            score += LAST_ENEMY_ICEBERG_THAT_CAN_BE_OCCUPIED
 
         # Check whether source will be in danger if send the penguins.
         iceberg_simulation_data = simulation_data.get(source_iceberg)

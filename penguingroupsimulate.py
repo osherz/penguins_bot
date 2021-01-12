@@ -124,7 +124,7 @@ class PenguinGroupSimulate:
         :return: Is arrived.
         :rtype: bool
         """
-        return self.__turns_till_arrival == 0
+        return self.__turns_till_arrival == 1
 
     def collision_with(self, other_penguin_group):
         """
