@@ -99,7 +99,8 @@ class Scores:
 
             if score_by_iceberg_level:
                 scores.append(self.__score_by_iceberg_level(source_iceberg,
-                    destination_iceberg_to_score, iceberg_owner_after_all_groups_arrived))
+                                                            destination_iceberg_to_score,
+                                                            iceberg_owner_after_all_groups_arrived))
 
             if score_by_avg_distance_from_players:
                 scores.append(self.__score_by_avg_distance_from_players(source_iceberg,
@@ -132,7 +133,7 @@ class Scores:
         """
         game = self.__game
         if utils.is_bonus_iceberg(game, iceberg_to_score):
-            return CANT_DO_ACTION_SCORE
+            return UNUPGRADEABLE_ICEBERG_SCORE
         score = 0
         upgrade_cost = iceberg_to_score.upgrade_cost
         if not utils.can_be_upgrade(iceberg_to_score):
@@ -147,7 +148,7 @@ class Scores:
                 score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
 
         next_level = iceberg_to_score.level + 1
-        score += self.__max_price - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
+        score += - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
 
         ret = score * UPDATE_FACTOR_SCORE
 
@@ -244,12 +245,12 @@ class Scores:
             if not iceberg_to_score is game.get_bonus_iceberg():
                 score += (self.__max_distance - avr_distance_from_enemy) * SUPPORT_SCORE_FACTOR
             else:
-                score+=CANT_DO_ACTION_SCORE
+                score += CANT_DO_ACTION_SCORE
         elif is_belong_to_me:
             score += OUR_DESTINATION_ICEBERG_FAR_FROM_ENEMY_SCORE
         return score
 
-    def __score_by_iceberg_level(self,source_iceberg, iceberg_to_score, iceberg_owner_after_all_groups_arrived):
+    def __score_by_iceberg_level(self, source_iceberg, iceberg_to_score, iceberg_owner_after_all_groups_arrived):
         """
         Scoring by the iceberg level.
 
@@ -263,7 +264,7 @@ class Scores:
             if iceberg_to_score.level < iceberg_to_score.upgrade_level_limit:
                 return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
         elif utils.is_neutral(self.__game, iceberg_owner_after_all_groups_arrived):
-            return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
+            return LEVEL_FACTOR_SCORE * iceberg_to_score.penguins_per_turn
         return iceberg_to_score.penguins_per_turn
 
     def __score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):
