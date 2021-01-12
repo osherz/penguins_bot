@@ -7,7 +7,7 @@ BUILD_BRIDGE = 'build_bridge'
 
 MIN_ADDITIONAL_PENGUINS_FOR_OCCUPY = 1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
-MIN_DISTANCE_TO_CHECK = 10
+MIN_DISTANCE_TO_CHECK = 90
 MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS = 15
 
 
@@ -204,7 +204,7 @@ class OccupyMethodDecision:
         """
         ours_avg_distance, enemy_avg_distance = self.__simulation_data.get_avg_distance_from_players(iceberg)
         if ours_avg_distance <= 0:
-            max_distance_to_check = max(ours_avg_distance, MIN_DISTANCE_TO_CHECK)
+            max_distance_to_check = MIN_DISTANCE_TO_CHECK
         else:
             max_distance_to_check = ours_avg_distance
         close_icebergs = [
