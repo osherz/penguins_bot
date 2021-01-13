@@ -184,11 +184,11 @@ class OccupyMethodDecision:
 
     def __calc_amount_of_our_penguins_to_destination(self, destination_iceberg, game, source_iceberg,
                                                      min_group_turns_to_destination=0):
-        ours_groups = utils.get_groups_way_to_iceberg(game, destination_iceberg, [
+        ours_groups = [
             group
-            for group in game.get_my_penguin_groups()
-            if group.source.equals(source_iceberg) and group.turns_till_arrival >= min_group_turns_to_destination
-        ])
+            for group in utils.get_groups(game, source_iceberg, destination_iceberg)
+            if group.turns_till_arrival >= min_group_turns_to_destination
+        ]
         our_penguin_groups_amount = sum(map(lambda x: x.penguin_amount, ours_groups))
         return our_penguin_groups_amount
 
