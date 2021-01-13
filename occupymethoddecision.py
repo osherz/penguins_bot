@@ -9,7 +9,9 @@ MIN_ADDITIONAL_PENGUINS_FOR_OCCUPY = 1
 MIN_PENGUIN_BONUS_ICEBERG_FACTOR = 1.8
 MIN_DISTANCE_TO_CHECK = 90
 MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS = 15
+MIN_TURNS_REMAIN_TO_GROUP_TO_ARRIVE_FOR_BRIDGE_BUILDING_TO_OURS = 2
 BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR = 0.6
+
 
 class OccupyMethodData:
     """
@@ -45,6 +47,9 @@ class OccupyMethodDecision:
     """
 
     def __init__(self, game, simulation_data):
+        global BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR
+        if len(game.get_all_icebergs()) == 5:
+            BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR = 0.55
         self.__game = game
         self.__simulation_data = simulation_data
 
@@ -112,7 +117,8 @@ class OccupyMethodDecision:
         penguins_of_close_iceberg, max_distance = self.__calc_penguins_of_close_iceberg_and_max_distance(source_iceberg)
         penguins_per_turn = 0 if utils.is_bonus_iceberg(self.__game,
                                                         source_iceberg) else source_iceberg.penguins_per_turn
-        distance_with_bridge = max_distance / max(1,(self.__game.iceberg_bridge_speed_multiplier * BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR))
+        distance_with_bridge = max_distance / max(1, (
+                    self.__game.iceberg_bridge_speed_multiplier * BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR))
         reduce_penguins = int(max(0, penguins_of_close_iceberg - distance_with_bridge * penguins_per_turn))
         max_penguins_can_be_use = max(0, max_penguins_can_be_use - reduce_penguins)
         return max_penguins_can_be_use
@@ -162,7 +168,8 @@ class OccupyMethodDecision:
             is_ours_after_bridge_creating = self.__is_ours_after_bridge_creating(destination_iceberg, source_iceberg)
 
             our_penguin_groups_amount = self.__calc_amount_of_our_penguins_to_destination(destination_iceberg, game,
-                                                                                          source_iceberg)
+                                                                                          source_iceberg,
+                                                                                          0)
             if is_ours_after_bridge_creating and our_penguin_groups_amount > MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS:
                 is_bridge_prefer = True
         return is_bridge_prefer, game.iceberg_bridge_cost
@@ -175,11 +182,12 @@ class OccupyMethodDecision:
             game, source_iceberg, destination_iceberg, simulation_data)
         return utils.is_me(game, new_owner)
 
-    def __calc_amount_of_our_penguins_to_destination(self, destination_iceberg, game, source_iceberg):
+    def __calc_amount_of_our_penguins_to_destination(self, destination_iceberg, game, source_iceberg,
+                                                     min_group_turns_to_destination=0):
         ours_groups = utils.get_groups_way_to_iceberg(game, destination_iceberg, [
             group
             for group in game.get_my_penguin_groups()
-            if group.source.equals(source_iceberg)
+            if group.source.equals(source_iceberg) and group.turns_till_arrival >= min_group_turns_to_destination
         ])
         our_penguin_groups_amount = sum(map(lambda x: x.penguin_amount, ours_groups))
         return our_penguin_groups_amount

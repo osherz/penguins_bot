@@ -265,7 +265,10 @@ class Scores:
             if iceberg_to_score.level < iceberg_to_score.upgrade_level_limit:
                 return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
         elif utils.is_neutral(self.__game, iceberg_owner_after_all_groups_arrived):
-            return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
+            if len(self.__game.get_all_icebergs()) == 5:
+                return LEVEL_FACTOR_SCORE * iceberg_to_score.penguins_per_turn
+            else:
+                return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
         return iceberg_to_score.penguins_per_turn
 
     def __score_by_iceberg_distance(self, source_iceberg, destination_iceberg_to_score):

@@ -22,9 +22,6 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    for group in game.get_my_penguin_groups():
-        print group.turns_till_arrival
-
     # utils.active_print(game, 0)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
