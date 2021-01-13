@@ -456,3 +456,9 @@ def get_real_distance_between_icebergs(source_iceberg, destination_iceberg):
         return distance // bridge.speed_multiplier
     else:
         return (distance - bridge.duration) + bridge.duration // bridge.speed_multiplier
+
+def has_groups_from_source_to_destination(game, source_iceberg, destination_iceberg):
+    """
+    Check whether there are any groups from the source to the destination
+    """
+    return not is_empty(get_groups(game,source_iceberg, destination_iceberg))

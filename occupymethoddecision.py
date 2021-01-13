@@ -66,10 +66,12 @@ class OccupyMethodDecision:
         )
 
         is_bridge_prefer = False
+        has_groups_from_source_to_destination = utils.has_groups_from_source_to_destination(game, source_iceberg,
+                                                                                            destination_iceberg)
         if not utils.is_me(game, owner_if_no_action_will_made):
             min_penguins_to_send_for_occupy = min_penguins_to_make_neutral + MIN_ADDITIONAL_PENGUINS_FOR_OCCUPY
 
-            if utils.is_enemy(game, owner_if_no_action_will_made):
+            if utils.is_enemy(game, owner_if_no_action_will_made) and has_groups_from_source_to_destination:
                 # Only if the destination iceberg will belong to enemy
                 # we want to think about bridge building.
                 is_bridge_prefer, penguins_to_use = self.__is_bridge_prefer(
@@ -86,7 +88,8 @@ class OccupyMethodDecision:
         else:
             # If the iceberg will belong ot me,
             # we want to think about sending some support.
-            is_bridge_prefer, penguins_to_use = self.__is_bridge_to_our_prefer(destination_iceberg, source_iceberg)
+            if has_groups_from_source_to_destination:
+                is_bridge_prefer, penguins_to_use = self.__is_bridge_to_our_prefer(destination_iceberg, source_iceberg)
             if not is_bridge_prefer:
                 min_penguins_to_send_for_occupy = self.__calc_penguins_to_send_for_support(source_iceberg)
 
@@ -118,7 +121,7 @@ class OccupyMethodDecision:
         penguins_per_turn = 0 if utils.is_bonus_iceberg(self.__game,
                                                         source_iceberg) else source_iceberg.penguins_per_turn
         distance_with_bridge = max_distance / max(1, (
-                    self.__game.iceberg_bridge_speed_multiplier * BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR))
+                self.__game.iceberg_bridge_speed_multiplier * BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR))
         reduce_penguins = int(max(0, penguins_of_close_iceberg - distance_with_bridge * penguins_per_turn))
         max_penguins_can_be_use = max(0, max_penguins_can_be_use - reduce_penguins)
         return max_penguins_can_be_use
