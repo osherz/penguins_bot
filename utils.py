@@ -211,6 +211,20 @@ def get_groups_way_to_iceberg(game, iceberg, groups_to_check=None):
     ]
     return groups
 
+def get_groups(game, source_iceberg, destination_iceberg):
+    """
+    Return all group that sent from source_iceberg to destination_iceberg
+
+    :type source_iceberg: Iceberg
+    :type destination_iceberg: Iceberg
+    """
+    groups_from_source = [
+        group
+        for group in game.get_my_penguin_groups()
+        if source_iceberg.equals(group)
+    ]
+    return get_groups_way_to_iceberg(game, destination_iceberg, groups_from_source)
+
 
 def get_additional_pengions_in_x_turns(iceberg, owner, turns, my_player, enemy):
     """
