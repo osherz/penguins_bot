@@ -169,7 +169,7 @@ class OccupyMethodDecision:
 
             our_penguin_groups_amount = self.__calc_amount_of_our_penguins_to_destination(destination_iceberg, game,
                                                                                           source_iceberg,
-                                                                                          0)
+                                                                                          MIN_TURNS_REMAIN_TO_GROUP_TO_ARRIVE_FOR_BRIDGE_BUILDING_TO_OURS)
             if is_ours_after_bridge_creating and our_penguin_groups_amount > MIN_PENGUINS_GROUP_FOR_BRIDGE_BUILDING_TO_OURS:
                 is_bridge_prefer = True
         return is_bridge_prefer, game.iceberg_bridge_cost
