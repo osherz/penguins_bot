@@ -69,13 +69,13 @@ def occupy_close_icebergs(game):
         if not utils.is_empty(destination_scored_icebergs) and upgrade_score_for_my_iceberg < \
                 destination_scored_icebergs[0].get_score():
             penguins_used = 0
-            while not utils.is_empty(destination_scored_icebergs) and not continue_to_next_source:
+            while not utils.is_empty(destination_scored_icebergs) and not continue_to_next_source and \
+                    max_penguins_can_be_use - penguins_used > 0:
                 icebergs_to_update = []
                 log('Running time: ', game.get_max_turn_time(),
                     ', ', game.get_time_remaining())
 
-                # type: ScoreData
-                iceberg_score_data = destination_scored_icebergs[0]
+                iceberg_score_data = destination_scored_icebergs[0]  # type: ScoreData
                 dest_iceberg = iceberg_score_data.get_destination()  # type: Iceberg
                 min_price = iceberg_score_data.get_min_penguins_for_occupy()
                 # If got so much scores but hasn't enough penguins we prefer to wait.
@@ -95,6 +95,7 @@ def occupy_close_icebergs(game):
                         send_penguins(my_iceberg, min_price, dest_iceberg)
                     elif not my_iceberg.already_acted:
                         build_bridge(my_iceberg, dest_iceberg)
+                        acted = True
                         break
                     penguins_used += min_price
                     icebergs_to_update = [my_iceberg, dest_iceberg]
@@ -293,6 +294,7 @@ def try_to_send_from_multiple_icebergs(game, current_iceberg_score_data, standby
     :type current_iceberg_score_data: ScoreData
     :type standby_icebergs_score_data: {}
     """
+
     dest_iceberg = current_iceberg_score_data.get_destination()  # type: Iceberg
     unique_id = dest_iceberg.unique_id
     icebergs_to_update = []
@@ -314,7 +316,7 @@ def try_to_send_from_multiple_icebergs(game, current_iceberg_score_data, standby
                 penguins_to_send = min(
                     iceberg_score_data.get_max_penguins_can_be_sent(), min_penguins_for_occupy,
                     source_iceberg.penguin_amount)
-                source_iceberg.send_penguins(dest_iceberg, int(penguins_to_send))
+                send_penguins(source_iceberg, int(penguins_to_send), dest_iceberg)
                 min_penguins_for_occupy -= penguins_to_send
                 log(source_iceberg, dest_iceberg,
                     penguins_to_send, min_penguins_for_occupy)
@@ -337,8 +339,9 @@ def send_penguins(my_iceberg, destination_penguin_amount, destination):
     :type destination_penguin_amount: int
     :type destination: Iceberg
     """
-    log(my_iceberg, "sends", destination_penguin_amount, "penguins to", destination)
-    my_iceberg.send_penguins(destination, int(destination_penguin_amount))
+    if destination_penguin_amount > 0:
+        log(my_iceberg, "sends", destination_penguin_amount, "penguins to", destination)
+        my_iceberg.send_penguins(destination, int(destination_penguin_amount))
 
 
 def build_bridge(my_iceberg, destination):
