@@ -140,7 +140,9 @@ class SimulationsData:
             if not simulation.is_belong_to_me():
                 max_enemy_penguins = max(max_enemy_penguins, simulation.get_penguin_amount())
 
-        if enable_calculate_max_penguins_to_use and max_penguins_can_be_use > 0 and was_occupied:
+        if enable_calculate_max_penguins_to_use and max_penguins_can_be_use > 0:
+            groups_to_our_iceberg = utils.get_groups_way_to_iceberg(game, iceberg, game.get_enemy_penguin_groups())
+            if any(groups_to_our_iceberg):
                 max_penguins_can_be_use -= 1
 
         return iceberg_simulation_turn, max_penguins_can_be_use, max_enemy_penguins
@@ -151,7 +153,8 @@ class SimulationsData:
         else:
             icebergs_distances = [source_iceberg.get_turns_till_arrival(iceberg)
                                   for source_iceberg in utils.get_all_my_icebergs(game)]
-            penguin_group_distance = [group.turns_till_arrival for group in utils.get_groups_way_to_iceberg(game, iceberg)]
+            penguin_group_distance = [group.turns_till_arrival for group in
+                                      utils.get_groups_way_to_iceberg(game, iceberg)]
             my_iceberg_distances = sorted(icebergs_distances + penguin_group_distance) + [max_distance]
         return my_iceberg_distances
 
@@ -254,7 +257,7 @@ class SimulationsData:
             for our_iceberg in self.__game.get_my_icebergs()
             if not our_iceberg.equals(iceberg)
         ]
-        if len(ours_distance) ==0:
+        if len(ours_distance) == 0:
             return 0
         return sum(ours_distance) / len(ours_distance)
 
