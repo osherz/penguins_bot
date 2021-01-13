@@ -221,7 +221,7 @@ def get_groups(game, source_iceberg, destination_iceberg):
     groups_from_source = [
         group
         for group in game.get_my_penguin_groups()
-        if source_iceberg.equals(group)
+        if source_iceberg.equals(group.source)
     ]
     return get_groups_way_to_iceberg(game, destination_iceberg, groups_from_source)
 
