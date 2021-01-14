@@ -4,6 +4,7 @@ from utils import log
 from scoredata import ScoreData
 from occupymethoddecision import OccupyMethodData, SEND_PENGUINS, BUILD_BRIDGE
 from simulationsdata import SimulationsData, OWNER
+from mapchecker import MapChecker
 
 ENEMY_BELONGS_SCORE = 27
 NEUTRAL_BELONGS_SCORE = 17
@@ -45,6 +46,7 @@ class Scores:
         """
         :type game: Game
         """
+        self.__change_score_by_map()
         self.__game = game
         self.__simulation_data = simulation_data
         self.__max_price = self.__find_max_price()
@@ -265,7 +267,7 @@ class Scores:
             if iceberg_to_score.level < iceberg_to_score.upgrade_level_limit:
                 return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
         elif utils.is_neutral(self.__game, iceberg_owner_after_all_groups_arrived):
-            if len(self.__game.get_all_icebergs()) == 5:
+            if MapChecker.get().is_tricky_map():
                 return LEVEL_FACTOR_SCORE * iceberg_to_score.penguins_per_turn
             else:
                 return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn

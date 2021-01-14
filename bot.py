@@ -7,6 +7,7 @@ from random import shuffle
 from simulationsdata import SimulationsData, OWNER, ARE_GROUP_REMAIN, PENGUIN_AMOUNT
 from scoredata import ScoreData
 from occupymethoddecision import OccupyMethodDecision
+from mapchecker import MapChecker
 
 # import typing
 # from typing import List
@@ -22,6 +23,7 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
+    MapChecker(game)
     # utils.active_print(game, 0)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)

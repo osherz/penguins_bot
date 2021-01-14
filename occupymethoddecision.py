@@ -1,6 +1,7 @@
 from penguin_game import *
 from simulationsdata import SimulationsData, OWNER
 import utils
+from mapchecker import MapChecker
 
 SEND_PENGUINS = 'send_penguins'
 BUILD_BRIDGE = 'build_bridge'
@@ -48,7 +49,7 @@ class OccupyMethodDecision:
 
     def __init__(self, game, simulation_data):
         global BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR
-        if len(game.get_all_icebergs()) == 5:
+        if MapChecker.get().is_tricky_map():
             BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR = 0.55
         self.__game = game
         self.__simulation_data = simulation_data
