@@ -322,7 +322,7 @@ class Scores:
         score += PRICE_FACTOR_SCORE * (float(min_penguins_for_occupy) / self.__max_price)
 
         if utils.is_enemy(game, destination_iceberg_to_score.owner) \
-                and min_penguins_for_occupy <= max_penguins_can_be_use \
+                and (min_penguins_for_occupy <= max_penguins_can_be_use or utils.is_empty(game.get_neutral_icebergs())) \
                 and len(game.get_enemy_icebergs()) == 1:
             score += LAST_ENEMY_ICEBERG_THAT_CAN_BE_OCCUPIED
 
