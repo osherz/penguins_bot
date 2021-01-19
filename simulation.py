@@ -260,6 +260,12 @@ class Simulation:
     def is_belong_to_neutral(self):
         return self.__iceberg_owner.equals(self.__game.get_neutral())
 
+    def has_max_penguins(self):
+        """
+        Return whether the iceberg arrived the maximum penguins.
+        """
+        return self.get_penguin_amount() >= self.__iceberg_to_simulate.max_penguins
+
     def __calculate_how_much_turns_to_continue(self, turn_of_the_current_simulate, turns_to_simulate):
         """
         Calculate how much turns need the closest group to arrive.
