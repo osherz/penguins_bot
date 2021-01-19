@@ -3,6 +3,7 @@ from simulation import Simulation
 from simulationsdata import SimulationsData, OWNER, ARE_GROUP_REMAIN, PENGUIN_AMOUNT
 
 TURN_TO_START_PRINT_FROM = 0
+INFINITY_PENGUINS_AMOUNT = 9999
 
 __print_enable = False
 game = ''  # type: Game
@@ -65,8 +66,14 @@ def min_penguins_to_make_neutral(game, source_iceberg, destination_iceberg, simu
     log('distance', distance)
     penguins, owner, min_turns = get_penguins_in_x_turns(
         game, source_iceberg, destination_iceberg, distance, simulation_data)
-    # penguins = simulation_data.get_max_enemy_penguins(destination_iceberg)
-    # owner = simulation_data.get(destination_iceberg)[-1][OWNER]
+
+    # Check whether the penguins will manage to make destination neutral.
+    # Need because of the limitation of max penguins.
+    simulation = Simulation(game, destination_iceberg, simulation_data.get_bonus_turns())
+    simulation.add_penguin_group(source_iceberg, destination_iceberg, penguins)
+    simulation.simulate_until_last_group_arrived()
+    if simulation.is_belong_to_enemy():
+        penguins = INFINITY_PENGUINS_AMOUNT
     log('min penguins:', penguins, "owner:", owner)
     if not owner.equals(game.get_myself()):
         return penguins
@@ -210,6 +217,7 @@ def get_groups_way_to_iceberg(game, iceberg, groups_to_check=None):
         if group.destination.equals(iceberg)
     ]
     return groups
+
 
 def get_groups(game, source_iceberg, destination_iceberg):
     """
@@ -457,8 +465,9 @@ def get_real_distance_between_icebergs(source_iceberg, destination_iceberg):
     else:
         return (distance - bridge.duration) + bridge.duration // bridge.speed_multiplier
 
+
 def has_groups_from_source_to_destination(game, source_iceberg, destination_iceberg):
     """
     Check whether there are any groups from the source to the destination
     """
-    return not is_empty(get_groups(game,source_iceberg, destination_iceberg))
+    return not is_empty(get_groups(game, source_iceberg, destination_iceberg))
