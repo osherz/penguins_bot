@@ -118,6 +118,9 @@ class OccupyMethodDecision:
 
     def __calc_max_penguins_can_be_use_consider_close_enemy_icebergs(self, source_iceberg):
         max_penguins_can_be_use = self.__simulation_data.get_max_penguins_can_be_use(source_iceberg)
+        if MapChecker.get().is_2X2_map():
+            return max_penguins_can_be_use
+
         penguins_of_close_iceberg, max_distance = self.__calc_penguins_of_close_iceberg_and_max_distance(source_iceberg)
         penguins_per_turn = 0 if utils.is_bonus_iceberg(self.__game,
                                                         source_iceberg) else source_iceberg.penguins_per_turn
@@ -222,9 +225,19 @@ class OccupyMethodDecision:
         close_icebergs = [
             enemy_iceberg
             for enemy_iceberg in self.__game.get_enemy_icebergs()
-            if utils.get_real_distance_between_icebergs(iceberg, enemy_iceberg) <= max_distance_to_check
+            if self.__is_will_belong_to_enemy(enemy_iceberg) and
+               utils.get_real_distance_between_icebergs(iceberg, enemy_iceberg) <= max_distance_to_check
         ]
         if utils.is_empty(close_icebergs):
             return 0, 0
         return sum(map(lambda x: x.penguin_amount, close_icebergs)), \
                max(close_icebergs, key=lambda x: x.get_turns_till_arrival(iceberg)).get_turns_till_arrival(iceberg)
+
+    def __is_will_belong_to_enemy(self, iceberg):
+        """
+        Check whether in the end, the owner of the iceberg will be the enemy
+        """
+        simulation_data = self.__simulation_data
+        last_turn_data = simulation_data.get(iceberg)[-1]
+        owner_in_the_end = last_turn_data[OWNER]
+        return utils.is_enemy(self.__game, owner_in_the_end)

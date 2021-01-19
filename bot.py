@@ -1,4 +1,4 @@
-from penguin_game import Player, PenguinGroup, Iceberg, BonusIceberg
+from penguin_game import Player, PenguinGroup, Iceberg, BonusIceberg, Game
 import utils
 from scores import Scores
 import math
@@ -23,7 +23,8 @@ def do_turn(game):
     :param game: the current game state.
     :type game: Game
     """
-    MapChecker(game)
+    if game.turn <= 1:
+        MapChecker(game)
     # utils.active_print(game, 0)
     # Go over all of my icebergs.
     log(game.turn, "/", game.max_turns)
@@ -92,7 +93,7 @@ def occupy_close_icebergs(game):
                 else:
                     # TODO: Check if we can to do another action.
                     if is_send_penguins:
-                        if utils.is_enemy(game, dest_iceberg.owner):
+                        if utils.is_enemy(game, dest_iceberg.owner) or MapChecker.get().is_2X2_map():
                             min_price = max_penguins_can_be_use - penguins_used
                         send_penguins(my_iceberg, min_price, dest_iceberg)
                     elif not my_iceberg.already_acted:

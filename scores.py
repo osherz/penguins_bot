@@ -322,7 +322,7 @@ class Scores:
         score += PRICE_FACTOR_SCORE * (float(min_penguins_for_occupy) / self.__max_price)
 
         if utils.is_enemy(game, destination_iceberg_to_score.owner) \
-            and min_penguins_for_occupy <= max_penguins_can_be_use \
+                and min_penguins_for_occupy <= max_penguins_can_be_use \
                 and len(game.get_enemy_icebergs()) == 1:
             score += LAST_ENEMY_ICEBERG_THAT_CAN_BE_OCCUPIED
 
@@ -431,3 +431,14 @@ class Scores:
                                destination_iceberg_to_score.penguin_amount
             return penguins_to_send
         return 0
+
+    def __change_score_by_map(self):
+        """
+        Change scores by map
+        """
+        global ENEMY_BELONGS_SCORE, UPDATE_FACTOR_SCORE, ENEMY_BELONGS_SCORE
+        if MapChecker.get().is_2X2_map():
+            ENEMY_BELONGS_SCORE = 127
+        elif MapChecker.get().is_2020_map():
+            UPDATE_FACTOR_SCORE = 1.45
+            ENEMY_BELONGS_SCORE = 23
