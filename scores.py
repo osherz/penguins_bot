@@ -121,6 +121,7 @@ class Scores:
                          destination_iceberg_to_score,
                          occupy_method_data.min_penguins_for_occupy,
                          max_penguins_can_be_use,
+                         occupy_method_data.spare_penguins,
                          sum(scores),
                          send_penguins=action == SEND_PENGUINS,
                          build_bridge=action == BUILD_BRIDGE)
