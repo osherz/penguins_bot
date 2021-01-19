@@ -390,7 +390,8 @@ class Simulation:
         ]
 
         groups_arrived.sort(
-            key=lambda group: group.get_owner().id)  # If number of groups arrived, treat ours as arrived first
+            key=lambda group: 0 if utils.is_me(self.__game,
+                                               group.get_owner()) else 1)  # If number of groups arrived, treat ours as arrived first
 
         for group in groups_arrived:  # type: PenguinGroupSimulate
             self.__treat_group_arrived_destination(
