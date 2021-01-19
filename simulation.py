@@ -42,6 +42,7 @@ class Simulation:
         self.__iceberg_owner = iceberg_to_simulate.owner
         self.__penguin_amount = iceberg_to_simulate.penguin_amount
         self.__our_groups_to_iceberg = 0
+        self.__spare_penguins_in_this_turn = 0
         self.__enemy_groups_to_iceberg = 0
         if type(iceberg_to_simulate) == Iceberg:
             self.__iceberg_level = iceberg_to_simulate.level
@@ -77,6 +78,7 @@ class Simulation:
         actions = 0
 
         while turn <= turns_to_simulate:
+            self.__spare_penguins_in_this_turn = 0
             self.__current_turn += turns_to_continue
             # We don't need to move groups to destination
             # because we using __current_turn to check which groups arrived
@@ -134,6 +136,12 @@ class Simulation:
         Return whether there are any groups remaining that belongs to enemy.
         """
         return self.__enemy_groups_to_iceberg > 0
+
+    def get_spare_penguins(self):
+        """
+        Return the spare penguins for this turn.
+        """
+        return self.__spare_penguins_in_this_turn
 
     def add_penguin_group_simulate(self, penguin_group_simulate):
         """
@@ -513,7 +521,9 @@ class Simulation:
                 self.__penguin_amount = abs(self.__penguin_amount)
                 self.__iceberg_owner = owner
 
-        if self.__penguin_amount > self.__iceberg_to_simulate.max_penguins:
+        max_penguins = self.__iceberg_to_simulate.max_penguins
+        if self.__penguin_amount > max_penguins:
+            self.__spare_penguins_in_this_turn += self.__penguin_amount - max_penguins
             self.__penguin_amount = self.__iceberg_to_simulate.max_penguins
 
     def __belong_to(self):
