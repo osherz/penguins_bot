@@ -151,9 +151,9 @@ class Scores:
                 score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
 
         next_level = iceberg_to_score.level + 1
-        score += - upgrade_cost + next_level * UPGRADE_TURNS_TO_CHECK
+        score += - upgrade_cost + UPDATE_FACTOR_SCORE * (next_level * UPGRADE_TURNS_TO_CHECK)
 
-        ret = score * UPDATE_FACTOR_SCORE
+        ret = score
 
         ret += self.__score_by_strong_enemy_close_to_me(iceberg_to_score)
         return ret
