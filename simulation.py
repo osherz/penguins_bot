@@ -41,18 +41,17 @@ class Simulation:
         iceberg_to_simulate = self.__iceberg_to_simulate  # type: Iceberg
         self.__iceberg_owner = iceberg_to_simulate.owner
         self.__penguin_amount = iceberg_to_simulate.penguin_amount
+        self.__our_groups_to_iceberg = 0
+        self.__enemy_groups_to_iceberg = 0
         if type(iceberg_to_simulate) == Iceberg:
             self.__iceberg_level = iceberg_to_simulate.level
             self.__penguins_per_turn = iceberg_to_simulate.penguins_per_turn
-        # TODO: use penguins_per_turn instead of level
 
         self.__all_groups = map(
             lambda group: PenguinGroupSimulate(game, penguin_group=group),
             game.get_all_penguin_groups()
         )
-        # type: List[Bridge]
-        # type: List[Bridge]
-        self.__custom_bridges_to_iceberg = {}
+        self.__custom_bridges_to_iceberg = {}  # type: List[Bridge]
 
     def get_penguin_amount(self):
         """
@@ -123,6 +122,18 @@ class Simulation:
         :rtype: bool
         """
         return len(self.__groups_to_iceberg) > 0
+
+    def are_our_groups_remains(self):
+        """
+        Return whether there are any groups remaining that belongs to us.
+        """
+        return self.__our_groups_to_iceberg > 0
+
+    def are_enemy_groups_remains(self):
+        """
+        Return whether there are any groups remaining that belongs to enemy.
+        """
+        return self.__enemy_groups_to_iceberg > 0
 
     def add_penguin_group_simulate(self, penguin_group_simulate):
         """
@@ -287,6 +298,17 @@ class Simulation:
                 self.__analyze_groups_distance()
                 self.__sort_groups_by_distance()
                 self.__treat_groups_coming_each_other()
+                self.__calc_groups_owner_amount()
+
+    def __calc_groups_owner_amount(self):
+        """
+        Calculate how much groups has each owner to this iceberg.
+        """
+        for group in self.__groups_to_iceberg:
+            if utils.is_me(self.__game, group.owner):
+                self.__our_groups_to_iceberg += 1
+            else:
+                self.__enemy_groups_to_iceberg += 1
 
     def __analyze_groups_distance(self):
         """
@@ -371,6 +393,12 @@ class Simulation:
         :type penguin_amount: int
         :return:
         """
+        # Calculate how much groups (to this iceberg) remain to each owner
+        if utils.is_me(self.__game, owner):
+            self.__our_groups_to_iceberg -= 1
+        else:
+            self.__enemy_groups_to_iceberg -= 1
+
         if self.is_belong_to_neutral():
             self.__treat_group_arrived_iceberg_neutral(owner, penguin_amount)
         else:
