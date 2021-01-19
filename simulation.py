@@ -90,7 +90,7 @@ class Simulation:
                 turn, turns_to_simulate)
             turn += turns_to_continue
             actions += -1
-            if actions >= max_actions:
+            if actions >= max_actions or turns_to_continue == 0:
                 break
 
     def simulate(self, turns_to_simulate):
@@ -271,13 +271,20 @@ class Simulation:
         Calculate how much turns need the closest group to arrive.
         If its bigger than the turns remind, return the turns remind.
         """
+        remaining_turns = turns_to_simulate - turn_of_the_current_simulate
+        # Check whether we arrived the maximum penguins amount
+        # there aren't any groups of the opposite player.
+        if self.has_max_penguins():
+            if self.is_belong_to_me() and not self.are_enemy_groups_remains() or \
+                    self.is_belong_to_enemy() and not self.are_our_groups_remains():
+                return remaining_turns
+
         turns_to_continue = 1
         if self.are_group_remains() and turn_of_the_current_simulate < turns_to_simulate:
             turns_to_continue = self.__groups_to_iceberg[0].get_turns_till_arrival() - self.__current_turn
             if turn_of_the_current_simulate + turns_to_continue > turns_to_simulate:
-                turns_to_continue = turns_to_simulate - turn_of_the_current_simulate
+                turns_to_continue = remaining_turns
         return turns_to_continue
-        # Calculate turns for next bonus
 
     def __sort_groups_by_distance(self):
         """
@@ -311,7 +318,7 @@ class Simulation:
         Calculate how much groups has each owner to this iceberg.
         """
         for group in self.__groups_to_iceberg:
-            if utils.is_me(self.__game, group.owner):
+            if utils.is_me(self.__game, group.get_owner()):
                 self.__our_groups_to_iceberg += 1
             else:
                 self.__enemy_groups_to_iceberg += 1
@@ -369,7 +376,7 @@ class Simulation:
             penguins_per_turn = self.__penguins_per_turn
             penguins_to_add = turns * penguins_per_turn
             if not self.is_belong_to_neutral():
-                self.__penguin_amount += penguins_to_add
+                self.__add_penguin_amount(penguins_to_add, self.__iceberg_owner)
 
     def __treat_groups_arrived_destination(self):
         """
@@ -418,14 +425,7 @@ class Simulation:
         :type owner: Player
         :type penguin_amount: int
         """
-        if self.__penguin_amount > penguin_amount:
-            self.__penguin_amount -= penguin_amount
-        else:
-            penguin_amount -= self.__penguin_amount
-            self.__iceberg_owner = owner
-            self.__penguin_amount = 0
-            self.__treat_group_arrived_iceberg_not_neutral(
-                owner, penguin_amount)
+        self.__add_penguin_amount(penguin_amount, owner)
 
     def __treat_group_arrived_iceberg_not_neutral(self, owner, penguin_amount):
         """
@@ -435,15 +435,7 @@ class Simulation:
         :param penguin_amount: Amount of penguins in group.
         :type penguin_amount: int
         """
-        if self.__iceberg_owner.equals(owner):
-            self.__penguin_amount += penguin_amount
-        else:
-            self.__penguin_amount -= penguin_amount
-            if self.__penguin_amount < 0:
-                self.__iceberg_owner = owner
-                self.__penguin_amount = abs(self.__penguin_amount)
-            elif self.__penguin_amount == 0:
-                self.__iceberg_owner = self.__game.get_neutral()
+        self.__add_penguin_amount(penguin_amount, owner)
 
     def __treat_groups_coming_each_other(self):
         """
@@ -492,9 +484,31 @@ class Simulation:
                     bonus_turns_ls[index].get_turn() <= self.__current_turn:
                 bonus_data = bonus_turns_ls[index]  # type:BonusTurnData
                 if self.__iceberg_owner.equals(bonus_data.get_owner()):
-                    self.__penguin_amount += bonus_data.get_pengion_bonus()
+                    self.__add_penguin_amount(bonus_data.get_pengion_bonus(), self.__iceberg_owner)
                 index += 1
             self.__bonus_turn_index = index
+
+    def __add_penguin_amount(self, amount, owner):
+        """
+        Add penguins to the iceberg, take in account the maximum penguins that it can has.
+
+        :param amount: Amount to add.
+        :param owner: The owner of the amount
+        """
+        game = self.__game
+
+        if self.__iceberg_owner.equals(owner):
+            self.__penguin_amount += amount
+        else:
+            self.__penguin_amount -= amount
+            if self.__penguin_amount == 0:
+                self.__iceberg_owner = game.get_neutral()
+            elif self.__penguin_amount < 0:
+                self.__penguin_amount = abs(self.__penguin_amount)
+                self.__iceberg_owner = owner
+
+        if self.__penguin_amount > self.__iceberg_to_simulate.max_penguins:
+            self.__penguin_amount = self.__iceberg_to_simulate.max_penguins
 
     def __belong_to(self):
         """
