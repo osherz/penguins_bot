@@ -389,9 +389,14 @@ class Simulation:
             if penguin_group.get_turns_till_arrival() - self.__current_turn <= 1 or penguin_group.is_arrived()
         ]
 
+        def sort_function(group):
+            return (
+                group.get_penguin_amount(),
+                0 if utils.is_me(self.__game, group.get_owner()) else 1
+            )
+
         groups_arrived.sort(
-            key=lambda group: 0 if utils.is_me(self.__game,
-                                               group.get_owner()) else 1)  # If number of groups arrived, treat ours as arrived first
+            key=sort_function)  # If number of groups arrived, treat ours as arrived first
 
         for group in groups_arrived:  # type: PenguinGroupSimulate
             self.__treat_group_arrived_destination(
