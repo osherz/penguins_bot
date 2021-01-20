@@ -110,19 +110,33 @@ def occupy_close_icebergs(game):
                     continue_to_next_source = my_iceberg.penguin_amount <= 0
 
                 if not continue_to_next_source:
-                    destination_scored_icebergs = destination_scored_icebergs[1:]
-                    if not utils.is_empty(destination_scored_icebergs):
-                        next_iceberg_score_data = destination_scored_icebergs[0]  # type: ScoreData
+                    if len(destination_scored_icebergs) >= 2:
+                        next_iceberg_score_data = destination_scored_icebergs[1]  # type: ScoreData
                         if next_iceberg_score_data.get_score() < upgrade_score_for_my_iceberg or \
                                 (not is_action_made and
                                  iceberg_score_data.get_score() != next_iceberg_score_data.get_score()):
                             continue_to_next_source = True
+                        else:
+                            destination_scored_icebergs = destination_scored_icebergs[1:]
+                    else:
+                        continue_to_next_source = True
 
         elif upgrade_score_for_my_iceberg > 0 and utils.can_be_upgrade(
                 my_iceberg) and my_iceberg.upgrade_cost <= max_penguins_can_be_use:
             my_iceberg.upgrade()
             is_action_made = True
             icebergs_to_update = [my_iceberg]
+
+        spare_penguins = min(simulation_data.get_spare_penguins(my_iceberg), my_iceberg.penguin_amount)
+        if spare_penguins > 0 and not my_iceberg.already_acted:
+            if utils.is_empty(destination_scored_icebergs):
+                send_penguins(my_iceberg, spare_penguins, game.get_enemy_icebergs()[0])
+            else:
+                for iceberg_score_data in destination_scored_icebergs:
+                    destination = iceberg_score_data.get_destination()
+                    send_penguins(my_iceberg, spare_penguins, destination)
+                    icebergs_to_update += [destination]
+                    break
 
         if game.get_time_remaining() < -50:
             print('time over')

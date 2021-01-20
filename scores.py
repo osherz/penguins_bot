@@ -152,9 +152,9 @@ class Scores:
                 score += OUR_UPGRADE_ICEBERG_IN_DANGER_SCORE
 
         next_level = iceberg_to_score.level + 1
-        score += - upgrade_cost + UPDATE_FACTOR_SCORE * (next_level * UPGRADE_TURNS_TO_CHECK)
+        score += - upgrade_cost + (next_level * UPGRADE_TURNS_TO_CHECK)
 
-        ret = score
+        ret = UPDATE_FACTOR_SCORE * score
 
         ret += self.__score_by_strong_enemy_close_to_me(iceberg_to_score)
         return ret
@@ -268,7 +268,7 @@ class Scores:
             if iceberg_to_score.level < iceberg_to_score.upgrade_level_limit:
                 return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
         elif utils.is_neutral(self.__game, iceberg_owner_after_all_groups_arrived):
-            if MapChecker.get().is_tricky_map():
+            if MapChecker.get().is_tricky_map() or MapChecker.get().is_extra_far_treasure() or MapChecker.get().is_extra_far():
                 return LEVEL_FACTOR_SCORE * iceberg_to_score.penguins_per_turn
             else:
                 return LEVEL_FACTOR_SCORE ** iceberg_to_score.penguins_per_turn
@@ -437,9 +437,13 @@ class Scores:
         """
         Change scores by map
         """
-        global ENEMY_BELONGS_SCORE, UPDATE_FACTOR_SCORE, ENEMY_BELONGS_SCORE
-        if MapChecker.get().is_2X2_map():
+        global ENEMY_BELONGS_SCORE, UPDATE_FACTOR_SCORE, UPGRADE_TURNS_TO_CHECK
+        map_checker = MapChecker.get()  # type: MapChecker
+        if map_checker.is_2X2_map():
             ENEMY_BELONGS_SCORE = 127
-        elif MapChecker.get().is_2020_map():
+        elif map_checker.is_2020_map():
             UPDATE_FACTOR_SCORE = 1.45
             ENEMY_BELONGS_SCORE = 23
+        elif map_checker.is_circles():
+            UPGRADE_TURNS_TO_CHECK = 20
+            ENEMY_BELONGS_SCORE = 40

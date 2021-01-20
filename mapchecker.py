@@ -20,6 +20,14 @@ class MapChecker:
         if not stay_default:
             self.init_maps(game)
 
+        print self.__is_2X2_map, \
+                self.__is_tricky_map, \
+                self.__is_extra_far_treasure, \
+                self.__is_extra_far, \
+                self.__is_circles, \
+                self.__is_default_map, \
+                self.__is_2020_map
+
         global map_checker
         if map_checker is None:
             map_checker = self
@@ -30,17 +38,16 @@ class MapChecker:
         Check in which maps we play.
         """
         starter_amount = game.get_my_icebergs()[0].penguin_amount
-        if starter_amount == 17:
+        if starter_amount == 16:
             self.__is_2X2_map = True
         elif len(game.get_all_icebergs()) == 5:
             self.__is_tricky_map = True
-        elif starter_amount == 20:
+        elif starter_amount == 19:
             self.__is_extra_far = True
+        elif starter_amount == 10:
+            self.__is_circles = True
         elif starter_amount == 11:
-            if game.get_neutral_icebergs()[0].penguin_amount == 1:
-                self.__is_circles = True
-            else:
-                self.__is_extra_far_treasure = True
+            self.__is_extra_far_treasure = True
         else:
             level1_20_penguins = [
                 iceberg

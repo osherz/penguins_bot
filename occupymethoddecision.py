@@ -125,7 +125,7 @@ class OccupyMethodDecision:
         spare_penguins = self.__simulation_data.get_spare_penguins(source_iceberg)
         max_penguins_can_be_use = self.__simulation_data.get_max_penguins_can_be_use(source_iceberg)
         if MapChecker.get().is_2X2_map():
-            return max_penguins_can_be_use + spare_penguins
+            return min(max_penguins_can_be_use + spare_penguins, source_iceberg.penguin_amount)
 
         penguins_of_close_iceberg, max_distance = self.__calc_penguins_of_close_iceberg_and_max_distance(source_iceberg)
         penguins_per_turn = 0 if utils.is_bonus_iceberg(self.__game,
@@ -134,7 +134,7 @@ class OccupyMethodDecision:
                 self.__game.iceberg_bridge_speed_multiplier * BRIDGE_SPEED_MULTIPLIER_FOR_MAX_DISTANCE_FACTOR))
         reduce_penguins = int(max(0, penguins_of_close_iceberg - distance_with_bridge * penguins_per_turn))
         max_penguins_can_be_use = max(0, max_penguins_can_be_use - reduce_penguins)
-        return max_penguins_can_be_use + spare_penguins
+        return min(max_penguins_can_be_use + spare_penguins, source_iceberg.penguin_amount)
 
     def __calc_min_penguins_to_send(self, source_iceberg, destination_iceberg):
         """
