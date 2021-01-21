@@ -471,3 +471,55 @@ def has_groups_from_source_to_destination(game, source_iceberg, destination_iceb
     Check whether there are any groups from the source to the destination
     """
     return not is_empty(get_groups(game, source_iceberg, destination_iceberg))
+
+def get_avg_distance_between_all_icebergs(game):
+    sum = 0.0
+    allIcebergs = game.get_all_icebergs()
+    n = len(allIcebergs)
+
+    for iceberg1 in allIcebergs:
+        for iceberg2 in allIcebergs:
+            if not iceberg1.equals(iceberg2):
+                sum += iceberg1.get_turns_till_arrival(iceberg2)
+                print(iceberg1.get_turns_till_arrival(iceberg2))
+
+    return sum / (n * (n - 1))
+
+
+def get_avg_distance_between_natural_groups(game):
+    """
+    :type game: Game
+    """
+    myIceberg = game.get_my_icebergs()[0] # type: Iceberg
+    enemyIceberg = game.get_enemy_icebergs()[0]  # type: Iceberg
+    allNeutralIcebergs = game.get_neutral_icebergs() # type: list[Iceberg]
+
+    #allNeutralIcebergs.sort(key= lambda iceberg: iceberg.get_turns_till_arrival(myIceberg))
+    #neturalLen = len(allNeutralIcebergs)
+
+    closeToMe = []
+    closeToEnemy = []
+    sum = 0.0
+
+    for iceberg in allNeutralIcebergs:
+        if enemyIceberg.get_turns_till_arrival(iceberg) < myIceberg.get_turns_till_arrival(iceberg):
+            closeToEnemy.append(iceberg)
+        else:
+            closeToMe.append(iceberg)
+
+    closeToMe.sort(key= lambda iceberg: iceberg.get_turns_till_arrival(myIceberg))
+    closeToEnemy.sort(key= lambda iceberg: iceberg.get_turns_till_arrival(enemyIceberg))
+
+    print("My:", closeToMe)
+    print("Enemy:", closeToEnemy)
+
+    minLen = min(len(closeToMe), len(closeToEnemy))
+
+    for i in range(minLen):
+        sum += closeToMe[i].get_turns_till_arrival(closeToEnemy[i])
+
+    sum += myIceberg.get_turns_till_arrival(game.get_enemy_icebergs()[0])
+
+    return sum / (len(game.get_all_icebergs()) / 2)
+
+

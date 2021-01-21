@@ -1,4 +1,5 @@
 from penguin_game import *
+from utils import get_avg_distance_between_all_icebergs, get_avg_distance_between_natural_groups
 
 map_checker = None
 
@@ -37,27 +38,20 @@ class MapChecker:
         Active this function in the first turn of the game only!
         Check in which maps we play.
         """
-        starter_amount = game.get_my_icebergs()[0].penguin_amount
-        if starter_amount == 16:
+        avg_distance = get_avg_distance_between_natural_groups(game)
+
+        if avg_distance <= 10:
             self.__is_2X2_map = True
-        elif len(game.get_all_icebergs()) == 5:
-            self.__is_tricky_map = True
-        elif starter_amount == 19:
-            self.__is_extra_far = True
-        elif starter_amount == 10:
-            self.__is_circles = True
-        elif starter_amount == 11:
-            self.__is_extra_far_treasure = True
-        else:
-            level1_20_penguins = [
-                iceberg
-                for iceberg in game.get_neutral_icebergs()
-                if iceberg.level == 1 and iceberg.penguin_amount == 20
-            ]
-            if any(level1_20_penguins):
-                self.__is_2020_map = True
+        elif avg_distance <= 15:
+            if game.get_my_icebergs()[0].get_turns_till_arrival(game.get_enemy_icebergs()[0]) < get_avg_distance_between_all_icebergs(game):
+                self.__is_extra_far = True
             else:
-                self.__is_default_map = True
+                self.__is_extra_far_treasure = True
+        elif avg_distance <= 18:
+            self.__is_default_map = True
+        else:
+            self.__is_circles = True
+
 
     def is_2X2_map(self):
         return self.__is_2X2_map
